@@ -1,6 +1,6 @@
 # VFX-software-prefs
 
-See the READMEs for
+My favorite gizmos, scripts, shelves, and prefs for
 
 <h2>Maya</h2>
 <h2><a href="https://github.com/sharktacos/VFX-software-prefs/tree/main/Nuke#readme">Nuke</a></h2>
