@@ -1,0 +1,9 @@
+// wait until Alembic plugins load before initializing menus...
+
+//if(!`pluginInfo -query -l -n AbcImport`) evalDeferred("loadPlugin \"AbcImport.mll\"");
+//if(!`pluginInfo -query -l -n AbcExport`) evalDeferred("loadPlugin \"AbcExport.mll\"");
+qube_addUI_maya();
+AlembicCreateUI;
+bonusToolsMenu;
+eval("source \"startup/GoZScript.mel\"");
+

@@ -1,0 +1,28 @@
+#! C:/Program Files/Nuke8.0v1/nuke-8.0.v1.dll -nx
+version 8.0 v1
+Gizmo {
+ addUserKnob {20 User}
+ addUserKnob {2 Var l Var}
+ addUserKnob {26 Usage l Usage: T "Call variable in read nodes with \[value NAMER1.Var]"}
+ label "\[value Var]"
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -347
+  ypos 189
+ }
+ NoOp {
+  name NoOp1
+  selected true
+  xpos -347
+  ypos 256
+ }
+ Output {
+  name Output1
+  xpos -347
+  ypos 329
+ }
+end_group
+
+

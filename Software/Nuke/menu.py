@@ -1,0 +1,63 @@
+#import cryptomatte_utilities
+#cryptomatte_utilities.setup_cryptomatte_ui()
+
+toolbar = nuke.toolbar("Nodes")
+
+
+
+ 
+#toolbar.addCommand( "Gizmos/NAMER", "nuke.createNode('NAMER')")
+toolbar.addCommand( "Gizmos/bm_OpticalGlow", "nuke.createNode('bm_OpticalGlow')")
+toolbar.addCommand( "Gizmos/tonemap", "nuke.createNode('tonemap')")
+toolbar.addCommand( "Gizmos/exr_extract", "nuke.createNode('exr_extract')")
+toolbar = nuke.toolbar("Nodes")
+#toolbar.addCommand( "Gizmos/Levels", "nuke.createNode('Levels')")
+#toolbar = nuke.toolbar("Nodes")
+#toolbar.addCommand( "Gizmos/ColorBalance", "nuke.createNode('ColorBalance')")
+toolbar.addCommand( "Gizmos/Offset", "nuke.createNode('Offset')")
+
+toolbar = nuke.toolbar("Nodes")
+toolbar.addCommand( "Gizmos/bokeh_blur_jb_v03_1", "nuke.createNode('bokeh_blur_jb_v03_1')")
+
+def writeDir():
+ import os
+ file = nuke.filename(nuke.thisNode())
+ dir = os.path.dirname(file)
+ osdir = nuke.callbacks.filenameFilter(dir)
+ try:
+  os.makedirs(osdir)
+ except OSError:
+  pass
+
+  # Shuffle custom defaults: 
+nuke.knobDefault("Shuffle.hide_input", "1")  
+nuke.knobDefault("Shuffle.postage_stamp", "1")
+nuke.knobDefault("Shuffle.label", "[value in]") 
+
+  # Cryptomatte custom defaults: 
+nuke.knobDefault("Cryptomatte.hide_input", "1")  
+nuke.knobDefault("Cryptomatte.label", "[value matteList]") 
+
+# Write > Default for EXR files: DWAB
+nuke.knobDefault("Write.exr.compression","8")  
+
+nuke.knobDefault('Write.beforeRender','writeDir()')
+
+#-------------------- Custom Merge Function -------------------------------#
+'''More info on callbacks here:
+ http://docs.thefoundry.co.uk/nuke/90/pythondevguide/callbacks.html'''
+
+def MergeNodeAfterKnobChange():
+
+  if nuke.thisKnob().name() == "operation":
+
+	outputRGB = [ "plus", "minus", "screen", "multiply", "divide", "difference", "hypot" ]
+	outputRGBA = [ "over", "under" , "disjoint-over" , "conjoint-over", "in", 
+	"out", "overlay", "stencil", "mask", "matte", "copy" ]
+	
+	if nuke.thisKnob().value() in outputRGB:
+		nuke.thisNode()[ "output" ].setValue( "rgb" ) 
+	elif nuke.thisKnob().value() in outputRGBA:
+		nuke.thisNode()[ "output" ].setValue( "rgba" )
+
+nuke.addKnobChanged( MergeNodeAfterKnobChange, nodeClass="Merge2" )
