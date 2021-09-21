@@ -1,0 +1,81 @@
+#! C:/Program Files/Nuke6.3v4/Nuke6.3.exe -nx
+version 6.3 v4
+Gizmo {
+ addUserKnob {20 User l Offset}
+ addUserKnob {12 offset}
+ addUserKnob {14 tiles R 0 100}
+ tiles 1
+ addUserKnob {6 mx l "mirror x" +STARTLINE}
+ addUserKnob {6 my l "mirror y" -STARTLINE}
+ addUserKnob {41 filter T STMap1.filter}
+ addUserKnob {26 ""}
+ addUserKnob {41 motionblur T mb_trans.motionblur}
+ addUserKnob {41 shutter T mb_trans.shutter}
+ addUserKnob {41 shutteroffset l "shutter offset" T mb_trans.shutteroffset}
+ addUserKnob {41 shuttercustomoffset l "" -STARTLINE T mb_trans.shuttercustomoffset}
+ addUserKnob {20 about l @}
+ addUserKnob {26 author l "Author: " T "Mariusz Wesierski ( mw@fxcalibur.com )"}
+ addUserKnob {26 version l "Version: " T 1.0}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -301
+  ypos -196
+ }
+set Na133ed0 [stack 0]
+ Expression {
+  expr0 ((x-offset.x)<0?1+((x-offset.x)/width*tiles.w)-int((x-offset.x)/width*tiles.w):((x-offset.x)/width*tiles.w)-int((x-offset.x)/width*tiles.w))
+  expr1 ((y-offset.y)<0?1+((y-offset.y)/height*tiles.h)-int((y-offset.y)/height*tiles.h):((y-offset.y)/height*tiles.h)-int((y-offset.y)/height*tiles.h))
+  expr2 0
+  channel3 {none none none -rgba.alpha}
+  name offset_xp
+  xpos -422
+  ypos -142
+ }
+ Expression {
+  expr0 "mx?(x-offset.x>=0?0:1)+ fmod(int((x-offset.x)/width*tiles.w),2)!=0?1-r:r:r"
+  expr1 "my?(y-offset.y>=0?0:1)+ fmod(int((y-offset.y)/height*tiles.h),2)!=0?1-g:g:g"
+  channel2 {-rgba.red -rgba.green -rgba.blue}
+  channel3 none
+  name mirror_xp
+  xpos -422
+  ypos -118
+  disable {{mx?0:my?0:1}}
+ }
+push $Na133ed0
+ STMap {
+  inputs 2
+  uv rgb
+  blur_scale 0
+  filter Impulse
+  name STMap1
+  xpos -301
+  ypos -124
+ }
+ Transform {
+  translate {{offset.x i} {offset.y i}}
+  center {800 501.5}
+  filter Impulse
+  shutteroffset centred
+  name mb_trans
+  xpos -301
+  ypos -81
+  disable {{motionblur>0?0:1 i}}
+ }
+ Transform {
+  translate {{-offset.x i} {-offset.y i}}
+  center {800 501.5}
+  filter Impulse
+  black_outside false
+  name inv_trans
+  xpos -301
+  ypos -57
+  disable {{mb_trans.motionblur>0?0:1 i}}
+ }
+ Output {
+  name Output1
+  xpos -301
+  ypos -23
+ }
+end_group
