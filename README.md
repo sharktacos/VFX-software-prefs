@@ -1,9 +1,6 @@
-# VFX-software-prefs
+# VFX Software tools
 
-My favorite gizmos, scripts, shelves, and prefs for
+You can download the config files in the [Releases page](https://github.com/sharktacos/VFX-software-prefs/releases) of this repo.
 
-<h2><a href="docs/Maya.md">Maya</a></h2>
-<h2><a href="docs/Nuke.md">Nuke</a></h2>
-<h2><a href="docs/Substance.md">Substance Painter</a></h2>
-
+Check out the [DOCUMENTATION](https://sharktacos.github.io/VFX-software-prefs/) for details on the tools and how to use them.
 
