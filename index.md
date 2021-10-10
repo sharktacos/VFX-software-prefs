@@ -1,4 +1,4 @@
-# VFX-software-prefs
+# VFX Software Tools
 
 My favorite gizmos, scripts, shelves, and prefs for:
 
