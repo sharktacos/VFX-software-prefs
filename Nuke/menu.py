@@ -1,15 +1,14 @@
-#import cryptomatte_utilities
-#cryptomatte_utilities.setup_cryptomatte_ui()
+import cryptomatte_utilities
+cryptomatte_utilities.setup_cryptomatte_ui()
 
 toolbar = nuke.toolbar("Nodes")
-
-
 
  
 #toolbar.addCommand( "Gizmos/NAMER", "nuke.createNode('NAMER')")
 toolbar.addCommand( "Gizmos/bm_OpticalGlow", "nuke.createNode('bm_OpticalGlow')")
-toolbar.addCommand( "Gizmos/tonemap", "nuke.createNode('tonemap')")
+#toolbar.addCommand( "Gizmos/tonemap", "nuke.createNode('tonemap')")
 toolbar.addCommand( "Gizmos/exr_extract", "nuke.createNode('exr_extract')")
+toolbar.addCommand( "Color/OCIO/ACES Ref Gamut Compress", "nuke.createNode('ACES_ref_gamut_compress')")
 toolbar = nuke.toolbar("Nodes")
 #toolbar.addCommand( "Gizmos/Levels", "nuke.createNode('Levels')")
 #toolbar = nuke.toolbar("Nodes")
@@ -28,6 +27,24 @@ def writeDir():
   os.makedirs(osdir)
  except OSError:
   pass
+
+  # OCIO Shot Look custom defaults: 
+'''
+def _setOCIODisplayContext():
+    node = nuke.thisNode()
+    node.knob('key1').setValue("SHOW")
+    node.knob('key2').setValue("SHOT")
+    node.knob('key3').setValue("VER")
+    node.knob('key4').setValue("SHAPER")
+    
+    node.knob('value1').setValue("DSOM")
+    node.knob('value2').setValue("022") 
+    node.knob('value3').setValue("v02")
+    node.knob('value4').setValue("ACEScct")
+    
+nuke.addOnCreate(_setOCIODisplayContext, nodeClass="OCIODisplay")
+'''
+
 
   # Shuffle custom defaults: 
 nuke.knobDefault("Shuffle.hide_input", "1")  
@@ -48,16 +65,12 @@ nuke.knobDefault('Write.beforeRender','writeDir()')
  http://docs.thefoundry.co.uk/nuke/90/pythondevguide/callbacks.html'''
 
 def MergeNodeAfterKnobChange():
-
   if nuke.thisKnob().name() == "operation":
-
-	outputRGB = [ "plus", "minus", "screen", "multiply", "divide", "difference", "hypot" ]
-	outputRGBA = [ "over", "under" , "disjoint-over" , "conjoint-over", "in", 
-	"out", "overlay", "stencil", "mask", "matte", "copy" ]
-	
-	if nuke.thisKnob().value() in outputRGB:
-		nuke.thisNode()[ "output" ].setValue( "rgb" ) 
-	elif nuke.thisKnob().value() in outputRGBA:
-		nuke.thisNode()[ "output" ].setValue( "rgba" )
+    outputRGB = [ "plus", "minus", "screen", "multiply", "divide", "difference", "hypot" ]
+    outputRGBA = [ "over", "under" , "disjoint-over" , "conjoint-over", "in", "out", "overlay", "stencil", "mask", "matte", "copy" ]
+    if nuke.thisKnob().value() in outputRGB:
+        nuke.thisNode()[ "output" ].setValue( "rgb" ) 
+    elif nuke.thisKnob().value() in outputRGBA:
+        nuke.thisNode()[ "output" ].setValue( "rgba" )
 
 nuke.addKnobChanged( MergeNodeAfterKnobChange, nodeClass="Merge2" )
