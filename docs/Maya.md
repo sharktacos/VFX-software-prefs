@@ -34,6 +34,7 @@ Shelf items shown above are oranized into three sections:
    - *Create Light Group AOVs* 
    - *Remove Light Group AOVs* 
    - *Renderman MakeTX GUI*
+     GUI for MakeTx to convert textures to mipmap TX files with an OCIO config in Renderman. See the [doc page](https://docs.sharktacos.com/texture/mipmap.html) for usage.
  - **Arnold**
    - *Arnold Render View*
    - *Custom Layout (node editor & persp view)*
