@@ -319,7 +319,7 @@ global proc shelf_DF_Zdrive () {
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "import dfMakeTexPy3\n# dfMakeTexPy3.Main()" 
+        -command "import dfMakeTexPy3\ndfMakeTexPy3.Main()" 
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1
