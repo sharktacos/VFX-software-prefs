@@ -1,21 +1,12 @@
-import cryptomatte_utilities
-cryptomatte_utilities.setup_cryptomatte_ui()
 
 toolbar = nuke.toolbar("Nodes")
 
- 
-#toolbar.addCommand( "Gizmos/NAMER", "nuke.createNode('NAMER')")
-toolbar.addCommand( "Gizmos/bm_OpticalGlow", "nuke.createNode('bm_OpticalGlow')")
-#toolbar.addCommand( "Gizmos/tonemap", "nuke.createNode('tonemap')")
-toolbar.addCommand( "Gizmos/exr_extract", "nuke.createNode('exr_extract')")
 toolbar.addCommand( "Color/OCIO/ACES Ref Gamut Compress", "nuke.createNode('ACES_ref_gamut_compress')")
-toolbar = nuke.toolbar("Nodes")
-#toolbar.addCommand( "Gizmos/Levels", "nuke.createNode('Levels')")
-#toolbar = nuke.toolbar("Nodes")
-#toolbar.addCommand( "Gizmos/ColorBalance", "nuke.createNode('ColorBalance')")
-toolbar.addCommand( "Gizmos/Offset", "nuke.createNode('Offset')")
 
-toolbar = nuke.toolbar("Nodes")
+toolbar.addCommand( "Gizmos/bm_OpticalGlow", "nuke.createNode('bm_OpticalGlow')")
+toolbar.addCommand( "Gizmos/bm_OpticalLightwrap", "nuke.createNode('bm_OpticalLightwrap')")
+toolbar.addCommand( "Gizmos/exr_extract", "nuke.createNode('exr_extract')")
+toolbar.addCommand( "Gizmos/Offset", "nuke.createNode('Offset')")
 toolbar.addCommand( "Gizmos/bokeh_blur_jb_v03_1", "nuke.createNode('bokeh_blur_jb_v03_1')")
 
 def writeDir():
