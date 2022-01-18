@@ -10,7 +10,9 @@ Each folder here goes in its parallel folder in your Substance user shelf or ass
 | Mac	      | 7.2 or newer	| /Users/username/Documents/Adobe/Adobe Substance 3D Painter/assets/
 |           | Legacy	      |/Users/username/Documents/Allegorithmic/Substance Painter/shelf/
 
-Alternately a custom location for assets can be defined in edit>settings>libraries.
+Alternately a custom location for assets can be defined in `edit>settings>libraries`.
+
+![mari1](img/Substance_assets.jpg)
 
 <h2>Usage</h2>
 Watch a <a href="https://vimeo.com/469364354">video walkthrough</a> of the tools and how they are used to optimze your workflow.<br>
