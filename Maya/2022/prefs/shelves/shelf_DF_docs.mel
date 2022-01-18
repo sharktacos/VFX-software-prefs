@@ -507,5 +507,39 @@ global proc shelf_DF_docs () {
         -commandRepeatable 1
         -flat 1
     ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 32
+        -enable 1
+        -width 35
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Blend Roughness" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "string $file = `shadingNode -asTexture -isColorManaged file`;\nst..." 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "C:/Users/DFLOOD/Documents/maya/2022/prefs/icons/BlendRuf.png" 
+        -image1 "C:/Users/DFLOOD/Documents/maya/2022/prefs/icons/BlendRuf.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "string $file = `shadingNode -asTexture -isColorManaged file`;\nstring $uv = `shadingNode -asUtility place2dTexture`;\n\nstring $lum = `shadingNode -asUtility luminance`;\nstring $blend = `shadingNode -asUtility blendColors`;\n\nconnectAttr -f ( $uv + \".coverage\" ) ( $file + \".coverage\" );\nconnectAttr -f ( $uv + \".translateFrame\" ) ( $file + \".translateFrame\" );\nconnectAttr -f ( $uv + \".rotateFrame\" ) ( $file + \".rotateFrame\" );\nconnectAttr -f ( $uv + \".mirrorU\" ) ( $file + \".mirrorU\" );\nconnectAttr -f ( $uv + \".mirrorV\" ) ( $file + \".mirrorV\" );\nconnectAttr -f ( $uv + \".stagger\" ) ( $file + \".stagger\" );\nconnectAttr -f ( $uv + \".wrapU\" ) ( $file + \".wrapU\" );\nconnectAttr -f ( $uv + \".wrapV\" ) ( $file + \".wrapV\" );\nconnectAttr -f ( $uv + \".repeatUV\" ) ( $file + \".repeatUV\" );\nconnectAttr -f ( $uv + \".offset\" ) ( $file + \".offset\" );\nconnectAttr -f ( $uv + \".rotateUV\" ) ( $file + \".rotateUV\" );\nconnectAttr -f ( $uv + \".noiseUV\" ) ( $file + \".noiseUV\" );\nconnectAttr -f ( $uv + \".vertexUvOne\" ) ( $file + \".vertexUvOne\" );\nconnectAttr -f ( $uv + \".vertexUvTwo\" ) ( $file + \".vertexUvTwo\" );\nconnectAttr -f ( $uv + \".vertexUvThree\" ) ( $file + \".vertexUvThree\" );\nconnectAttr -f ( $uv + \".vertexCameraOne\" ) ( $file + \".vertexCameraOne\" );\nconnectAttr -f ( $uv + \".outUV\" ) ( $file + \".uv\" );\nconnectAttr -f ( $uv + \".outUvFilterSize\" ) ( $file + \".uvFilterSize\" );\n\nsetAttr ($file + \".alphaIsLuminance\") 1;\n\nselect -d;\nNodeEditorHideAttributes;\n{\n\tstring $ned = ( `getCurrentNodeEditor`);\n\tif (\"\" != $ned) {\n\t\tnodeEditor -e -nodeViewMode \"simple\" $ned;\n  }\n};\n\nconnectAttr -f ( $blend + \".output\" ) ( $lum + \".value\" );\nconnectAttr -f ( $file + \".outAlpha\" ) ( $blend + \".blender\" );\nsetAttr ($blend + \".color1\") -type double3 0.2 0.2 0.2;\nsetAttr ($blend + \".color2\") -type double3 0.5 0.5 0.5;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
 
 } 
