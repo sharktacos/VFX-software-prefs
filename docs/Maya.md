@@ -40,8 +40,14 @@ Shelf items shown above are oranized into three sections:
 
 ## Arnold
    - *Arnold Render View*
-   - *Custom Layout (node editor & persp view)*
    - *Create Texture File Node*
    - *Create Arnold Standard Shader*
+   
+## Shader Networks
+   - *Blend Roughness*<br>
+     Two roughness values based on masked regions.
+   - *Cloth Shader Network*<br>
+      See [docs](https://docs.sharktacos.com/texture/FabricArnold.html) for more detail. Defaults to plain weave but pattern can be swapped out with maps provided in docs [download](https://docs.sharktacos.com/images/tutorials/Assets/Maya/fabricMaps.zip)
+
    
    
