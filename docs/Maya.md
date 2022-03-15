@@ -40,10 +40,9 @@ Shelf items shown above are oranized into three sections:
 
 ## Arnold
    - *Arnold Render View*
-   - *Custom Layout (node editor & persp view)*
    - *Create Texture File Node*
    - *Create Arnold Standard Shader*
-   - 
+   
 ## Shader Networks
    - *Blend Roughness*<br>
      Two roughness values based on masked regions.
