@@ -5,3 +5,11 @@ Place contents in the .nuke folder of your $HOME directory (if at the school lab
 <h2>MacOS</h2>
   In the finder menu select <b>go>home</b>. This folder is hidden by default. To show it Press CMD+Shift+Period in the Finder.
 
+## Tools/Gizmos
+
+- **Shuffle EXR** </br> The older EXR shuffle was incompatible with Nuke 13. The new one, is located in the User tab of a Read node.
+- **bm Optical Glow** </br> Created by Ben McEwan. Adds exponentially-increasing blurs together to produce a more optically-correct, natural glow. Located in the Gizmos menu.
+- **bm Optical Light Wrap** </br> Created by Ben McEwan. Adds exponentially-increasing blurs together to produce a more optically-correct, natural light wrap. Located in the Gizmos menu.
+- **ACES Ref Gamut Compress** </br> Created by the ACES Gamut Mapping Workgroup. Located in ```Color > OCIO``` menu
+
+
