@@ -7,9 +7,9 @@ Place contents in the .nuke folder of your $HOME directory (if at the school lab
 
 ## Tools/Gizmos
 
-- **Shuffle EXR** </br> The older EXR shuffle was incompatible with Nuke 13. The new one, is located in the User tab of a Read node.
-- **bm Optical Glow** </br> Created by Ben McEwan. Adds exponentially-increasing blurs together to produce a more optically-correct, natural glow. Located in the Gizmos menu.
-- **bm Optical Light Wrap** </br> Created by Ben McEwan. Adds exponentially-increasing blurs together to produce a more optically-correct, natural light wrap. Located in the Gizmos menu.
-- **ACES Ref Gamut Compress** </br> Created by the ACES Gamut Mapping Workgroup. Located in ```Color > OCIO``` menu
+- **Shuffle EXR** </br> [Created by Nacho Igea](http://www.nukepedia.com/python/import/export/shufflelayers). The older EXR shuffle was incompatible with Nuke 13. The new one, is located in the ```User``` tab of a ```Read``` node.
+- **bm Optical Glow** </br> [Created by Ben McEwan](https://github.com/BenMcEwan/nuke_public). Adds exponentially-increasing blurs together to produce a more optically-correct, natural glow. Located in the ```Gizmos``` menu.
+- **bm Optical Light Wrap** </br> [Created by Ben McEwan](https://github.com/BenMcEwan/nuke_public). Adds exponentially-increasing blurs together to produce a more optically-correct, natural light wrap. Located in the ```Gizmos``` menu.
+- **ACES Ref Gamut Compress** </br> [Created by the ACES Gamut Mapping Workgroup](https://github.com/ampas/aces-vwg-gamut-mapping-2020). Located in ```Color > OCIO``` menu
 
 
