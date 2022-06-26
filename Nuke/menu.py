@@ -5,9 +5,11 @@ toolbar.addCommand( "Color/OCIO/ACES Ref Gamut Compress", "nuke.createNode('ACES
 
 toolbar.addCommand( "Gizmos/bm_OpticalGlow", "nuke.createNode('bm_OpticalGlow')")
 toolbar.addCommand( "Gizmos/bm_OpticalLightwrap", "nuke.createNode('bm_OpticalLightwrap')")
-#toolbar.addCommand( "Gizmos/exr_extract", "nuke.createNode('exr_extract')")
-toolbar.addCommand( "Gizmos/Offset", "nuke.createNode('Offset')")
-toolbar.addCommand( "Gizmos/bokeh_blur_jb_v03_1", "nuke.createNode('bokeh_blur_jb_v03_1')")
+toolbar.addCommand( "Gizmos/exr_extract", "nuke.createNode('exr_extract')")
+toolbar.addCommand( "Gizmos/mmColorTarget", "nuke.createNode('mmColorTarget')")
+toolbar.addCommand( "Gizmos/CalibrateMacbeth", "nuke.createNode('CalibrateMacbeth')")
+#toolbar.addCommand( "Gizmos/Offset", "nuke.createNode('Offset')")
+#toolbar.addCommand( "Gizmos/bokeh_blur_jb_v03_1", "nuke.createNode('bokeh_blur_jb_v03_1')")
 
 import shuffleLayers
 from shuffleLayers import newNode
