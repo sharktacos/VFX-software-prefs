@@ -11,6 +11,7 @@ Place contents in the .nuke folder of your $HOME directory (if at the school lab
 - **bm Optical Glow** </br> [Created by Ben McEwan](https://github.com/BenMcEwan/nuke_public). Adds exponentially-increasing blurs together to produce a more optically-correct, natural glow. </br>Located in the ```Gizmos``` menu.
 - **bm Optical Light Wrap** </br> [Created by Ben McEwan](https://github.com/BenMcEwan/nuke_public). Adds exponentially-increasing blurs together to produce a more optically-correct, natural light wrap. </br>Located in the ```Gizmos``` menu.
 - **Optical Z Defocus** </br> [Created by Jed Smith](https://gist.github.com/jedypod/50a3b68f9b5bbe487e1a). A physically accurate ZDefocus, which controls circle of confusion (coc) size based on lens geometry using the depth of field equation. Set your lens and film-back characteristics, your focus distance, and adjust the size of your bokeh with the aperture size, just like a real lens. </br>Located in the ```Gizmos``` menu.
+- **mm Color Target** </br> [Created by Marco Myer](https://www.marcomeyer-vfx.de/posts/mmcolortarget-nuke-gizmo/). Neutralize film footage with a Macbeth color chart to a target color space. </br>Located in the ```Gizmos``` menu.
 - **ACES Ref Gamut Compress** </br> [Created by the ACES Gamut Mapping Workgroup](https://github.com/ampas/aces-vwg-gamut-mapping-2020). </br>Located in ```Color > OCIO``` menu
 
 
