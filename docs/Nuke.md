@@ -15,4 +15,7 @@ Place contents in the .nuke folder of your $HOME directory (if at the school lab
 - **df Night Adaptation** </br> Created by Derek Flood. Simulate perceptual loss of color and blue-shift in low-light conditions by desaturating and color balancing low luminance colors. Based on ZoneSat and ZoneGrade tools by Jed Smith.
 - **ACES Ref Gamut Compress** </br> [Created by the ACES Gamut Mapping Workgroup](https://github.com/ampas/aces-vwg-gamut-mapping-2020). </br>Located in ```Color > OCIO``` menu
 
+*The video below shows the usage of mm Color Target to neutralize a film plate for VFX work* </br>
+<div style="padding:56.31% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/727228662?h=6d5cbf799a&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Plate Neutralization for CG integration"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
+
 
