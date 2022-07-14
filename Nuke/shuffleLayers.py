@@ -90,6 +90,8 @@ def customShuffle():
     mynode.addKnob(text)
     mynode.addKnob(mybutton)
 
+nuke.addOnCreate(selectLayers,nodeClass="Read")
+
 nuke.addOnCreate(customShuffle, nodeClass="Read")
 
-nuke.addOnCreate( selectLayers , nodeClass= "Read" )
+
