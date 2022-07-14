@@ -2,15 +2,28 @@
 Zip file containing Maya project folders for an animation studio pipeline.
 
 # Turntable Setup 
+
 Maya files for look development turntable setup.
+Includes a .json file that can be used to import the following LPEs that create custom AOVs combining two or more builtin AOVs. 
+
+| *LPE name* | *LPE code* | *Builtin AOVs*
+|----|----|----
+| "LPE_texture" | `C[DV]A` | diffuse_albedo + sss_albedo
+| "LPE_direct" | `C[D]L` | diffuse_direct + sss_direct
+| "LPE_indirect" | `C[TD][DSVOB].*` | diffuse_indirect + sss_indirect 
+| "LPE_reflect" | `C<RS>[DSVOB].*` | specular_indirect + coat_indirect + sheen_indirect
+| "LPE_spec" | `C<RS>L` | specular_direct + coat_direct + sheen_direct
+
 
 # scripts
+
 Python and Mel scripts. Place these in your Maya scripts folder. Python scripts updated for Python3 used by Maya 2022.
 
 # Maya shelf
+
 A Maya shelf containing the above scripts and some other goodies. This goes in your Maya prefs folder. 
 
-| OS | Location
+| **OS** | **Location**
 |----|----
 | Windows: | %USERPROFILE%\Documents\maya\2022\prefs\
 | Mac OS X: |  /Users/[username]/Library/Preferences/Autodesk/maya/2022/prefs/
