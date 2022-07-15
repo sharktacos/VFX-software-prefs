@@ -1,7 +1,7 @@
-# Project template
+# Maya Project template
 Zip file containing Maya project folders for an animation studio pipeline.
 
-# Turntable Setup 
+# Maya Turntable Setup 
 
 Maya files for look development turntable setup.
 Includes a .json file that can be used to import the following LPEs that create custom AOVs combining two or more builtin AOVs. 
@@ -15,7 +15,7 @@ Includes a .json file that can be used to import the following LPEs that create 
 | "LPE_spec" | `C<RS>L` | specular_direct + coat_direct + sheen_direct
 
 
-# scripts
+# Maya scripts
 
 Python and Mel scripts. Place these in your Maya scripts folder. Python scripts updated for Python3 used by Maya 2022.
 
