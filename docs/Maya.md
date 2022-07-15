@@ -4,7 +4,7 @@ Zip file containing Maya project folders for an animation studio pipeline. See [
 # Maya Turntable Setup 
 
 Maya files for look development turntable setup.
-Includes a .json file that can be used to import the following LPEs that create custom AOVs combining two or more builtin AOVs. 
+Includes a .json file that can be used to import the following LPEs that create custom AOVs combining two or more builtin AOVs. The following LPEs are included:
 
 | *LPE name* | *LPE code* | *Builtin AOVs*
 |----|----|----
