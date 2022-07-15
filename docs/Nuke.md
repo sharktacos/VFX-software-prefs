@@ -5,7 +5,7 @@ Place contents in the .nuke folder of your $HOME directory (if at the school lab
 ## MacOS 
   In the finder menu select **go>home**. This folder is hidden by default. To show it Press CMD+Shift+Period in the Finder.
 
-## Tools/Gizmos
+# Tools/Gizmos
 
 - **Shuffle EXR** <br> [Created by Nacho Igea](http://www.nukepedia.com/python/import/export/shufflelayers). The older EXR shuffle was incompatible with Nuke 13. The new one has options to extract all AOVs or select the AOVs to extract. <br>Located in the ```User``` tab of a ```Read``` node.
 - **bm Optical Glow** <br> [Created by Ben McEwan](https://github.com/BenMcEwan/nuke_public). Adds exponentially-increasing blurs together to produce a more optically-correct, natural glow. <br>Located in the ```Gizmos``` menu.
