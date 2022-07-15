@@ -17,7 +17,7 @@ Includes a .json file that can be used to import the following LPEs that create 
 
 # Maya scripts
 
-Python and Mel scripts. Place these in your Maya scripts folder. Python scripts updated for Python3 used by Maya 2022.
+Python and Mel scripts. Place these in your Maya scripts folder. Python scripts updated for Python3 used by Maya 2022. These scripts are also included as buttons in the Maya shelf.
 
 # Maya shelf
 
