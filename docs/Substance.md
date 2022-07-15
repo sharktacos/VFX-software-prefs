@@ -27,9 +27,10 @@ Watch a <a href="https://vimeo.com/469364354">video walkthrough</a> of the tools
 |----|----
 | ctr+alt+right | Pick mesh (aka TextureSet)
 | shift+right | Rotate Enviornment Lighting
-| alt+mask icon | show mask (alt click on mask icon)
 | tab | Fullscreen (hide UI)
-| TOOLS |
+| alt+mask icon | show mask (alt click on mask icon)
+| M | show material view
+| TOOLS: |
 | s+click | move **stencil/projection** tool: rotate (s+left), pan (s+middle), zoom (+right) Projection 
 | N | Disable **stencil/projection** tool
 | [  ] | **brush** size (same as Photoshop)
