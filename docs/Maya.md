@@ -1,5 +1,5 @@
 # Maya Project template
-Zip file containing Maya project folders for an animation studio pipeline.
+Zip file containing Maya project folders for an animation studio pipeline. See [docs](https://docs.sharktacos.com/pipeline/naming.html) for details on organization and naming conventions.
 
 # Maya Turntable Setup 
 
