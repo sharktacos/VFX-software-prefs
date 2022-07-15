@@ -1,5 +1,6 @@
 <h1>Installation</h1>
 Place contents in the .nuke folder of your $HOME directory (if at the school lab that's your Z drive). 
+
 ## Windows
   You can find the $HOME folder by typing %HOME% or %USERPROFILE% in an Explorer Browser.
 ## MacOS 
