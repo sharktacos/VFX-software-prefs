@@ -1,3 +1,8 @@
+  
+  # Add EXR shuffle to read node in User tab: import shuffleLayers
+from shuffleLayers import newNode
+from shuffleLayers import mylayerPanel
+
 
 toolbar = nuke.toolbar("Nodes")
 
@@ -5,15 +10,15 @@ toolbar.addCommand( "Color/OCIO/ACES Ref Gamut Compress", "nuke.createNode('ACES
 
 toolbar.addCommand( "Gizmos/bm_OpticalGlow", "nuke.createNode('bm_OpticalGlow')")
 toolbar.addCommand( "Gizmos/bm_OpticalLightwrap", "nuke.createNode('bm_OpticalLightwrap')")
-toolbar.addCommand( "Gizmos/exr_extract", "nuke.createNode('exr_extract')")
 toolbar.addCommand( "Gizmos/mmColorTarget", "nuke.createNode('mmColorTarget')")
-toolbar.addCommand( "Gizmos/CalibrateMacbeth", "nuke.createNode('CalibrateMacbeth')")
-#toolbar.addCommand( "Gizmos/Offset", "nuke.createNode('Offset')")
-#toolbar.addCommand( "Gizmos/bokeh_blur_jb_v03_1", "nuke.createNode('bokeh_blur_jb_v03_1')")
+toolbar.addCommand( "Gizmos/OpticalZDefocus", "nuke.createNode('OpticalZDefocus')")
 
-import shuffleLayers
-from shuffleLayers import newNode
-from shuffleLayers import mylayerPanel
+# obsolete
+'''
+#toolbar.addCommand( "Gizmos/bokeh_blur_jb_v03_1", "nuke.createNode('bokeh_blur_jb_v03_1')")
+#toolbar.addCommand( "Gizmos/CalibrateMacbeth", "nuke.createNode('CalibrateMacbeth')")
+#toolbar.addCommand( "Gizmos/Offset", "nuke.createNode('Offset')")
+#toolbar.addCommand( "Gizmos/exr_extract", "nuke.createNode('exr_extract')")
 
 def writeDir():
  import os
@@ -26,7 +31,7 @@ def writeDir():
   pass
 
   # OCIO Shot Look custom defaults: 
-'''
+
 def _setOCIODisplayContext():
     node = nuke.thisNode()
     node.knob('key1').setValue("SHOW")
@@ -46,16 +51,18 @@ nuke.addOnCreate(_setOCIODisplayContext, nodeClass="OCIODisplay")
   # Shuffle custom defaults: 
 nuke.knobDefault("Shuffle.hide_input", "1")  
 nuke.knobDefault("Shuffle.postage_stamp", "1")
-nuke.knobDefault("Shuffle.label", "[value in]") 
+#nuke.knobDefault("Shuffle.label", "[value in]") 
 
   # Cryptomatte custom defaults: 
 nuke.knobDefault("Cryptomatte.hide_input", "1")  
-nuke.knobDefault("Cryptomatte.label", "[value matteList]") 
+#nuke.knobDefault("Cryptomatte.label", "[value matteList]") 
 
 # Write > Default for EXR files: DWAB
 nuke.knobDefault("Write.exr.compression","8")  
+#nuke.knobDefault('Write.beforeRender','writeDir()')
 
-nuke.knobDefault('Write.beforeRender','writeDir()')
+  # OCIO Color Space custom defaults: 
+nuke.knobDefault("OCIOColorSpace.label", "[value in_colorspace]\n[value out_colorspace]") 
 
 #-------------------- Custom Merge Function -------------------------------#
 '''More info on callbacks here:
