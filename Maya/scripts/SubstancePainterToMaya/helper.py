@@ -233,88 +233,10 @@ def displaySecondPartOfUI(ui, renderer):
         ui.subdivIter.setEnabled(False)
         ui.optionsSubLayout2.addWidget(ui.subdivIter)
 
-    elif renderer.name == 'Vray':
-        # Vray subdivisions
-        ui.checkbox6 = QtWidgets.QCheckBox('Add subdivisions')
-        ui.optionsSubLayout2.addWidget(ui.checkbox6)
-        ui.checkbox6.stateChanged.connect(lambda: ui.addVraySubdivisionsCheckbox())
-
-        ui.subdivIterVrayTitle = QtWidgets.QLabel('Edge Length')
-        ui.optionsSubLayout2.addWidget(ui.subdivIterVrayTitle)
-
-        ui.subdivIterVray = QtWidgets.QLineEdit('4')
-        ui.subdivIterVray.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivIterVray)
-
-        ui.subdivMaxVrayTitle = QtWidgets.QLabel('Max Subdivs')
-        ui.optionsSubLayout2.addWidget(ui.subdivMaxVrayTitle)
-
-        ui.maxSubdivIterVray = QtWidgets.QLineEdit('4')
-        ui.maxSubdivIterVray.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.maxSubdivIterVray)
-
-    elif renderer.name == 'PxrSurface' or renderer.name == 'PxrDisney':
-        # Renderman Subdivisions
-        ui.checkbox7 = QtWidgets.QCheckBox('Add subdivisions')
-        ui.optionsSubLayout2.addWidget(ui.checkbox7)
-        ui.checkbox7.stateChanged.connect(lambda: ui.addRendermanSubdivisionsCheckbox())
-
-        ui.subdivIterRendermanTitle = QtWidgets.QLabel('scheme')
-        ui.optionsSubLayout2.addWidget(ui.subdivIterRendermanTitle)
-
-        ui.subdivIterRenderman = QtWidgets.QComboBox()
-        ui.subdivIterRenderman.addItems(['Catmull', 'Loop', 'Bilinear'])
-        ui.subdivIterRenderman.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivIterRenderman)
-
-        ui.subdivInterRendermanTitle = QtWidgets.QLabel('Interpolation')
-        ui.optionsSubLayout2.addWidget(ui.subdivInterRendermanTitle)
-
-        ui.subdivInterRenderman = QtWidgets.QComboBox()
-        ui.subdivInterRenderman.addItems(['No', 'Sharp creases and corners', 'Sharp creases'])
-        ui.subdivInterRenderman.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivInterRenderman)
-
-    elif renderer.name == 'Redshift':
-        # Renderman Subdivisions
-        ui.checkbox8 = QtWidgets.QCheckBox('Add subdivisions')
-        ui.optionsSubLayout2.addWidget(ui.checkbox8)
-        ui.checkbox8.stateChanged.connect(lambda: ui.addRedshiftSubdivisionsCheckbox())
-
-        ui.subdivIterRedshiftTitle = QtWidgets.QLabel('scheme')
-        ui.optionsSubLayout2.addWidget(ui.subdivIterRedshiftTitle)
-
-        ui.subdivIterRedshift = QtWidgets.QComboBox()
-        ui.subdivIterRedshift.addItems(['Cat + Loop', 'Cat'])
-        ui.subdivIterRedshift.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivIterRedshift)
-
-        ui.subdivMinTitle = QtWidgets.QLabel('Min Edge Length')
-        ui.optionsSubLayout2.addWidget(ui.subdivMinTitle)
-
-        ui.subdivMin = QtWidgets.QLineEdit('4.00')
-        ui.subdivMin.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivMin)
-
-        ui.subdivMaxTitle = QtWidgets.QLabel('Max Subdivs')
-        ui.optionsSubLayout2.addWidget(ui.subdivMaxTitle)
-
-        ui.subdivMax = QtWidgets.QLineEdit('6')
-        ui.subdivMax.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivMax)
-
-    if renderer.name == 'Stingray':
-        ui.checkbox1.setVisible(False)
-        ui.checkbox2.setVisible(False)
-#        ui.checkbox4.setVisible(False)
-        ui.checkbox1.setChecked(False)
-        ui.checkbox2.setChecked(False)
-        ui.checkbox4.setChecked(False)
-
     else:
         ui.checkbox1.setVisible(True)
         ui.checkbox2.setVisible(True)
-        ui.checkbox4.setVisible(True)
+#        ui.checkbox4.setVisible(False)
 
 
     ui.grpProceed.setVisible(True)

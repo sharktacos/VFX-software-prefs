@@ -262,17 +262,6 @@ def connect(ui, texture, renderer, fileNode):
     elif texture.materialAttribute == 'specularRoughness':
         createSpecMap(texture, renderer, fileNode, colorCorrect)
 
-    # If lyr texture
-    elif texture.materialAttribute == 'mix2':
-        materialName += '_lyr'
-        helper.createLayerMaterialAndShadingGroup(materialName, renderer.renderParameters.SHADER, renderer.renderParameters.SHADER_LYR)
-        connectLyrMap(texture, renderer, fileNode, colorCorrect)
-
-        print('lyr texture name is ' + materialName)
-        print('lyr fileNode name is ' + fileNode)
-
-#        mc.connectAttr(fileNode + '.outAlpha', texture.textureSet + '.mix2', force=True)
-       
     # If it's another type of map
     else:
         helper.connectTexture(fileNode, texture.output, texture.textureSet, texture.materialAttribute, colorCorrect)

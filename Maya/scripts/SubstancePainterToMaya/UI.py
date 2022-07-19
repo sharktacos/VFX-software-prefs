@@ -102,7 +102,7 @@ class PainterToMayaUI:
         self.textureSetLabel = QtWidgets.QLabel('textureSet')
         self.namingConventionSubLayoutLabel.addWidget(self.textureSetLabel)
 
-        self.textureSet = QtWidgets.QLineEdit('Shader name')
+        self.textureSet = QtWidgets.QLineEdit('ShaderName')
         self.textureSet.setToolTip(
             'The part of one of your texture\'s name which define the material\'s name to use'
         )
@@ -140,13 +140,13 @@ class PainterToMayaUI:
         self.rendererRadio1 = QtWidgets.QRadioButton('Arnold (aiStandardSurface)')
         self.rendererRadio1.setChecked(True)
         self.grpRadioRenderer.addButton(self.rendererRadio1)
-        self.rendererRadio2 = QtWidgets.QRadioButton('VRay (VrayMtl)')
-        self.grpRadioRenderer.addButton(self.rendererRadio2)
-        self.rendererRadio3 = QtWidgets.QRadioButton('Renderman (PxrDisney)')
-        self.grpRadioRenderer.addButton(self.rendererRadio3)
-        self.rendererRadio4 = QtWidgets.QRadioButton('Renderman (PxrSurface)')
-        self.grpRadioRenderer.addButton(self.rendererRadio4)
-        
+
+#        self.rendererRadio2 = QtWidgets.QRadioButton('VRay (VrayMtl)')
+#        self.grpRadioRenderer.addButton(self.rendererRadio2)
+#        self.rendererRadio3 = QtWidgets.QRadioButton('Renderman (PxrDisney)')
+#        self.grpRadioRenderer.addButton(self.rendererRadio3)
+#        self.rendererRadio4 = QtWidgets.QRadioButton('Renderman (PxrSurface)')
+#        self.grpRadioRenderer.addButton(self.rendererRadio4)
 #        self.rendererRadio5 = QtWidgets.QRadioButton('Redshift (RedshiftMaterial)')
 #        self.grpRadioRenderer.addButton(self.rendererRadio5)
 #        self.rendererRadio6 = QtWidgets.QRadioButton('StingrayPBS')
@@ -154,10 +154,10 @@ class PainterToMayaUI:
 #        self.grpRadioRenderer.addButton(self.rendererRadio6)
 
         self.rendererLayout.addWidget(self.rendererRadio1)
-        self.rendererLayout.addWidget(self.rendererRadio2)
-        self.rendererLayout.addWidget(self.rendererRadio3)
-        self.rendererLayout.addWidget(self.rendererRadio4)
-        
+
+#        self.rendererLayout.addWidget(self.rendererRadio2)
+#        self.rendererLayout.addWidget(self.rendererRadio3)
+#        self.rendererLayout.addWidget(self.rendererRadio4)
 #        self.rendererLayout.addWidget(self.rendererRadio5)
 #        self.rendererLayout.addWidget(self.rendererRadio6)
 
@@ -241,9 +241,9 @@ class PainterToMayaUI:
         self.checkbox3.setVisible(False)
         self.optionsSubLayout1.addWidget(self.checkbox3)
 
-        self.checkbox4 = QtWidgets.QCheckBox('Create layered shader networks for lyr in texture name')
-        self.checkbox4.setChecked(True)
-        self.optionsSubLayout1.addWidget(self.checkbox4)
+#        self.checkbox4 = QtWidgets.QCheckBox('Create layered shader networks for lyr in texture name')
+#        self.checkbox4.setChecked(True)
+#        self.optionsSubLayout1.addWidget(self.checkbox4)
 
         # Proceed
         self.grpProceed = QtWidgets.QGroupBox('Proceed')

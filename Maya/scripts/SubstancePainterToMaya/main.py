@@ -84,7 +84,7 @@ class rendererObject:
             from SubstancePainterToMaya import config_mtoa as config
             reload(config)
             self.name = 'Arnold'
-            print ('Arnold')
+#            print ('Arnold')
 
         elif self.ui.grpRadioRenderer.checkedId() == -3:
             from SubstancePainterToMaya import config_vray as config

@@ -14,7 +14,7 @@ class config:
             '---- Emission', 'emissionWeight', 'emissionColor',
             '---- Thin film', 'thickness', 'thinIoR',
             '---- Geometry', 'opacity', 'height', 'normal', 'anisotropyTangent',
-            '---- Matte', 'matteColor', 'matteOpacity', 'LayerShader Mix2',
+            '---- Matte', 'matteColor', 'matteOpacity',
             '---- Don\'t use'
         ]
 
@@ -31,7 +31,7 @@ class config:
             '---- Emission', 'emission', 'emissionColor',
             '---- Thin film', 'thinFilmThickness', 'thinFilmIOR',
             '---- Geometry', 'opacity', 'normalCamera', 'normalCamera', 'tangent',
-            '---- Matte', 'aiMatteColor', 'aiMatteColorA', 'mix2',
+            '---- Matte', 'aiMatteColor', 'aiMatteColorA',
             '---- Don\'t use'
         ]
 
@@ -60,10 +60,10 @@ class config:
                 ['Matte', 'matte', 'msk'],
                 54
             ],
-             'layer': [
-                ['Layer', 'layer', 'lyr'],
-                56
-            ],
+#             'layer': [
+#                ['Layer', 'layer', 'lyr'],
+#                56
+#            ],
             'opacity': [
                 ['Opacity', 'opacity', 'transparency', 'Transparency'],
                 49
@@ -78,8 +78,8 @@ class config:
             ]
         }
 
-        self.MAP_LIST_COLOR_ATTRIBUTES_INDICES = [1, 4, 7, 13, 20, 21, 28, 29, 34, 37, 40, 44, 49, 51, 52, 54, 56]
-        self.DONT_USE_IDS = [0, 11, 18, 26, 32, 38, 42, 45, 48, 53]
+        self.MAP_LIST_COLOR_ATTRIBUTES_INDICES = [1, 4, 7, 13, 20, 21, 28, 29, 34, 37, 40, 44, 49, 51, 52, 54]
+        self.DONT_USE_IDS = [0, 11, 18, 26, 32, 38, 42, 45, 48, 53, 56]
 #        self.MAP_LIST_COLOR_ATTRIBUTES_INDICES = [1, 4, 7, 13, 20, 21, 28, 29, 34, 37, 40, 44, 49, 51, 52, 54, 57]
 #        self.DONT_USE_IDS = [0, 11, 18, 26, 32, 38, 42, 45, 48, 53, 56]
         self.SHADER = 'aiStandardSurface'
