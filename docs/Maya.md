@@ -35,7 +35,7 @@ If your prefs directory is in a different location you can edit the file to poin
 
 ![img](img/maya_shelf.jpg)
 
-Shelf items shown above are oranized into three sections:
+Shelf items shown above are oranized into the following sections:
 
  ## Lights
    - *custom point light*<br>
@@ -44,7 +44,7 @@ Shelf items shown above are oranized into three sections:
    - *custom directional light*
    - *custom dome light (Arnold)*
  
- ## scripts
+ ## Scripts
    - *Material Transfer GUI*<br>
      Used to transfer shader assignments from a lookdev asset to its corresponding Alembic cache. [Watch a video](https://vimeo.com/252241167) showing the use of this GUI. 
    - *UV Transfer GUI*
