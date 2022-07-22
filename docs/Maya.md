@@ -48,7 +48,8 @@ Shelf items shown above are oranized into three sections:
    - *Material Transfer GUI*<br>
      Used to transfer shader assignments from a lookdev asset to its corresponding Alembic cache. [Watch a video](https://vimeo.com/252241167) showing the use of this GUI. 
    - *UV Transfer GUI*
-   - *Create Light Group AOVs* 
+   - *Create Light Group AOVs*<br>
+    converts the custom LPEs (provided in the .json file described above) to Light Groups.
    - *Remove Light Group AOVs* 
    - *Renderman MakeTX GUI*<br>
      GUI for MakeTx to convert textures to mipmap TX files with an OCIO config in Renderman. See the [doc page](https://docs.sharktacos.com/texture/mipmap.html) for usage.
