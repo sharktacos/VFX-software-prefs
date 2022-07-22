@@ -358,38 +358,6 @@ def checkCreateMaterial(ui, texture, renderer):
 
     return materialName, materialNotFound
 
-
-def createLayerNetwork(fileNode, materialName, materialType):
-
-
-    # Get shader group connection
-    SG = mc.listConnections (materialName + '.outColor', d=True, s=False)[0] or []
-    
-    # check if layer network already exists
-    if mc.objectType(SG) == 'shadingEngine':
-
-        # duplicate material with inputs
-        materialName_top = mc.duplicate(materialName, ic=True, name=materialName + '_top')[0] or []
-
-        # create layer shader and connect mix
-        layer_material = mc.shadingNode('aiLayerShader', asShader=True, name=materialName + '_lyr')
-        mc.setAttr( layer_material+'.enable2', 1)
-        mc.connectAttr(fileNode + '.outAlpha', layer_material + '.mix2', force=True)
-
-
-        # Connect the shading network
-        mc.connectAttr (materialName + '.outColor', layer_material + '.input1')
-        mc.connectAttr (materialName_top + '.outColor', layer_material + '.input2')
-
-        # Connect the lyr material to the original shading group
-        mc.connectAttr(layer_material + '.outColor', SG + '.surfaceShader', force=True)
-
-    else:
-        print('A layer shader network is already assigned for \"' + materialName + '\"')
-
-    return materialName
-
-
 def createMaterialAndShadingGroup(materialName, materialType):
     """
     Create a material and it's shading group

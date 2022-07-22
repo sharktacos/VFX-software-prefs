@@ -228,11 +228,11 @@ def proceed(ui, foundTextures, renderer, uiElements):
 
     # Layer shader option 
     useLyr = ui.checkbox4.isChecked()
-    materialType = renderer.renderParameters.SHADER
+    mixNode = renderer.renderParameters.MIX_NODE
     
     for texture in texturesToUse:
-       if useLyr and texture.materialAttribute == 'mix2':
-            helper.createLayerNetwork(fileNode, texture.textureSet, materialType)
+       if useLyr and texture.materialAttribute == mixNode:
+            render_helper.createLayerNetwork(texture, renderer, fileNode)
 
     print('\n FINISHED \n')
 

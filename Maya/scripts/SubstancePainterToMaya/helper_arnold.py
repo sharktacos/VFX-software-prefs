@@ -187,6 +187,44 @@ def createSpecMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
         # Connect the spec node tree to the material attribute
         mc.connectAttr(lumaNode + '.outValue', material + '.' + attributeName, force=forceTexture)
 
+def createLayerNetwork(texture, renderer, fileNode):
+    """
+    Convert standard shader into layer network.
+    :param material: The name of the material
+    :param materialType: The default shader type
+    :param materialTypleLyr: The default layer shader type
+    :param mixNode: The layer shader mix input
+    :return: None
+    """
+
+    materialName = texture.textureSet
+    materialType = renderer.renderParameters.SHADER
+    materialTypeLyr = renderer.renderParameters.SHADER_LYR
+    mixNode = renderer.renderParameters.MIX_NODE
+
+    # Get shader group connection
+    SG = mc.listConnections (materialName + '.outColor', d=True, s=False)[0] or []
+
+    # check if layer network already exists
+    if mc.objectType(SG) == 'shadingEngine':
+
+        # duplicate material with inputs
+        materialName_top = mc.duplicate(materialName, ic=True, name=materialName + '_top')[0] or []
+
+        # create layer shader and connect mix
+        layer_material = mc.shadingNode(materialTypeLyr, asShader=True, name=materialName + '_lyr')
+        mc.setAttr( layer_material+'.enable2', 1)
+        mc.connectAttr(fileNode + '.outAlpha', layer_material + '.' + mixNode, force=True)
+
+        # Connect the shading network
+        mc.connectAttr (materialName + '.outColor', layer_material + '.input1')
+        mc.connectAttr (materialName_top + '.outColor', layer_material + '.input2')
+
+        # Connect the lyr material to the original shading group
+        mc.connectAttr(layer_material + '.outColor', SG + '.surfaceShader', force=True)
+
+    else:
+        print('The shader \"' + materialName + '\" has already been assigned a layer shader network. Skipping.')
 
 
 def connect(ui, texture, renderer, fileNode):

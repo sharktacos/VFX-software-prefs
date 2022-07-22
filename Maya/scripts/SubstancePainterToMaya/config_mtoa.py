@@ -82,6 +82,7 @@ class config:
         self.DONT_USE_IDS = [0, 6, 11, 18, 26, 32, 38, 42, 45, 48, 53, 57]
         self.SHADER = 'aiStandardSurface'
         self.SHADER_LYR = 'aiLayerShader'
+        self.MIX_NODE = 'mix2'
         self.NORMAL_NODE = 'aiNormalMap'
         self.BUMP_NODE = 'aiBump2d'
         self.BLEND_NODE = 'blendColors'
