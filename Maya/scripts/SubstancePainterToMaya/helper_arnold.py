@@ -187,60 +187,17 @@ def createSpecMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
         # Connect the spec node tree to the material attribute
         mc.connectAttr(lumaNode + '.outValue', material + '.' + attributeName, force=forceTexture)
 
-def connectLyrMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
-    """
-    Connect the specRoughness map with the mix nodes
-    :param material: The name of the material
-    :param attributeName: The name of the material attribute to use
-    :param forceTexture: Specify if the texture connection is forced
-    :param imageNode: The file node to connect
-    :return: None
-    """
 
-    material = texture.textureSet + '_lyr'
-    print ('mat is ' + material)
-    attributeName = texture.materialAttribute
-    print ('attr is ' + attributeName)
-
-    # List all the connection in the material attribute
-    connectedNodes = mc.listConnections(material + '.' + attributeName)
-
-    # If there's connections
-    if connectedNodes:
-
-        for node in connectedNodes:
-
-            # Replace the connection with the lyr tex if the force texture is true
-            mc.connectAttr(fileNode + '.outAlpha', material + '.' + attributeName, force=forceTexture)
-            print ('connected file is ' + fileNode)
-            print ('connected attr is ' + attributeName)
-    # If there's not connections
-    else:
-
-        # Connect the lyr tex to the material attribute
-        mc.connectAttr(fileNode + '.outAlpha', material + '.' + attributeName, force=forceTexture)
-        print ('file is ' + fileNode)
-        print ('attr last is ' + attributeName)
 
 def connect(ui, texture, renderer, fileNode):
 
-#    colorCorrect = ui.checkbox4.isChecked()
     colorCorrect = False
     useBump = ui.checkbox1.isChecked()
     useDisplace = ui.checkbox2.isChecked()
-    
-    materialName = texture.textureSet
-
-    # Change file node parameters to Raw and add alphaIsLuminance
-#    if texture.materialAttribute is not 'baseColor':
-#        try:
-#            mc.setAttr(fileNode + '.colorSpace', 'Raw', type='string')
-#        except:
-#            pass
-#        mc.setAttr(fileNode + '.alphaIsLuminance', True)
+    attributeName = texture.materialAttribute
 
     # If height or normalMap
-    if texture.materialAttribute == 'normalCamera':
+    if attributeName == 'normalCamera':
 
         # If height
         if texture.output == 'outColorR':
@@ -255,13 +212,14 @@ def connect(ui, texture, renderer, fileNode):
 
         # If normalMap
         elif texture.output == 'outColor':
-
             createNormalMap(texture, renderer, fileNode, colorCorrect)
-            
-    # If spec roughness
-    elif texture.materialAttribute == 'specularRoughness':
+
+    # If spec roughness create a mask network
+    elif attributeName == 'specularRoughness':
         createSpecMap(texture, renderer, fileNode, colorCorrect)
 
     # If it's another type of map
     else:
-        helper.connectTexture(fileNode, texture.output, texture.textureSet, texture.materialAttribute, colorCorrect)
+        helper.connectTexture(fileNode, texture.output, texture.textureSet, attributeName, colorCorrect)
+
+

@@ -1,7 +1,7 @@
 PLUGIN_NAME = 'Substance to Maya'
 PLUGIN_VERSION = '0.2'
 TEXTURE_FOLDER = 'textures'
-INFOS = 'Original script Tristan Legranche \ngithub.com/Strangenoise/SubstancePainterToMaya/\n\nUpdated workflow for Python3 by Derek Flood \nsharktacos.github.io/VFX-software-prefs '
+INFOS = 'Original script by Tristan Legranche \ngithub.com/Strangenoise/SubstancePainterToMaya/\n\nUpdated workflow for Python3 by Derek Flood \nsharktacos.github.io/VFX-software-prefs '
 
 PAINTER_IMAGE_EXTENSIONS = [
     'bmp', 'ico', 'jpeg', 'jpg', 'jng', 'pbm', 'pbmraw', 'pgm', 'pgmraw', 'png', 'ppm', 'ppmraw', 'targa',

@@ -226,6 +226,24 @@ def proceed(ui, foundTextures, renderer, uiElements):
         if subdivisions == True:
             render_helper.addSubdivisions(ui, texture)
 
+    # Layer shader option 
+    useLyr = ui.checkbox4.isChecked()
+
+    for texture in texturesToUse:
+
+       if useLyr and texture.materialAttribute == 'mix2':
+
+            # duplicate material with inputs
+            materialName_top = mc.duplicate(texture.textureSet, ic=True, name=texture.textureSet + '_top')[0] or []
+
+            # create layer shader and connect mix
+            layer_material = mc.shadingNode('aiLayerShader', asShader=True, name=texture.textureSet + '_lyr')
+            mc.setAttr( layer_material+'.enable2', 1)
+            mc.connectAttr(fileNode + '.outAlpha', layer_material + '.mix2', force=True)
+
+            # connect layer network
+            helper.createLayerNetwork(texture.textureSet, materialName_top, layer_material)
+
     print('\n FINISHED \n')
 
 

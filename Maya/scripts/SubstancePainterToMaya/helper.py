@@ -152,9 +152,6 @@ def listTextures(ui, renderer, foundFiles, allTextureSets):
                             map.mapName = mapName
                             map.mapInList = renderer.renderParameters.MAP_LIST[map.indice]
 
-#                            if mapName == 'lyr':
-#                                print ('YES layer')
-
                             # Add map to foundTextures
                             foundTextures.append(map)
 
@@ -324,10 +321,6 @@ def checkCreateMaterial(ui, texture, renderer):
     materialType = renderer.renderParameters.SHADER
     materialTypeLyr = renderer.renderParameters.SHADER_LYR
 
-    # If layer shader option checked
-#    DoLayer = ui.checkbox4.isChecked()
-#    if DoLayer:
-
     # option: "Create new materials if they doesn't exist, else use existing ones"
     if ui.grpRadioMaterials.checkedId() == -2:
 
@@ -360,11 +353,26 @@ def checkCreateMaterial(ui, texture, renderer):
         if not mc.objExists(materialName) or not mc.objectType(materialName) == materialType:
             # Specify that the material was not found
             materialNotFound = True
-#    elif texture.materialAttribute == 'mix2':
 
     mc.select(materialName)
 
     return materialName, materialNotFound
+
+
+def createLayerNetwork(materialName, materialName_top, layerName):
+
+    # Get shader group connection
+    SG = mc.listConnections (materialName + '.outColor', d=True, s=False)[0] or []
+
+    # Connect the shading network
+    mc.connectAttr (materialName + '.outColor', layerName + '.input1')
+    mc.connectAttr (materialName_top + '.outColor', layerName + '.input2')
+
+    # Connect the lyr material to the original shading group
+    mc.connectAttr(layerName + '.outColor', SG + '.surfaceShader', force=True)
+
+    return materialName
+
 
 def createMaterialAndShadingGroup(materialName, materialType):
     """
@@ -384,32 +392,6 @@ def createMaterialAndShadingGroup(materialName, materialType):
 
     return materialName
 
-def createLayerMaterialAndShadingGroup(materialName, materialType, materialTypeLyr):
-    """
-    Create a layer material network and it's shading group
-    :param material: The material's name
-    :return: The layer material's name
-    """
-
-    # Create the materials
-    material_base = createMaterial_base(materialName, materialType)
-    material_top = createMaterial_top(materialName, materialType)
-    material_lyr = createMaterial_lyr(materialName, materialTypeLyr)
-    
-    # Create the shading group
-    shadingEngine_lyr = createLyrShadingGroup(material_lyr)
-    
-    # Connect the shading network
-    mc.connectAttr (material_base + '.outColor', material_lyr + '.input1')
-    mc.connectAttr (material_top + '.outColor', material_lyr + '.input2')
-#    mc.connectAttr (file_lyr + '.outAlpha', material_lyr + '.mix2')
-
-    # Connect the material to the shading group
-    mc.connectAttr(material_lyr + '.outColor', shadingEngine_lyr + '.surfaceShader')
-    print (material_lyr + ' is mat lyr ' + shadingEngine_lyr + ' is lyr SG')
-
-    return materialName
-
 def createMaterial(materialName, materialType):
 
     # Create the material
@@ -417,41 +399,12 @@ def createMaterial(materialName, materialType):
     mc.setAttr ( material+'.transmitAovs', 1)
     return material
 
-def createMaterial_lyr(materialName, materialTypeLyr):
-
-    # Create the material
-    material_lyr = mc.shadingNode(materialTypeLyr, asShader=True, name=materialName + '_lyr')
-    mc.setAttr ( material_lyr+'.enable2', 1)
-
-    return material_lyr
-
-def createMaterial_base(materialName, materialType):
-
-    # Create the material
-    material_base = mc.shadingNode(materialType, asShader=True, name=materialName + '_base')
-    mc.setAttr ( material_base+'.transmitAovs', 1)
-    return material_base
-
-def createMaterial_top(materialName, materialType):
-
-    # Create the material
-    material_top = mc.shadingNode(materialType, asShader=True, name=materialName + '_top')
-    mc.setAttr ( material_top+'.transmitAovs', 1)
-    return material_top
-
 def createShadingGroup( materialName):
 
     shadingEngineName = materialName.replace('_shd', '_SG')
     shadingEngine = mc.sets(renderable=True, noSurfaceShader=True, empty=True, name=shadingEngineName)
 
     return shadingEngine
-
-def createLyrShadingGroup( materialName):
-
-    shadingEngineName = materialName.replace('_lyr', '_lyrSG')
-    shadingEngine_lyr = mc.sets(renderable=True, noSurfaceShader=True, empty=True, name=shadingEngineName)
-
-    return shadingEngine_lyr
 
 def getTexturesToUse(renderer, foundTextures, uiElements):
 
@@ -468,10 +421,13 @@ def getTexturesToUse(renderer, foundTextures, uiElements):
                 foundTexture.indice = uiElement[1].currentIndex()
 
         if foundTexture.indice in renderer.renderParameters.DONT_USE_IDS:
+
             continue
 
         else:
+
             if foundTexture.indice in renderer.renderParameters.MAP_LIST_COLOR_ATTRIBUTES_INDICES:
+
                 foundTexture.output = 'outColor'
             else:
                 foundTexture.output = 'outColorR'
@@ -479,7 +435,6 @@ def getTexturesToUse(renderer, foundTextures, uiElements):
             texturesToUse.append(foundTexture)
 
     return texturesToUse
-
 
 def connectTexture(textureNode, textureOutput, targetNode, targetInput, colorCorrect=False, forceTexture=True):
     """
@@ -505,10 +460,10 @@ def connectTexture(textureNode, textureOutput, targetNode, targetInput, colorCor
         # Connect the color correct to the material
         mc.connectAttr(colorCorrect + '.' + textureOutput, targetNode + '.' + targetInput, force=forceTexture)
 
-    # Connect the file node output to to right material input
-        
-    else:
+    # Connect the file node output to material input
+    elif targetInput != 'mix2':
         mc.connectAttr(textureNode + '.' + textureOutput, targetNode + '.' + targetInput, force=forceTexture)
+
 
 def createDisplacementMap(texture, fileNode, colorCorrect=False, forceTexture=True):
     """

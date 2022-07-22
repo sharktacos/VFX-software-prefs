@@ -17,7 +17,7 @@ class PainterToMayaUI:
         self.PLUGIN_NAME = self.PLUGIN_VERSION = self.TEXTURE_FOLDER = ''
         self.PLUGIN_NAME = cfg.PLUGIN_NAME
         self.PLUGIN_VERSION = cfg.PLUGIN_VERSION
-        self.TEXTURE_FOLDER = cfg.TEXTURE_FOLDER
+        self.TEXTURE_FOLDER = mc.workspace(fre='sourceImages')
         self.INFOS = cfg.INFOS
         self.PAINTER_IMAGE_EXTENSIONS = cfg.PAINTER_IMAGE_EXTENSIONS
         self.DELIMITERS = cfg.DELIMITERS
@@ -99,30 +99,30 @@ class PainterToMayaUI:
         self.namingConventionSubLayout1.insertLayout(2, self.namingConventionSubLayoutValue, stretch=0)
 
         # Add Naming Convention widgets
-        self.textureSetLabel = QtWidgets.QLabel('textureSet')
+        self.textureSetLabel = QtWidgets.QLabel('textureSet / shader name')
         self.namingConventionSubLayoutLabel.addWidget(self.textureSetLabel)
 
-        self.textureSet = QtWidgets.QLineEdit('ShaderName')
+        self.textureSet = QtWidgets.QLineEdit('shaderName')
         self.textureSet.setToolTip(
-            'The part of one of your texture\'s name which define the material\'s name to use'
+            'The part of the texture name defining the material\'s name (textureSet)'
         )
         self.namingConventionSubLayoutValue.addWidget(self.textureSet)
 
-        self.mapLabel = QtWidgets.QLabel('map')
+        self.mapLabel = QtWidgets.QLabel('texture map type')
         self.namingConventionSubLayoutLabel.addWidget(self.mapLabel)
         self.mapLabel.resize(200,200)
 
-        self.map = QtWidgets.QLineEdit('BaseColor')
+        self.map = QtWidgets.QLineEdit('dif')
         self.map.setToolTip(
-            'The part of one of your texture\'s name which define the map type or attribute to use'
+            'The part of the texture name defining the map type.'
         )
         self.namingConventionSubLayoutValue.addWidget(self.map)
 
         self.grpRadioTextureSets = QtWidgets.QButtonGroup()
-        self.textureSetRadio1 = QtWidgets.QRadioButton('Use all found textures set')
+        self.textureSetRadio1 = QtWidgets.QRadioButton('Use all found texture sets')
         self.textureSetRadio1.setChecked(True)
         self.grpRadioTextureSets.addButton(self.textureSetRadio1)
-        self.textureSetRadio2 = QtWidgets.QRadioButton('Use only specified textureSet')
+        self.textureSetRadio2 = QtWidgets.QRadioButton('Use only specified texture set')
         self.grpRadioTextureSets.addButton(self.textureSetRadio2)
 
         self.namingConventionLayout.addWidget(self.textureSetRadio1)
@@ -172,14 +172,14 @@ class PainterToMayaUI:
         self.grpRadioMaterials = QtWidgets.QButtonGroup()
 
         self.materialsRadio1 = QtWidgets.QRadioButton(
-            'Use existing ones, if they don\'t exist, create new ones')
+            'Use existing materials, if they don\'t exist, create new ones')
         self.grpRadioMaterials.addButton(self.materialsRadio1)
         self.materialsRadio1.setChecked(True)
 
-        self.materialsRadio2 = QtWidgets.QRadioButton('Create new ones')
+        self.materialsRadio2 = QtWidgets.QRadioButton('Create new materials')
         self.grpRadioMaterials.addButton(self.materialsRadio2)
 
-        self.materialsRadio3 = QtWidgets.QRadioButton('Use existing ones')
+        self.materialsRadio3 = QtWidgets.QRadioButton('Use existing materials')
         self.grpRadioMaterials.addButton(self.materialsRadio3)
 
         self.materialsLayout.addWidget(self.materialsRadio1)
@@ -232,7 +232,7 @@ class PainterToMayaUI:
         self.checkbox1.setChecked(True)
         self.optionsSubLayout1.addWidget(self.checkbox1)
 
-        self.checkbox2 = QtWidgets.QCheckBox('Use height as displace')
+        self.checkbox2 = QtWidgets.QCheckBox('Use height as displacement')
         self.optionsSubLayout1.addWidget(self.checkbox2)
 
         self.checkbox3 = QtWidgets.QCheckBox('Force texture replacement')
@@ -241,9 +241,9 @@ class PainterToMayaUI:
         self.checkbox3.setVisible(False)
         self.optionsSubLayout1.addWidget(self.checkbox3)
 
-#        self.checkbox4 = QtWidgets.QCheckBox('Create layered shader networks for lyr in texture name')
-#        self.checkbox4.setChecked(True)
-#        self.optionsSubLayout1.addWidget(self.checkbox4)
+        self.checkbox4 = QtWidgets.QCheckBox('Create layered shader networks (If \"lyr\"" texture map found)')
+        self.checkbox4.setChecked(True)
+        self.optionsSubLayout1.addWidget(self.checkbox4)
 
         # Proceed
         self.grpProceed = QtWidgets.QGroupBox('Proceed')
