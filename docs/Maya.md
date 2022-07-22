@@ -36,12 +36,14 @@ If your prefs directory is in a different location you can edit the file to poin
 ![img](img/maya_shelf.jpg)
 
 Shelf items shown above are oranized into three sections:
+
  ## Lights
    - *custom point light*<br>
      This creates a point light with a templated sphere showing the size (radius) of the light.
    - *custom area light (Arnold)*
    - *custom directional light*
    - *custom dome light (Arnold)*
+ 
  ## scripts
    - *Material Transfer GUI*<br>
      Used to transfer shader assignments from a lookdev asset to its corresponding Alembic cache. [Watch a video](https://vimeo.com/252241167) showing the use of this GUI. 
@@ -50,6 +52,8 @@ Shelf items shown above are oranized into three sections:
    - *Remove Light Group AOVs* 
    - *Renderman MakeTX GUI*<br>
      GUI for MakeTx to convert textures to mipmap TX files with an OCIO config in Renderman. See the [doc page](https://docs.sharktacos.com/texture/mipmap.html) for usage.
+    - *Substance to Maya*<br>
+      Automatic creation of shader networks and textures from Substance 3D Painter. See the [dedicated page](substancePaintertoMaya.) for details.
 
 ## Arnold
    - *Arnold Render View*
