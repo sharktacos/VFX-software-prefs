@@ -54,7 +54,7 @@ Shelf items shown above are oranized into the following sections:
    - *Renderman MakeTX GUI*<br>
      GUI for MakeTx to convert textures to mipmap TX files with an OCIO config in Renderman. See the [doc page](https://docs.sharktacos.com/texture/mipmap.html) for usage.
     - *Substance to Maya*<br>
-      Automatic creation of shader networks and textures from Substance 3D Painter. See the [dedicated page](substancePaintertoMaya.) for details.
+      Automatic creation of shader networks and textures from Substance 3D Painter. See the [dedicated page](substancePaintertoMaya.md) for details.
 
 ## Arnold
    - *Arnold Render View*
