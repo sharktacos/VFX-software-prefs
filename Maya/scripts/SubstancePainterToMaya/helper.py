@@ -359,17 +359,33 @@ def checkCreateMaterial(ui, texture, renderer):
     return materialName, materialNotFound
 
 
-def createLayerNetwork(materialName, materialName_top, layerName):
+def createLayerNetwork(fileNode, materialName, materialType):
+
 
     # Get shader group connection
     SG = mc.listConnections (materialName + '.outColor', d=True, s=False)[0] or []
+    
+    # check if layer network already exists
+    if mc.objectType(SG) == 'shadingEngine':
 
-    # Connect the shading network
-    mc.connectAttr (materialName + '.outColor', layerName + '.input1')
-    mc.connectAttr (materialName_top + '.outColor', layerName + '.input2')
+        # duplicate material with inputs
+        materialName_top = mc.duplicate(materialName, ic=True, name=materialName + '_top')[0] or []
 
-    # Connect the lyr material to the original shading group
-    mc.connectAttr(layerName + '.outColor', SG + '.surfaceShader', force=True)
+        # create layer shader and connect mix
+        layer_material = mc.shadingNode('aiLayerShader', asShader=True, name=materialName + '_lyr')
+        mc.setAttr( layer_material+'.enable2', 1)
+        mc.connectAttr(fileNode + '.outAlpha', layer_material + '.mix2', force=True)
+
+
+        # Connect the shading network
+        mc.connectAttr (materialName + '.outColor', layer_material + '.input1')
+        mc.connectAttr (materialName_top + '.outColor', layer_material + '.input2')
+
+        # Connect the lyr material to the original shading group
+        mc.connectAttr(layer_material + '.outColor', SG + '.surfaceShader', force=True)
+
+    else:
+        print('A layer shader network is already assigned for \"' + materialName + '\"')
 
     return materialName
 
@@ -460,7 +476,7 @@ def connectTexture(textureNode, textureOutput, targetNode, targetInput, colorCor
         # Connect the color correct to the material
         mc.connectAttr(colorCorrect + '.' + textureOutput, targetNode + '.' + targetInput, force=forceTexture)
 
-    # Connect the file node output to material input
+    # Connect the file node output to material input, except fot mix2
     elif targetInput != 'mix2':
         mc.connectAttr(textureNode + '.' + textureOutput, targetNode + '.' + targetInput, force=forceTexture)
 

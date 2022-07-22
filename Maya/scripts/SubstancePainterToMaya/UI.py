@@ -81,11 +81,11 @@ class PainterToMayaUI:
         self.grpNamingConvention.setLayout(self.namingConventionLayout)
 
         self.nomenclatureInfo = QtWidgets.QLabel(
-            'Enter the textureSet and the map name of one of your textures'
+            'Enter the textureSet/shader name and the map name of one of your textures'
             '\n\nSee the documentation for more information\n'
         )
         self.nomenclatureInfo.setToolTip(
-            'The script use the defined textureSet and map\'s names to understand your naming convention. \nI.e: myProject_character_left_arm_metalness.png will have character_left_arm as textureSet and metalness as map\nThen the script will find all your textureSets and maps, looking for the different parts of your files names'
+            'The script uses the defined textureSet and map\'s names to understand your naming convention. \nI.e: myProject_character_left_arm_metalness.png will have character_left_arm as textureSet and metalness as map\nThen the script will find all your textureSets and maps, looking for the different parts of your files names'
         )
         self.namingConventionLayout.addWidget(self.nomenclatureInfo)
 
@@ -104,17 +104,17 @@ class PainterToMayaUI:
 
         self.textureSet = QtWidgets.QLineEdit('shaderName')
         self.textureSet.setToolTip(
-            'The part of the texture name defining the material\'s name (textureSet)'
+            'Example of the part of the texture file name containing the material\'s name (textureSet)'
         )
         self.namingConventionSubLayoutValue.addWidget(self.textureSet)
 
-        self.mapLabel = QtWidgets.QLabel('texture map type')
+        self.mapLabel = QtWidgets.QLabel('Example map type\n(eg: dif, bmp, spc, met, lyr)')
         self.namingConventionSubLayoutLabel.addWidget(self.mapLabel)
         self.mapLabel.resize(200,200)
 
         self.map = QtWidgets.QLineEdit('dif')
         self.map.setToolTip(
-            'The part of the texture name defining the map type.'
+            'Example of the part of the texture file name defining the map type.'
         )
         self.namingConventionSubLayoutValue.addWidget(self.map)
 
@@ -241,7 +241,7 @@ class PainterToMayaUI:
         self.checkbox3.setVisible(False)
         self.optionsSubLayout1.addWidget(self.checkbox3)
 
-        self.checkbox4 = QtWidgets.QCheckBox('Create layered shader networks (If \"lyr\"" texture map found)')
+        self.checkbox4 = QtWidgets.QCheckBox('Create layered shader networks\n(When \"lyr\"" texture map found)')
         self.checkbox4.setChecked(True)
         self.optionsSubLayout1.addWidget(self.checkbox4)
 
@@ -300,7 +300,7 @@ class PainterToMayaUI:
 
     def getTextureFolder(self):
         """
-        Get the base texture path in the interface, the file dialog start in the base texture path of the project
+        Get the base texture path in the interface, the file dialog starts in the base texture path of the project
         :return: The texture directory
         """
 
