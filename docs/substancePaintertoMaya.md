@@ -22,7 +22,7 @@ Note that this workflow is also included in the roughness section of my "UberSha
  
 If a layer map is found (naming: 'Layer', 'layer', 'lyr') the aiStandardSurface shader is duplicated with all of its input connections, and these two shaders are then connected to a layerShader. Finally the layer texture map is input into the layer mix. 
  
- **Layer Shader network**
+![img](img/sp2m_layer.jpg)
    
 
 
