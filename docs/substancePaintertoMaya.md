@@ -15,7 +15,7 @@ In the second field put one of the textureSets (i.e. the shader name) included i
 
 In the third field put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). 
 
-Click  the "Launch" button and the script will search your textures for matches.
+Click  the "Launch" button and the script will search your textures for matches. This will open the second panel, shown below, where all the texure matches are shown. 
 
 ![img](img/sp2m_gui2.jpg)
 
