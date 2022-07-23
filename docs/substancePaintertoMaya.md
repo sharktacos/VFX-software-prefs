@@ -1,6 +1,25 @@
 # Substance 3D Painter to Maya (Arnold)
 
-Tool to automatically connect Substance 3D Painter textures to Maya shaders. Based on [the original script by Tristan Le Granche](https://github.com/Strangenoise/SubstancePainterToMaya). This version has been updated for Python 3 (required for Maya 2022 and up). Additionally the following modifications have been made:
+Tool to automatically connect Substance 3D Painter textures to Maya shaders. Based on [the original script by Tristan Le Granche](https://github.com/Strangenoise/SubstancePainterToMaya). This version has been updated for Python 3 (required for Maya 2022 and up). 
+
+## Usage
+
+Click the shelf button to launch the GUI. 
+
+![img](img/sp2m_gui1.jpg)
+
+The first field will default to the texture directory defined in your Maya project settings. If your textures are in a sub folder, you can navigate there. 
+
+In the second field put one of the textureSets (i.e. the shader name) included in your texture's file name. When Substance exports textures it includes the name of the shader you assigned in Maya, calling this a "textureSet" in Substance Painter. The script will match up the shader name in your Maya file to this part of the filename on your texture. 
+
+In the third field put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). 
+
+Click  the "Launch" button and the script will search your textures for matches.
+
+![img](img/sp2m_gui2.jpg)
+
+Select the desired options, and click the "Proceed" button. If you have the (default) option "use all found texture sets" the script will assign the texture maps to all the shaders it finds. If you only want to assign textures to one shader use the "use only specified texture set" option.
+
 
 ## Limitations
  - Only the Arnold renderer is supported. I have not had a chance to test this out in Renderman or Vray. Maybe some day.
