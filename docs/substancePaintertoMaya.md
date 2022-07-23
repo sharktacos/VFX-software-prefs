@@ -6,7 +6,8 @@ Tool to automatically connect Substance 3D Painter textures to Maya shaders. Bas
 
 Click the shelf button to launch the GUI. 
 
-![img](img/sp2m_gui1.jpg)
+<img src="img/sp2m_gui1.jpg" width="50%">
+
 
 The first field will default to the texture directory defined in your Maya project settings. If your textures are in a sub folder, you can navigate there. 
 
