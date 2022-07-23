@@ -145,48 +145,6 @@ def createBumpMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
         mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName,
                        force=forceTexture)
 
-def createSpecMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
-    """
-    Connect the specRoughness map with the mix nodes
-    :param material: The name of the material
-    :param attributeName: The name of the material attribute to use
-    :param forceTexture: Specify if the texture connection is forced
-    :param imageNode: The file node to connect
-    :return: None
-    """
-
-    lumaNode = renderer.renderParameters.LUMA_NODE
-    blendNode = renderer.renderParameters.BLEND_NODE
-    material = texture.textureSet
-    attributeName = texture.materialAttribute
-
-    # Create the blendColor and luminance nodes and set attributes
-    lumaNode = mc.shadingNode(lumaNode, asUtility=True)
-    blendNode = mc.shadingNode(blendNode, asUtility=True)
-    mc.setAttr (blendNode + ".color1", 0.2, 0.2, 0.2, type='double3')
-    mc.setAttr (blendNode + ".color2", 0.5, 0.5, 0.5, type='double3')
-
-    # Connect the file to blend, and blend to luma 
-    helper.connectTexture(fileNode, 'outColorR', blendNode, 'blender', colorCorrect)
-    helper.connectTexture(blendNode, 'output', lumaNode, 'value', colorCorrect)
-
-    # List all the connection in the material attribute
-    connectedNodes = mc.listConnections(material + '.' + attributeName)
-
-    # If there's connections
-    if connectedNodes:
-
-        for node in connectedNodes:
-
-            # Replace the connection by the spec node tree if the force texture is true
-            mc.connectAttr(lumaNode + '.outValue', material + '.' + attributeName, force=forceTexture)
-
-    # If there's not connections
-    else:
-
-        # Connect the spec node tree to the material attribute
-        mc.connectAttr(lumaNode + '.outValue', material + '.' + attributeName, force=forceTexture)
-
 def createLayerNetwork(texture, renderer, fileNode):
     """
     Convert standard shader into layer network.
@@ -201,6 +159,8 @@ def createLayerNetwork(texture, renderer, fileNode):
     materialType = renderer.renderParameters.SHADER
     materialTypeLyr = renderer.renderParameters.SHADER_LYR
     mixNode = renderer.renderParameters.MIX_NODE
+    # This feels sloppy...
+    fileNode = materialName + '_' + texture.mapName + '_file'
 
     # Get shader group connection
     SG = mc.listConnections (materialName + '.outColor', d=True, s=False)[0] or []
@@ -254,7 +214,7 @@ def connect(ui, texture, renderer, fileNode):
 
     # If spec roughness create a mask network
     elif attributeName == 'specularRoughness':
-        createSpecMap(texture, renderer, fileNode, colorCorrect)
+        helper.createSpecMap(texture, fileNode, colorCorrect)
 
     # If it's another type of map
     else:

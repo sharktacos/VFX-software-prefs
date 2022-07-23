@@ -475,3 +475,43 @@ def createDisplacementMap(texture, fileNode, colorCorrect=False, forceTexture=Tr
             # Connect the displacement node to all the found shading engines
             mc.connectAttr(displaceNode + '.displacement',
                            shadingGroup + '.displacementShader', force=forceTexture)
+
+def createSpecMap(texture, fileNode, colorCorrect=False, forceTexture=True):
+    """
+    Connect the specRoughness map with the mix nodes
+    :param material: The name of the material
+    :param attributeName: The name of the material attribute to use
+    :param forceTexture: Specify if the texture connection is forced
+    :param imageNode: The file node to connect
+    :return: None
+    """
+
+    blendNode = 'blendColors'
+    material = texture.textureSet
+    attributeName = texture.materialAttribute
+
+    # Create the blendColor and luminance nodes and set attributes
+    blendNode = mc.shadingNode(blendNode, asUtility=True, name='blendRoughness')
+    mc.setAttr (blendNode + ".color1", 0.2, 0.2, 0.2, type='double3')
+    mc.setAttr (blendNode + ".color2", 0.5, 0.5, 0.5, type='double3')
+
+    # Connect the file to blend, and blend to luma 
+    connectTexture(fileNode, 'outColorR', blendNode, 'blender', colorCorrect)
+
+    # List all the connection in the material attribute
+    connectedNodes = mc.listConnections(material + '.' + attributeName)
+
+    # If there's connections
+    if connectedNodes:
+
+        for node in connectedNodes:
+
+            # Replace the connection by the spec node tree if the force texture is true
+            mc.connectAttr(blendNode + '.outputR', material + '.' + attributeName, force=forceTexture)
+
+    # If there's not connections
+    else:
+
+        # Connect the spec node tree to the material attribute
+        mc.connectAttr(blendNode + '.outputR', material + '.' + attributeName, force=forceTexture)
+

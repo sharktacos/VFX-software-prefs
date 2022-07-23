@@ -80,10 +80,9 @@ class config:
 
         self.MAP_LIST_COLOR_ATTRIBUTES_INDICES = [1, 4, 7, 13, 20, 21, 28, 29, 34, 37, 40, 44, 49, 51, 52, 54]
         self.DONT_USE_IDS = [0, 6, 11, 18, 26, 32, 38, 42, 45, 48, 53, 57]
+        self.MAP_LAYER_ID = [56]
         self.SHADER = 'aiStandardSurface'
         self.SHADER_LYR = 'aiLayerShader'
         self.MIX_NODE = 'mix2'
         self.NORMAL_NODE = 'aiNormalMap'
         self.BUMP_NODE = 'aiBump2d'
-        self.BLEND_NODE = 'blendColors'
-        self.LUMA_NODE = 'luminance'
