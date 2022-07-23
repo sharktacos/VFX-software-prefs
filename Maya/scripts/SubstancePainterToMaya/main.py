@@ -205,11 +205,17 @@ def proceed(ui, foundTextures, renderer, uiElements):
     # Get the textures to use
     texturesToUse = helper.getTexturesToUse(renderer, foundTextures, uiElements)
 
-    # Connect textures
+    # Connect main textures
     for texture in texturesToUse:
 
-        # Create file node and 2dPlacer
-        fileNode = helper.createFileNode(texture, UDIMs)
+        texture.materialAttribute = renderer.renderParameters.MAP_LIST_REAL_ATTRIBUTES[texture.indice]
+
+        # Defer creation of layer texture maps
+        mixNode = renderer.renderParameters.MIX_NODE
+        if texture.materialAttribute != mixNode:
+
+            # Create file node and 2dPlacer
+            fileNode = helper.createFileNode(texture, UDIMs)
 
         # Create material
         material, materialNotFound = helper.checkCreateMaterial(ui, texture, renderer)
@@ -218,21 +224,23 @@ def proceed(ui, foundTextures, renderer, uiElements):
             continue
 
         texture.textureSet = material
-        texture.materialAttribute = renderer.renderParameters.MAP_LIST_REAL_ATTRIBUTES[texture.indice]
-
         render_helper.connect(ui, texture, renderer, fileNode)
 
         # Add subdivisions
         if subdivisions == True:
             render_helper.addSubdivisions(ui, texture)
 
-    # Layer shader option 
+    # Connect optional layer network
     useLyr = ui.checkbox4.isChecked()
-    mixNode = renderer.renderParameters.MIX_NODE
 
     for texture in texturesToUse:
         if useLyr and texture.materialAttribute == mixNode:
+            
+            # create the layer file node
+            fileNode = helper.createFileNode(texture, UDIMs)
+            # assemble the layer network
             render_helper.createLayerNetwork(texture, renderer, fileNode)
+
 
     print('\n FINISHED \n')
 

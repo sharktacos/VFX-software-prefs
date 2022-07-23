@@ -319,7 +319,6 @@ def checkCreateMaterial(ui, texture, renderer):
     materialNotFound = False
     materialName = texture.textureSet
     materialType = renderer.renderParameters.SHADER
-    materialTypeLyr = renderer.renderParameters.SHADER_LYR
 
     # option: "Create new materials if they doesn't exist, else use existing ones"
     if ui.grpRadioMaterials.checkedId() == -2:

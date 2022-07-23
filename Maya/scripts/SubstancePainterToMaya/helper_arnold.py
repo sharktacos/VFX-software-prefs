@@ -149,18 +149,14 @@ def createLayerNetwork(texture, renderer, fileNode):
     """
     Convert standard shader into layer network.
     :param material: The name of the material
-    :param materialType: The default shader type
     :param materialTypleLyr: The default layer shader type
     :param mixNode: The layer shader mix input
     :return: None
     """
 
     materialName = texture.textureSet
-    materialType = renderer.renderParameters.SHADER
     materialTypeLyr = renderer.renderParameters.SHADER_LYR
     mixNode = renderer.renderParameters.MIX_NODE
-    # This feels sloppy...
-    fileNode = materialName + '_' + texture.mapName + '_file'
 
     # Get shader group connection
     SG = mc.listConnections (materialName + '.outColor', d=True, s=False)[0] or []
