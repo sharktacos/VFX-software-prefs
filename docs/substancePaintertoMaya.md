@@ -38,6 +38,20 @@ Note that this workflow is also included in the roughness section of my "UberSha
 
 <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/326948120?h=da9e609785&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Substance Painter: A better way to export roughness maps for artistic control"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script><br>
 
+### Color maps multiple inputs, and default shader settings
+
+The color map is connected to both the base color and the subsurface color. This allows you to paint one color map in Substance Painter, and saves on disc space as well. Since the subsurface weight on the AiStandardSurface is set to zero by default, if you wish to use sss you just need to turn the subsurface weight on (and the base color weight off).
+
+![img](img/sp2m_sss.jpg)
+
+Additionally the following attributes are set on all the aiStandardSurface shaders, providing an optimal starting place:
+
+- specular weight: 0.5
+- transmit AOVs: on
+- subsurface radius: 0.15, 0.008, 0.008 (blood red)
+- subsurface scale: 0.1
+- subsurface anisotropy: 0.8
+
 
 ### Layer Shader network
  
