@@ -24,6 +24,7 @@ There are two parts of this file we need to identify.
  The 3 letter code of the texture map type:
 
 | map | name
+|----|----
 | diffuse/base color | dif
 | specular roughness | spc, ruf
 | bump | bmp
