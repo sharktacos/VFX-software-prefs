@@ -4,16 +4,22 @@ Tool to automatically connect Substance 3D Painter textures to Maya shaders. Bas
 
 ## Usage
 
+The script works by parsing the texture maps in a folder based on a defined naming convention and assigning these to their corresponding shaders. While written for Substance Painter, it would work equally well with textures from Mari. Below is an overview of the naming convention used. 
+
+| program | variable | explanation | example |
+| Substance | $textureSet | shader name | hubcap
+| Mari | $entity | 
+
 Click the shelf button to launch the GUI. 
 
 <img src="img/sp2m_gui1.jpg" width="50%">
 
 
-The first field will default to the texture directory defined in your Maya project settings. If your textures are in a sub folder, you can navigate there. 
+**The first field** will default to the texture directory defined in your Maya project settings. If your textures are in a sub folder, you can navigate there. 
 
-In the second field put one of the textureSets (i.e. the shader name) included in your texture's file name. When Substance exports textures it includes the name of the shader you assigned in Maya, calling this a "textureSet" in Substance Painter. The script will match up the shader name in your Maya file to this part of the filename on your texture. 
+In **the second field** put one of the textureSets (i.e. the shader name) included in your texture's file name. When Substance exports textures it includes the name of the shader you assigned in Maya, calling this a "textureSet" in Substance Painter. The script will match up the shader name in your Maya file to this part of the filename on your texture. 
 
-In the third field put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). 
+In **the third field** put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). 
 
 Click  the "Launch" button and the script will search your textures for matches. This will open the second panel, shown below, where all the texure matches are shown. 
 
