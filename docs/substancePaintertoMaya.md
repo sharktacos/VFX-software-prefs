@@ -8,6 +8,7 @@ The script works by parsing the texture maps in a folder based on a defined nami
 For example if we have the following naming for a texture map:
 
 [assetName]_[shaderName]_[map]_[version]_[artist].[extension]
+
 Example: car_hubcap_bmp_v01_lelgin.exr
 
 There are two parts of this file we need to identify.
