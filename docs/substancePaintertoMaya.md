@@ -6,9 +6,10 @@ Tool to automatically connect Substance 3D Painter textures to Maya shaders. Bas
 
 The script works by parsing the texture maps in a folder based on a defined naming convention and assigning these to their corresponding shaders. While written for Substance Painter, it would work equally well with textures from Mari. Below is an overview of the naming convention used. 
 
-| program | variable | explanation | example |
-| Substance | $textureSet | shader name | hubcap
-| Mari | $entity | 
+| variable | explanation | example 
+| $textureSet | shader name | hubcap
+| none | map type | dif, bmp, spc, met, lyr, 
+
 
 Click the shelf button to launch the GUI. 
 
