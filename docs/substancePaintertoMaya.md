@@ -15,7 +15,20 @@ There are two parts of this file we need to identify.
 
 **ShaderName** This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet". That is, the names of the shaders assigned in Maya and exported as an FBX become the "texture sets" when the FBX is imported into Substance Painter. 
 
-**map type**
+**map type** map: the 3 letter code of the texture map type:
+
+| map | name
+| diffuse/base color | dif
+| specular roughness | spc, ruf
+| bump | bmp
+| normal | nor
+| displacement | dsp 
+| layer mix | lyr 
+
+
+msk=mask
+trs=transparency
+
 
 
  While written for Substance Painter, it would work equally well with textures from Mari. Below is an overview of the naming convention used. 
