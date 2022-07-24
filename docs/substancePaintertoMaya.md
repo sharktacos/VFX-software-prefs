@@ -26,6 +26,7 @@ There are two parts of this file we need to identify.
 | map | name
 |----|----
 | diffuse/base color | dif
+| metalness | met
 | specular roughness | spc, ruf
 | bump | bmp
 | normal | nor
@@ -33,7 +34,6 @@ There are two parts of this file we need to identify.
 | layer mix | lyr 
 
 
-msk=mask
 trs=transparency
 
 ## GUI
