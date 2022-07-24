@@ -33,9 +33,6 @@ There are two parts of this file we need to identify.
 | displacement | dsp 
 | layer mix | lyr 
 
-
-trs=transparency
-
 ## GUI
 
 Click the shelf button to launch the GUI. 
