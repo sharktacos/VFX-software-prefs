@@ -4,7 +4,20 @@ Tool to automatically connect Substance 3D Painter textures to Maya shaders. Bas
 
 ## Usage
 
-The script works by parsing the texture maps in a folder based on a defined naming convention and assigning these to their corresponding shaders. While written for Substance Painter, it would work equally well with textures from Mari. Below is an overview of the naming convention used. 
+The script works by parsing the texture maps in a folder based on a defined naming convention and assigning these to their corresponding shaders.
+For example if we have the following naming for a texture map:
+
+[assetName]_[shaderName]_[map]_[version]_[artist].[extension]
+Example: car_hubcap_bmp_v01_lelgin.exr
+
+There are two parts of this file we need to identify.
+
+**ShaderName** This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet". That is, the names of the shaders assigned in Maya and exported as an FBX become the "texture sets" when the FBX is imported into Substance Painter. 
+
+**map type**
+
+
+ While written for Substance Painter, it would work equally well with textures from Mari. Below is an overview of the naming convention used. 
 
 | variable | explanation | example 
 | $textureSet | shader name | hubcap
