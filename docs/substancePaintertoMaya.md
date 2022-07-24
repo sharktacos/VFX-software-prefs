@@ -13,9 +13,9 @@ Example: car_hubcap_bmp_v01_lelgin.exr
 
 There are two parts of this file we need to identify.
 
-**ShaderName (define in second field below)** This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet". That is, the names of the shaders assigned in Maya and exported as an FBX become the "texture sets" when the FBX is imported into Substance Painter. 
+**ShaderName (defined in second field of GUI)** This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet". That is, the names of the shaders assigned in Maya and exported as an FBX become the "texture sets" when the FBX is imported into Substance Painter. 
 
-**map type (defined in third field below) ** map: the 3 letter code of the texture map type:
+**map type (defined in third field of GUI) ** map: the 3 letter code of the texture map type:
 
 | map | name
 | diffuse/base color | dif
@@ -28,6 +28,8 @@ There are two parts of this file we need to identify.
 
 msk=mask
 trs=transparency
+
+## GUI
 
 Click the shelf button to launch the GUI. 
 
