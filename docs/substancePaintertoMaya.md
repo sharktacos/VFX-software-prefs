@@ -50,10 +50,12 @@ Click the shelf button to launch the GUI.
 
 *The first field* will default to the texture directory defined in your Maya project settings. If your textures are in a sub folder, you can navigate there. 
 
-**texture set**
+**texture set/shader name**
+
 In *the second field* put one of the textureSets (i.e. the shader name) included in your texture's file name. When Substance exports textures it includes the name of the shader you assigned in Maya. The script will match up the shader name in your Maya file to this part of the filename on your texture. 
 
 **map type**
+
 In *the third field* put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). 
 
 Click  the "Launch" button and the script will search your textures for matches. This will open the second panel, shown below, where all the texure matches are shown. 
