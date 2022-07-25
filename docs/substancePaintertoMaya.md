@@ -38,6 +38,7 @@ As long as the names follow this naming convention they can be exported from any
 normal | nor 
 | displacement | dsp 
 
+
 Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because they are not modeling programs. 
 
 ## GUI
