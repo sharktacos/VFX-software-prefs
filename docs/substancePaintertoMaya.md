@@ -7,7 +7,7 @@ Tool to automatically connect Substance 3D Painter textures to Maya shaders. Bas
 The script works by parsing the texture maps in a folder based on a defined naming convention, and then assigning these found maps to their corresponding shaders.
 For example if we have the following naming for a texture map:
 
-[assetName]_[shaderName]_[map]_[version]_[artist].[extension]
+'''[assetName]_[shaderName]_[mapType]_[version]_[artist].[ext]'''
 
 Example: car_hubcap_bmp_v01_lelgin.exr
 
