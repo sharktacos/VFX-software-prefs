@@ -53,11 +53,11 @@ Click the shelf button to launch the GUI.
 
 **texture set/shader name**
 
-In *the second field* put one of the textureSets (i.e. the shader name) included in your texture's file name. When Substance exports textures it includes the name of the shader you assigned in Maya. The script will match up the shader name in your Maya file to this part of the filename on your texture. 
+In *the second field* put one of the textureSets (i.e. the shader name) included in your texture's file name. The maps with this name will be assigned to the shader with the same name. 
 
 **map type**
 
-In *the third field* put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). 
+In *the third field* put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). You only need one example type and the script will find all the others. 
 
 Click  the "Launch" button and the script will search your textures for matches. This will open the second panel, shown below, where all the texure matches are shown. 
 
