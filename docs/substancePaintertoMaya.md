@@ -4,23 +4,21 @@ Tool to automatically connect Substance 3D Painter textures to Maya shaders. Bas
 
 ## Usage
 
-The script works by parsing the texture maps in a folder based on a defined naming convention and assigning these to their corresponding shaders.
+The script works by parsing the texture maps in a folder based on a defined naming convention, and then assigning these found maps to their corresponding shaders.
 For example if we have the following naming for a texture map:
 
 [assetName]_[shaderName]_[map]_[version]_[artist].[extension]
 
 Example: car_hubcap_bmp_v01_lelgin.exr
 
-There are two parts of this file we need to identify.
+There are two parts of this file name we need to identify.
 
 **ShaderName**
 
-*defined in second field of GUI*.
- This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet". That is, the names of the shaders assigned in Maya and exported as an FBX become the "texture sets" when the FBX is imported into Substance Painter. 
+This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet". That is, the names of the shaders assigned in Maya and exported as an FBX become the "texture sets" when the FBX is imported into Substance Painter. 
 
 **map type**
 
-*defined in third field of GUI*. 
  The 3 letter code of the texture map type:
 
 | map | name
@@ -33,18 +31,23 @@ There are two parts of this file we need to identify.
 | displacement | dsp 
 | layer mix | lyr 
 
+Note that as long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. 
+
 ## GUI
 
 Click the shelf button to launch the GUI. 
 
 <img src="img/sp2m_gui1.jpg" width="50%">
 
+**Texture file location**
 
-**The first field** will default to the texture directory defined in your Maya project settings. If your textures are in a sub folder, you can navigate there. 
+*The first field* will default to the texture directory defined in your Maya project settings. If your textures are in a sub folder, you can navigate there. 
 
-In **the second field** put one of the textureSets (i.e. the shader name) included in your texture's file name. When Substance exports textures it includes the name of the shader you assigned in Maya, calling this a "textureSet" in Substance Painter. The script will match up the shader name in your Maya file to this part of the filename on your texture. 
+**texture set**
+In *the second field* put one of the textureSets (i.e. the shader name) included in your texture's file name. When Substance exports textures it includes the name of the shader you assigned in Maya. The script will match up the shader name in your Maya file to this part of the filename on your texture. 
 
-In **the third field** put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). 
+**map type**
+In *the third field* put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). 
 
 Click  the "Launch" button and the script will search your textures for matches. This will open the second panel, shown below, where all the texure matches are shown. 
 
