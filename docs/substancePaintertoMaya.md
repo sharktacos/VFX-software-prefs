@@ -31,6 +31,8 @@ This needs to match the name of the shader assigned in Maya. In Substance this i
 | displacement | dsp 
 | layer mix | lyr 
 
+## Mari, Zbrush, Photoshop 
+
 Note that as long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. 
 
 ## GUI
