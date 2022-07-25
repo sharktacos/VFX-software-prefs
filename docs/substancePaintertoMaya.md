@@ -21,19 +21,24 @@ This needs to match the name of the shader assigned in Maya. In Substance this i
 
  The 3 letter code of the texture map type:
 
-| map | name
-|----|----
-| diffuse/base color | dif
-| metalness | met
-| specular roughness | spc, ruf
-| bump | bmp
-| normal | nor
-| displacement | dsp 
-| layer mix | lyr 
+| map | name | method 
+|----|----|----
+| diffuse/base color | dif | export textures
+| metalness | met  | export textures
+|  bump | bmp  | export textures
+| specular roughness | spc, ruf | Export mask
+| layer mix | lyr | export mask
 
 ## Mari, Zbrush, Photoshop 
 
-Note that as long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. 
+As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. 
+
+| map | name
+|----|----
+normal | nor 
+| displacement | dsp 
+
+Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because that are Paint programs not modeling programs. 
 
 ## GUI
 
