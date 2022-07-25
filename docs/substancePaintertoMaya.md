@@ -26,7 +26,7 @@ This needs to match the name of the shader assigned in Maya. In Substance this i
 | diffuse/base color | dif | export textures
 | metalness | met  | export textures
 |  bump | bmp  | export textures
-| specular roughness | spc, ruf | Export mask
+| specular roughness | spc, ruf | export mask
 | layer mix | lyr | export mask
 
 ## Mari, Zbrush, Photoshop 
@@ -38,7 +38,7 @@ As long as the names follow this naming convention they can be exported from any
 normal | nor 
 | displacement | dsp 
 
-Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because that are Paint programs not modeling programs. 
+Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because they are not modeling programs. 
 
 ## GUI
 
