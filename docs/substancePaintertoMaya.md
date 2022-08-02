@@ -2,50 +2,58 @@
 
 Tool to automatically connect Substance 3D Painter textures to Maya shaders. Based on [the original script by Tristan Le Granche](https://github.com/Strangenoise/SubstancePainterToMaya). This version has been updated for Python 3 (required for Maya 2022 and up). 
 
+Note that as long as the texture maps follow the naming convention described below, they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. 
+
+This script is much more sophisticaed than [the one provided by Adobe/Substance](https://substance3d.adobe.com/documentation/integrations/apply-workflow-to-maps-223054251.html) in that it allows you to connect more complex shader networks, such as masked specular roughtness or layer shader networks, as described below. This results in more artistic control.
+
 ## Usage
 
 The script works by parsing the texture maps in a folder based on a defined naming convention, and then assigning these found maps to their corresponding shaders.
-For example if we have the following naming for a texture map:
+For example say we have the following naming for a texture map:
 
 ```[assetName]_[shaderName]_[mapType]_[version]_[artist].[ext]```
 
-Example: car_hubcap_bmp_v01_lelgin.exr
+Example: ```car_hubcap_bmp_v01_dflood.exr```
 
 There are two parts of this file name we need to identify.
 
 **ShaderName**
 
-This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet". That is, the names of the shaders assigned in Maya and exported as an FBX become the "texture sets" when the FBX is imported into Substance Painter. 
+This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet". That is, the names of the shaders assigned in Maya and exported as an FBX become the "texture sets" when the FBX is imported into Substance Painter. The texture maps containing this name will be assigned to the shader with the same name. 
 
 **map type**
 
  The 3 letter code of the texture map type:
 
-| map | name | method 
+| map | name | texture creation method 
 |----|----|----
-| diffuse/base color | dif | export textures
-| metalness | met  | export textures
-|  bump | bmp  | export textures
-| specular roughness | spc, ruf | export mask
-| layer mix | lyr | export mask
+| diffuse/base color | dif | Substance Painter: export textures
+| metalness | met  | Substance Painter: export textures
+|  bump | bmp  | Substance Painter: export textures
+| specular roughness | spc, ruf | Substance Painter: export mask to file
+| layer mix | lyr | Substance Painter: export mask to file
 
 ## Mari, Zbrush, Photoshop 
 
-As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. 
+As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. For example here are displacement and normal maps exported from Zbrush: 
 
-| map | name
-|----|----
-normal | nor 
-| displacement | dsp 
+| map | name | texture creation method 
+|----|----|----
+normal | nor | Zbrush: Multi-map exporter
+| displacement | dsp | Zbrush: Multi-map exporter
 
 
-Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because they are not modeling programs. 
+Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because they are not modeling programs. Substance when it generates a normal map is simply converting a 2D hight map into the normal map format, not deriving it from a 3D sculpt.
 
 ## GUI
 
+The script is included in the [custom Maya shelf](Maya.md#maya-shelf).
+
+![img](img/maya_shelf.jpg)
+
 Click the shelf button to launch the GUI. 
 
-<img src="img/sp2m_gui1.jpg" width="50%">
+![img](img/sp2m_gui1.jpg)
 
 **Texture file location**
 
@@ -53,11 +61,11 @@ Click the shelf button to launch the GUI.
 
 **texture set/shader name**
 
-In *the second field* put one of the textureSets (i.e. the shader name) included in your texture's file name. The maps with this name will be assigned to the shader with the same name. 
+In *the second field* put one of the textureSets (i.e. the shader name) included in your texture's file name. You only need to enter one texture set and the script will find all the others.  
 
 **map type**
 
-In *the third field* put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). You only need one example type and the script will find all the others. 
+In *the third field* put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). Assuming you are using the naming convention of "dif" for your diffuse map you can just leave this as is.
 
 Click  the "Launch" button and the script will search your textures for matches. This will open the second panel, shown below, where all the texure matches are listed. 
 
@@ -67,8 +75,7 @@ Select the desired options, and click the "Proceed" button. If you have the (def
 
 
 ## Limitations
- - Only the Arnold renderer is supported. I have not had a chance to test this out in Renderman or Vray. Maybe some day.
- - Color Correct mode has been disabled.
+ - Only the Arnold renderer is supported. I have not had a chance to test this out in Renderman or Vray. Maybe some day, but don't hold your breath.
 
 ## Enhancements
 
@@ -97,7 +104,7 @@ Additionally the following attributes are set on all the aiStandardSurface shade
 - subsurface anisotropy: 0.8
 
 
-### Layer Shader network
+### Layer Shader network option
  
 If a layer map is found (naming: 'Layer', 'layer', 'lyr') the aiStandardSurface shader is duplicated with all of its input connections, and these two shaders are then connected to a layerShader. Finally the layer texture map is input into the layer mix. 
  
