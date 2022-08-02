@@ -6,6 +6,6 @@ My favorite gizmos, scripts, shelves, and prefs for:
 ## [Nuke](docs/Nuke.md)
 ## [Substance Painter](docs/Substance.md)
 
-## [Substance Painter to Maya Bridge](substancePaintertoMaya.md)
+## [Substance Painter to Maya Bridge](docs/substancePaintertoMaya.md)
 
 
