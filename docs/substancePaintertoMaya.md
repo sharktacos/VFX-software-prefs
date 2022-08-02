@@ -68,7 +68,6 @@ Select the desired options, and click the "Proceed" button. If you have the (def
 
 ## Limitations
  - Only the Arnold renderer is supported. I have not had a chance to test this out in Renderman or Vray. Maybe some day.
- - Color Correct mode has been disabled.
 
 ## Enhancements
 
@@ -97,7 +96,7 @@ Additionally the following attributes are set on all the aiStandardSurface shade
 - subsurface anisotropy: 0.8
 
 
-### Layer Shader network
+### Layer Shader network option
  
 If a layer map is found (naming: 'Layer', 'layer', 'lyr') the aiStandardSurface shader is duplicated with all of its input connections, and these two shaders are then connected to a layerShader. Finally the layer texture map is input into the layer mix. 
  
