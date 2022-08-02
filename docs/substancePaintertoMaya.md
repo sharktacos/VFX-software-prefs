@@ -4,7 +4,7 @@ Tool to automatically connect Substance 3D Painter textures to Maya shaders. Bas
 
 Note that as long as the texture maps follow the naming convention described below, they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. 
 
-This script is much more sophisticaed than the one provided by Adobe/Substance. It allows you to apply maps to all the shaders in a scene, rather than needing to do them one at a time (thanks to Tristan's amazing original code), and it allows for more complex shader networks, such as masked specular roughtness or layer shader networks, as described below.
+This script is much more sophisticaed than [the one provided by Adobe/Substance](https://substance3d.adobe.com/documentation/integrations/apply-workflow-to-maps-223054251.html) in that it allows you to connect more complex shader networks, such as masked specular roughtness or layer shader networks, as described below. This results in more artistic control.
 
 ## Usage
 
