@@ -13,8 +13,7 @@ BASE_COLOR = [
     'baseColor', 'BaseColor', 'basecolor', 'color', 'Color', 'albedo', 'Albedo', 'dif'
 ]
 HEIGHT = [
-    'displace', 'Displace', 'Displacement', 'displacement', 'height', 'Height',
-    'bump', 'Bump', 'bmp', 'BumpMap', 'bumpMap', 'displacementMap', 'DisplacementMap'
+    'height', 'Height', 'bump', 'Bump', 'bmp', 'BumpMap', 'bumpMap'
 ]
 METALNESS = [
     'metal', 'Metal', 'metalness', 'Metalness', 'mtl', 'met'
@@ -30,6 +29,9 @@ MATTE = [
 ]
 LAYER = [
     'Layer', 'layer', 'lyr'
+]
+DISPLACE = [
+    'displace', 'Displace', 'Displacement', 'displacement', 'displacementMap', 'DisplacementMap', 'dsp', 'disp'
 ]
 OPACITY = [
     'Opacity', 'opacity', 'transparency', 'Transparency'

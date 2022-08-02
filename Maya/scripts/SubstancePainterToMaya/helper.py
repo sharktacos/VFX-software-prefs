@@ -3,6 +3,7 @@ import os
 from PySide2 import QtWidgets
 import re
 
+
 class foundMap:
 
     def __init__(self):
@@ -320,7 +321,7 @@ def checkCreateMaterial(ui, texture, renderer):
     materialName = texture.textureSet
     materialType = renderer.renderParameters.SHADER
 
-    # option: "Create new materials if they doesn't exist, else use existing ones"
+    # option: "Create new materials if they don't exist, or else use existing ones"
     if ui.grpRadioMaterials.checkedId() == -2:
 
         # If the material doesn't exist or if it's not of the right type
@@ -331,6 +332,11 @@ def checkCreateMaterial(ui, texture, renderer):
 
                 # Create the material
                 createMaterialAndShadingGroup(materialName, materialType)
+
+                # Set default shader values
+#                if mc.objectType(materialName) == materialType:
+#                    render_helper.materialSettings(texture.textureSet)
+
 
             materialName += '_shd'
 
@@ -379,7 +385,7 @@ def createMaterial(materialName, materialType):
 
     # Create the material
     material = mc.shadingNode(materialType, asShader=True, name=materialName + '_shd')
-    mc.setAttr ( material+'.transmitAovs', 1)
+
     return material
 
 def createShadingGroup( materialName):
@@ -444,7 +450,7 @@ def connectTexture(textureNode, textureOutput, targetNode, targetInput, colorCor
         mc.connectAttr(colorCorrect + '.' + textureOutput, targetNode + '.' + targetInput, force=forceTexture)
 
     # Connect the file node output to material input, except fot mix2
-    elif targetInput != 'mix2':
+    elif targetInput != 'mix2' and targetInput != 'displacementShader':
         mc.connectAttr(textureNode + '.' + textureOutput, targetNode + '.' + targetInput, force=forceTexture)
 
 

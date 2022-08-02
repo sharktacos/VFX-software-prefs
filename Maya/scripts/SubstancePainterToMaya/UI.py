@@ -81,8 +81,7 @@ class PainterToMayaUI:
         self.grpNamingConvention.setLayout(self.namingConventionLayout)
 
         self.nomenclatureInfo = QtWidgets.QLabel(
-            'Enter the textureSet/shader name and the map name of one of your textures'
-            '\n\nSee the documentation for more information\n'
+            'Enter the name of one of your shaders, and an example map type\n (dif, bmp, etc.) used in the texture file\'s naming convention.'
         )
         self.nomenclatureInfo.setToolTip(
             'The script uses the defined textureSet and map\'s names to understand your naming convention. \nI.e: myProject_character_left_arm_metalness.png will have character_left_arm as textureSet and metalness as map\nThen the script will find all your textureSets and maps, looking for the different parts of your files names'
@@ -99,16 +98,16 @@ class PainterToMayaUI:
         self.namingConventionSubLayout1.insertLayout(2, self.namingConventionSubLayoutValue, stretch=0)
 
         # Add Naming Convention widgets
-        self.textureSetLabel = QtWidgets.QLabel('textureSet / shader name')
+        self.textureSetLabel = QtWidgets.QLabel('Texture Set/Shader Name')
         self.namingConventionSubLayoutLabel.addWidget(self.textureSetLabel)
 
-        self.textureSet = QtWidgets.QLineEdit('shaderName')
+        self.textureSet = QtWidgets.QLineEdit('enter_shader_name')
         self.textureSet.setToolTip(
             'Example of the part of the texture file name containing the material\'s name (textureSet)'
         )
         self.namingConventionSubLayoutValue.addWidget(self.textureSet)
 
-        self.mapLabel = QtWidgets.QLabel('Example map type\n(eg: dif, bmp, spc, met, lyr)')
+        self.mapLabel = QtWidgets.QLabel('Map Type')
         self.namingConventionSubLayoutLabel.addWidget(self.mapLabel)
         self.mapLabel.resize(200,200)
 
@@ -129,16 +128,18 @@ class PainterToMayaUI:
         self.namingConventionLayout.addWidget(self.textureSetRadio2)
 
         # Renderer
-        self.grpRenderer = QtWidgets.QGroupBox('Renderer')
-        self.layVMainWindow01.addWidget(self.grpRenderer)
+#        self.grpRenderer = QtWidgets.QGroupBox('Renderer')
+#        self.layVMainWindow01.addWidget(self.grpRenderer)
 
         self.rendererLayout = QtWidgets.QVBoxLayout()
-        self.grpRenderer.setLayout(self.rendererLayout)
+#        self.grpRenderer.setLayout(self.rendererLayout)
 
         # Add Renderer widgets
         self.grpRadioRenderer = QtWidgets.QButtonGroup()
         self.rendererRadio1 = QtWidgets.QRadioButton('Arnold (aiStandardSurface)')
         self.rendererRadio1.setChecked(True)
+        self.rendererRadio1.setVisible(False)
+
         self.grpRadioRenderer.addButton(self.rendererRadio1)
 
 #        self.rendererRadio2 = QtWidgets.QRadioButton('VRay (VrayMtl)')
@@ -226,14 +227,19 @@ class PainterToMayaUI:
 
         # Options Widgets
         self.checkboxUDIMs = QtWidgets.QCheckBox('Use UDIMs')
+        self.checkboxUDIMs.setChecked(True)
+        self.checkboxUDIMs.setVisible(False)
         self.optionsSubLayout1.addWidget(self.checkboxUDIMs)
 
         self.checkbox1 = QtWidgets.QCheckBox('Use height as bump')
         self.checkbox1.setChecked(True)
+        self.checkbox1.setVisible(False)
         self.optionsSubLayout1.addWidget(self.checkbox1)
 
         self.checkbox2 = QtWidgets.QCheckBox('Use height as displacement')
+        self.checkbox2.setVisible(False)
         self.optionsSubLayout1.addWidget(self.checkbox2)
+
 
         self.checkbox3 = QtWidgets.QCheckBox('Force texture replacement')
         self.checkbox3.setChecked(True)
@@ -241,7 +247,7 @@ class PainterToMayaUI:
         self.checkbox3.setVisible(False)
         self.optionsSubLayout1.addWidget(self.checkbox3)
 
-        self.checkbox4 = QtWidgets.QCheckBox('Create layered shader networks\n(When \"lyr\"" texture map found)')
+        self.checkbox4 = QtWidgets.QCheckBox('Create layered shader networks\n(When \"layer\"" texture map found)')
         self.checkbox4.setChecked(True)
         self.optionsSubLayout1.addWidget(self.checkbox4)
 

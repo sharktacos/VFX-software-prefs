@@ -157,6 +157,7 @@ def createLayerNetwork(texture, renderer, fileNode):
     materialName = texture.textureSet
     materialTypeLyr = renderer.renderParameters.SHADER_LYR
     mixNode = renderer.renderParameters.MIX_NODE
+    attributeName = texture.materialAttribute
 
     # Get shader group connection
     SG = mc.listConnections (materialName + '.outColor', d=True, s=False)[0] or []
@@ -178,9 +179,61 @@ def createLayerNetwork(texture, renderer, fileNode):
 
         # Connect the lyr material to the original shading group
         mc.connectAttr(layer_material + '.outColor', SG + '.surfaceShader', force=True)
+        
+        # Connect displacement map
+        if attributeName == 'displacementShader':
+            helper.createDisplacementMap(texture, fileNode)
+
 
     else:
         print('The shader \"' + materialName + '\" has already been assigned a layer shader network. Skipping.')
+
+#    return materialName
+    
+def materialSettings(material):
+
+    # set default values
+    mc.setAttr ( material+'.transmitAovs', 1)
+    mc.setAttr ( material+'.specular', 0.5)
+    mc.setAttr ( material+'.subsurfaceScale', 0.1)
+    mc.setAttr ( material+'.subsurfaceAnisotropy', 0.8)
+    mc.setAttr ( material+'.subsurfaceRadius', 0.15, 0.0075, 0.0075, type='double3' )
+
+def createSSSMap(texture, fileNode, colorCorrect=False, forceTexture=True):
+    """
+    Connect the specRoughness map with the mix nodes
+    :param material: The name of the material
+    :param attributeName: The name of the material attribute to use
+    :param forceTexture: Specify if the texture connection is forced
+    :param imageNode: The file node to connect
+    :return: None
+    """
+
+    material = texture.textureSet
+    attributeName = texture.materialAttribute
+    sssColor = '.subsurfaceColor'
+    baseColor = '.baseColor'
+
+    # List all the connection in the material attribute
+    connectedNodes = mc.listConnections(material + '.' + attributeName)
+
+    # If there's connections
+    if connectedNodes:
+
+        for node in connectedNodes:
+
+            # Replace the connection if the force texture is true
+            mc.connectAttr(fileNode + '.outColor', material + sssColor, force=forceTexture)
+            mc.connectAttr(fileNode + '.outColor', material + baseColor, force=forceTexture)
+
+    # If there's not connections
+    else:
+
+        # Connect the color texture map to the SSS
+        mc.connectAttr(fileNode + '.outColor', material + sssColor, force=forceTexture)
+        mc.connectAttr(fileNode + '.outColor', material + baseColor, force=forceTexture)
+
+
 
 
 def connect(ui, texture, renderer, fileNode):
@@ -189,6 +242,14 @@ def connect(ui, texture, renderer, fileNode):
     useBump = ui.checkbox1.isChecked()
     useDisplace = ui.checkbox2.isChecked()
     attributeName = texture.materialAttribute
+
+    # Set default shader values
+    if mc.objectType(texture.textureSet) == renderer.renderParameters.SHADER:
+        materialSettings(texture.textureSet)
+
+    # If displacement
+    if attributeName == 'displacementShader':
+        helper.createDisplacementMap(texture, fileNode)
 
     # If height or normalMap
     if attributeName == 'normalCamera':
@@ -201,8 +262,8 @@ def connect(ui, texture, renderer, fileNode):
                 createBumpMap(texture, renderer, fileNode, colorCorrect)
 
             # If displace
-            if useDisplace:
-                helper.createDisplacementMap(texture, fileNode, colorCorrect)
+#            if useDisplace:
+#                helper.createDisplacementMap(texture, fileNode, colorCorrect)
 
         # If normalMap
         elif texture.output == 'outColor':
@@ -211,6 +272,10 @@ def connect(ui, texture, renderer, fileNode):
     # If spec roughness create a mask network
     elif attributeName == 'specularRoughness':
         helper.createSpecMap(texture, fileNode, colorCorrect)
+
+    # If base color connect to base and sss
+    elif attributeName == 'baseColor':
+        createSSSMap(texture, fileNode, colorCorrect)
 
     # If it's another type of map
     else:

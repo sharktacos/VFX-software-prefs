@@ -4,8 +4,10 @@
 #
 # This tool is used to automatically connect Substance Painter textures to Arnold, VRay and Renderman for Maya.
 #
-# Created by Tristan Le Granche
+# Originally created by Tristan Le Granche
 # tristan.legranche@gmail.com
+# updated for Python3 with modified options by Derek Flood
+# sharktacos.github,io
 #
 # Tool under licence CC-BY-NC
 # Contact me for commercial use
@@ -20,10 +22,9 @@
 # 1. Click on the shelf button
 # 2. Define the texture folder
 # 3. Define the Naming Convention
-# 4. Choose the renderer
 # 5. Choose a materials option
 # 6. Click on Launch
-# 7. Specify where to plug each found maps
+# 7. Specify where to plug each of the found maps
 # 8. Choose some options
 # 9. Click on Proceed
 # 10. Enjoy !
@@ -243,14 +244,6 @@ def proceed(ui, foundTextures, renderer, uiElements):
 
 
     print('\n FINISHED \n')
-
-
-
-
-
-
-
-
 
 
 

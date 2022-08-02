@@ -14,7 +14,7 @@ class config:
             '---- Emission', 'emissionWeight', 'emissionColor',
             '---- Thin film', 'thickness', 'thinIoR',
             '---- Geometry', 'opacity', 'height', 'normal', 'anisotropyTangent',
-            '---- Matte', 'matteColor', 'matteOpacity', 'LayerShader Mix2',
+            '---- Matte', 'matteColor', 'matteOpacity', 'LayerShader Mix2', 'displacement',
             '---- Don\'t use'
         ]
 
@@ -31,7 +31,7 @@ class config:
             '---- Emission', 'emission', 'emissionColor',
             '---- Thin film', 'thinFilmThickness', 'thinFilmIOR',
             '---- Geometry', 'opacity', 'normalCamera', 'normalCamera', 'tangent',
-            '---- Matte', 'aiMatteColor', 'aiMatteColorA', 'mix2',
+            '---- Matte', 'aiMatteColor', 'aiMatteColorA', 'mix2', 'displacementShader',
             '---- Don\'t use'
         ]
 
@@ -41,7 +41,7 @@ class config:
                 1
             ],
             'height': [
-                ['displace', 'Displace', 'Displacement', 'displacement', 'height', 'Height','bump', 'Bump', 'BumpMap', 'bumpMap', 'bmp', 'displacementMap', 'DisplacementMap'],
+                ['height', 'Height','bump', 'Bump', 'BumpMap', 'bumpMap', 'bmp', ],
                 2
             ],
             'metalness': [
@@ -58,11 +58,15 @@ class config:
             ],
             'matte': [
                 ['Matte', 'matte', 'msk'],
-                54
+                0
             ],
              'layer': [
                 ['Layer', 'layer', 'lyr'],
                 56
+            ],
+             'displacement': [
+                ['displace', 'Displace', 'Displacement', 'displacement', 'displacementMap', 'DisplacementMap', 'dsp', 'disp'],
+                57
             ],
             'opacity': [
                 ['Opacity', 'opacity', 'transparency', 'Transparency'],
@@ -79,7 +83,7 @@ class config:
         }
 
         self.MAP_LIST_COLOR_ATTRIBUTES_INDICES = [1, 4, 7, 13, 20, 21, 28, 29, 34, 37, 40, 44, 49, 51, 52, 54]
-        self.DONT_USE_IDS = [0, 6, 11, 18, 26, 32, 38, 42, 45, 48, 53, 57]
+        self.DONT_USE_IDS = [0, 6, 11, 18, 26, 32, 38, 42, 45, 48, 53]
         self.MAP_LAYER_ID = [56]
         self.SHADER = 'aiStandardSurface'
         self.SHADER_LYR = 'aiLayerShader'
