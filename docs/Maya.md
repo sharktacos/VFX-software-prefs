@@ -58,11 +58,7 @@ Shelf items shown above are oranized into the following sections:
    - *Create Light Group AOVs*<br>
     converts the custom LPEs (provided in the .json file described above) to Light Groups.
    - *Remove Light Group AOVs* 
-   - *Renderman MakeTX GUI*<br>
-   GUI for MakeTx to convert textures to mipmap TX files with an OCIO config in Renderman. See the [doc page](https://docs.sharktacos.com/texture/mipmap.html) for usage.
-   - *Substance to Maya*<br>
-      Automatic creation of shader networks and textures from Substance 3D Painter. See the [dedicated page](substancePaintertoMaya.md) for details.
-
+  
 ## Arnold
 
  ![img](img/maya_shelf_arnold.jpg)
@@ -79,7 +75,8 @@ Shelf items shown above are oranized into the following sections:
      Two roughness values based on masked regions.
    - *Cloth Shader Network*<br>
       See [docs](https://docs.sharktacos.com/texture/FabricArnold.html) for more detail. Defaults to plain weave but pattern can be swapped out with maps provided in docs [download](https://docs.sharktacos.com/images/tutorials/Assets/Maya/fabricMaps.zip)
-   - *Layer Shader Network*<br>
-     Converts the selected shader (aiStandardSurface) into a Layer Shader network, making a duplicate of the aiStandardSurface shader and its input texture connections and hooking these into the aiLayerShader. 
+    - *Substance to Maya*<br>
+      Automatic creation of shader networks and textures from Substance 3D Painter. See the [dedicated page](substancePaintertoMaya.md) for details.
+
    
    
