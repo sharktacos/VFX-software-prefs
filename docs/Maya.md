@@ -75,7 +75,7 @@ Shelf items shown above are oranized into the following sections:
      Two roughness values based on masked regions.
    - *Cloth Shader Network*<br>
       See [docs](https://docs.sharktacos.com/texture/FabricArnold.html) for more detail. Defaults to plain weave but pattern can be swapped out with maps provided in docs [download](https://docs.sharktacos.com/images/tutorials/Assets/Maya/fabricMaps.zip)
-    - *Substance to Maya*<br>
+   - *Substance to Maya*<br>
       Automatic creation of shader networks and textures from Substance 3D Painter. See the [dedicated page](substancePaintertoMaya.md) for details.
 
    
