@@ -2,6 +2,8 @@
 
 Tool to automatically connect Substance 3D Painter textures to Maya shaders. Based on [the original script by Tristan Le Granche](https://github.com/Strangenoise/SubstancePainterToMaya). This version has been updated for Python 3 (required for Maya 2022 and up). 
 
+Note that as long as the texture maps follow the naming convention described below, they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. 
+
 ## Usage
 
 The script works by parsing the texture maps in a folder based on a defined naming convention, and then assigning these found maps to their corresponding shaders.
@@ -31,7 +33,7 @@ This needs to match the name of the shader assigned in Maya. In Substance this i
 
 ## Mari, Zbrush, Photoshop 
 
-As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. For example
+As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. For example here are displacement and normal maps exported from Zbrush: 
 
 | map | name | texture creation method 
 |----|----|----
@@ -39,7 +41,7 @@ normal | nor | Zbrush: Multi-map exporter
 | displacement | dsp | Zbrush: Multi-map exporter
 
 
-Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because they are not modeling programs. 
+Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because they are not modeling programs. Substance when it generates a normal map is simply converting a 2D hight map into the normal map format, not deriving it from a 3D sculpt.
 
 ## GUI
 
