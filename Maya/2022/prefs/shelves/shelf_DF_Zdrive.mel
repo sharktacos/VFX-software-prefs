@@ -1,4 +1,4 @@
-global proc shelf_DF_Zdrive () {
+global proc shelf_DF_docs () {
     global string $gBuffStr;
     global string $gBuffStr0;
     global string $gBuffStr1;
@@ -177,8 +177,8 @@ global proc shelf_DF_Zdrive () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "Z:/Maya/2022/prefs/icons/ShaderToABC_200.png" 
-        -image1 "Z:/Maya/2022/prefs/icons/ShaderToABC_200.png" 
+        -image "%USERPROFILE%/Documents/maya/2022/prefs/icons/ShaderToABC_200.png" 
+        -image1 "%USERPROFILE%/Documents/maya/2022/prefs/icons/ShaderToABC_200.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -192,7 +192,7 @@ global proc shelf_DF_Zdrive () {
         -flexibleWidthType 3
         -flexibleWidthValue 32
         -enable 1
-        -width 39
+        -width 35
         -height 34
         -manage 1
         -visible 1
@@ -211,8 +211,8 @@ global proc shelf_DF_Zdrive () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "Z:/Maya/2022/prefs/icons/UVTransfer.png" 
-        -image1 "Z:/Maya/2022/prefs/icons/UVTransfer.png" 
+        -image "%USERPROFILE%/Documents/maya/2022/prefs/icons/UVTransfer.png" 
+        -image1 "%USERPROFILE%/Documents/maya/2022/prefs/icons/UVTransfer.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -245,8 +245,8 @@ global proc shelf_DF_Zdrive () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "Z:/Maya/2022/prefs/icons/aovGrp.png" 
-        -image1 "Z:/Maya/2022/prefs/icons/aovGrp.png" 
+        -image "%USERPROFILE%/Documents/maya/2022/prefs/icons/aovGrp.png" 
+        -image1 "%USERPROFILE%/Documents/maya/2022/prefs/icons/aovGrp.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -279,8 +279,8 @@ global proc shelf_DF_Zdrive () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "Z:/Maya/2022/prefs/icons/aovGrpOff.png" 
-        -image1 "Z:/Maya/2022/prefs/icons/aovGrpOff.png" 
+        -image "%USERPROFILE%/Documents/maya/2022/prefs/icons/aovGrpOff.png" 
+        -image1 "%USERPROFILE%/Documents/maya/2022/prefs/icons/aovGrpOff.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -289,44 +289,9 @@ global proc shelf_DF_Zdrive () {
         -commandRepeatable 1
         -flat 1
     ;
-    shelfButton
-        -enableCommandRepeat 1
-        -flexibleWidthType 3
-        -flexibleWidthValue 32
-        -enable 1
-        -width 35
-        -height 34
-        -manage 1
-        -visible 1
-        -preventOverride 0
-        -annotation "MkTex for Rman" 
-        -enableBackground 0
-        -backgroundColor 0 0 0 
-        -highlightColor 0.321569 0.521569 0.65098 
-        -align "center" 
-        -label "MkTex for Rman" 
-        -labelOffset 0
-        -rotation 0
-        -flipX 0
-        -flipY 0
-        -useAlpha 1
-        -font "plainLabelFont" 
-        -imageOverlayLabel "mktx" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.5 
-        -image "Z:/Maya/2022/prefs/icons/MkTex.png" 
-        -image1 "Z:/Maya/2022/prefs/icons/MkTex.png" 
-        -style "iconOnly" 
-        -marginWidth 1
-        -marginHeight 1
-        -command "import dfMakeTexPy3\ndfMakeTexPy3.Main()" 
-        -sourceType "python" 
-        -commandRepeatable 1
-        -flat 1
-    ;
     separator
         -enable 1
-        -width 34
+        -width 12
         -height 35
         -manage 1
         -visible 1
@@ -395,8 +360,8 @@ global proc shelf_DF_Zdrive () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "Z:/Maya/2022/prefs/icons/render_aiImage.png" 
-        -image1 "Z:/Maya/2022/prefs/icons/render_aiImage.png" 
+        -image "%USERPROFILE%/Documents/maya/2022/prefs/icons/render_aiImage.png" 
+        -image1 "%USERPROFILE%/Documents/maya/2022/prefs/icons/render_aiImage.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -429,47 +394,13 @@ global proc shelf_DF_Zdrive () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "Z:/Maya/2022/prefs/icons/out_aiStandardSurface_150.png" 
-        -image1 "Z:/Maya/2022/prefs/icons/out_aiStandardSurface_150.png" 
+        -image "%USERPROFILE%/Documents/maya/2022/prefs/icons/out_aiStandardSurface_150.png" 
+        -image1 "%USERPROFILE%/Documents/maya/2022/prefs/icons/out_aiStandardSurface_150.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
         -command "import mtoa.core as core \nimport maya.cmds as mc\n\nstandardSurface = core.createArnoldNode(\"aiStandardSurface\")\nmc.setAttr ( standardSurface+'.transmitAovs', 1)" 
         -sourceType "python" 
-        -commandRepeatable 1
-        -flat 1
-    ;
-    shelfButton
-        -enableCommandRepeat 1
-        -flexibleWidthType 3
-        -flexibleWidthValue 32
-        -enable 1
-        -width 35
-        -height 34
-        -manage 1
-        -visible 1
-        -preventOverride 0
-        -annotation "NodeEditorHideAttributes;\n{\n\tstring $ned = ( `getCurrentNodeEditor`);\n\tif (\"\" != $ned) {\n\t\tnodeEditor -e -nodeViewMode \"simple\" $ned;\n  }\n};" 
-        -enableBackground 0
-        -backgroundColor 0 0 0 
-        -highlightColor 0.321569 0.521569 0.65098 
-        -align "center" 
-        -label "NodeEditorHideAttributes;\n{\n\tstring $ned = ( `getCurrentNodeEdit..." 
-        -labelOffset 0
-        -rotation 0
-        -flipX 0
-        -flipY 0
-        -useAlpha 1
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.5 
-        -image "commandButton.png" 
-        -image1 "commandButton.png" 
-        -style "iconOnly" 
-        -marginWidth 1
-        -marginHeight 1
-        -command "select -d;\nNodeEditorHideAttributes;\n{\n\tstring $ned = ( `getCurrentNodeEditor`);\n\tif (\"\" != $ned) {\n\t\tnodeEditor -e -nodeViewMode \"simple\" $ned;\n  }\n};" 
-        -sourceType "mel" 
         -commandRepeatable 1
         -flat 1
     ;
@@ -501,7 +432,7 @@ global proc shelf_DF_Zdrive () {
         -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
-        -label "Blend Roughness"
+        -label "Blend Roughness" 
         -labelOffset 0
         -rotation 0
         -flipX 0
@@ -549,7 +480,7 @@ global proc shelf_DF_Zdrive () {
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "import mtoa.core as core \nimport maya.cmds as mc\n\n# create file node\nfileTex = mc.shadingNode ('file', asTexture=True, isColorManaged=True, name='file_ColorTex')\nuv = mc.shadingNode ('place2dTexture', asUtility=True )\nmc.connectAttr ( uv+'.coverage', fileTex+'.coverage', force=True )\nmc.connectAttr ( uv+'.translateFrame', fileTex+'.translateFrame', force=True )\nmc.connectAttr ( uv+'.rotateFrame', fileTex+'.rotateFrame', force=True )\nmc.connectAttr ( uv+'.mirrorU', fileTex+'.mirrorU', force=True )\nmc.connectAttr ( uv+'.mirrorV', fileTex+'.mirrorV', force=True )\nmc.connectAttr ( uv+'.stagger', fileTex+'.stagger', force=True )\nmc.connectAttr ( uv+'.wrapU', fileTex+'.wrapU', force=True )\nmc.connectAttr ( uv+'.wrapV', fileTex+'.wrapV', force=True )\nmc.connectAttr ( uv+'.repeatUV', fileTex+'.repeatUV', force=True )\nmc.connectAttr ( uv+'.offset', fileTex+'.offset', force=True )\nmc.connectAttr ( uv+'.rotateUV', fileTex+'.rotateUV', force=True )\nmc.connectAttr ( uv+'.noiseUV', fileTex+'.noiseUV', force=True )\nmc.connectAttr ( uv+'.vertexUvOne', fileTex+'.vertexUvOne', force=True )\nmc.connectAttr ( uv+'.vertexUvTwo', fileTex+'.vertexUvTwo', force=True )\nmc.connectAttr ( uv+'.vertexUvThree', fileTex+'.vertexUvThree', force=True )\nmc.connectAttr ( uv+'.vertexCameraOne', fileTex+'.vertexCameraOne', force=True )\nmc.connectAttr( uv+'.outUV', fileTex+'.uv', force=True )\nmc.connectAttr ( uv+'.outUvFilterSize', fileTex+'.uvFilterSize', force=True )\n\nmc.setAttr ( fileTex+'.alphaIsLuminance', 1)\nmc.setAttr (fileTex+'.defaultColor', 0.25, 0.5, 1, type='double3')\n\n\n#---------------------------------\n# create utilities\nclamp = core.createArnoldNode(\"aiClamp\")\nexposureEnd = core.createArnoldNode(\"aiColorCorrect\", name='exposureBoost')\nmc.setAttr (exposureEnd+'.exposure', 1.5)\nnoiseCC = core.createArnoldNode(\"aiColorCorrect\", name='noise_CC')\nclothCC = core.createArnoldNode(\"aiColorCorrect\", name='cloth_CC')\nmultA = core.createArnoldNode(\"aiMultiply\", name='multCloth')\nmultB = core.createArnoldNode(\"aiMultiply\", name='multColor')\ncolorTemp = mc.shadingNode ('gammaCorrect', asUtility=True, name='TexColor_PlaceHolder')\nmc.setAttr (colorTemp+'.value', 0.25, 0.5, 1, type='double3')\n\n# create noise\nnoise = core.createArnoldNode(\"aiNoise\")\nmc.setAttr (noise+'.octaves', 3)\nmc.setAttr (noise+'.scaleX', 7)\nmc.setAttr (noise+'.scaleY', 7)\nmc.setAttr (noise+'.scaleZ', 7)\n\n# create cloth weave\nclothTex = mc.shadingNode ('cloth', asShader=True )\nclothUV = mc.shadingNode ('place2dTexture', asUtility=True)\nmc.connectAttr (clothUV+'.outUV', clothTex+'.uv' )\nmc.connectAttr (clothUV+'.outUvFilterSize', clothTex+'.uvFilterSize')\n\n# set cloth attr...\nmc.setAttr (clothUV+'.repeatU', 200)\nmc.setAttr (clothUV+'.repeatV', 200)\nmc.setAttr (clothTex+'.brightSpread', 0.2)\nmc.setAttr (clothTex+'.randomness', 0.2)\nmc.setAttr (clothTex+'.gapColor', 0.1, 0.1, 0.1, type='double3')\n\n# create shader\nclothShader = core.createArnoldNode(\"aiStandardSurface\", name='aiClothShader')\nmc.setAttr ( clothShader+'.transmitAovs', 1)\nmc.setAttr ( clothShader+'.base', 0.1)\nmc.setAttr ( clothShader+'.diffuseRoughness', 1)\nmc.setAttr ( clothShader+'.specularIOR', 100)\nmc.setAttr ( clothShader+'.specularRoughness', 0.8)\nmc.setAttr ( clothShader+'.sheen', 0.5)\nmc.setAttr ( clothShader+'.sheenRoughness', 0.1)\n\n# CONNECT NODES...\n#--------------------------------\nmc.connectAttr ( clothTex+'.outColor', clothCC+'.input', force=True )\nmc.connectAttr ( noise+'.outColor', noiseCC+'.input', force=True )\n\nmc.connectAttr ( clothCC+'.outColor', multA+'.input1', force=True )\nmc.connectAttr ( noiseCC+'.outColor', multA+'.input2', force=True )\n\nmc.connectAttr ( multA+'.outColor', multB+'.input2', force=True )\nmc.connectAttr ( multB+'.outColor', exposureEnd+'.input', force=True )\nmc.connectAttr ( exposureEnd+'.outColor', clamp+'.input', force=True )\nmc.connectAttr ( clamp+'.outColor', clothShader+'.specularColor', force=True )\n\nmc.connectAttr ( fileTex+'.outColor', multB+'.input1', force=True )\nmc.connectAttr ( fileTex+'.outColor', clothShader+'.baseColor', force=True )\nmc.connectAttr ( fileTex+'.outColor', clothShader+'.sheenColor', force=True )\n\nmc.select ( d=True )\nmc.nodeEditor ('getCurrentNodeEditor',  e=True, graphSelectedConnections=True )" 
+        -command "import mtoa.core as core \nimport maya.cmds as mc\n\n# create file node\nfileTex = mc.shadingNode ('file', asTexture=True, isColorManaged=True, name='file_ColorTex')\nuv = mc.shadingNode ('place2dTexture', asUtility=True )\nmc.connectAttr ( uv+'.coverage', fileTex+'.coverage', force=True )\nmc.connectAttr ( uv+'.translateFrame', fileTex+'.translateFrame', force=True )\nmc.connectAttr ( uv+'.rotateFrame', fileTex+'.rotateFrame', force=True )\nmc.connectAttr ( uv+'.mirrorU', fileTex+'.mirrorU', force=True )\nmc.connectAttr ( uv+'.mirrorV', fileTex+'.mirrorV', force=True )\nmc.connectAttr ( uv+'.stagger', fileTex+'.stagger', force=True )\nmc.connectAttr ( uv+'.wrapU', fileTex+'.wrapU', force=True )\nmc.connectAttr ( uv+'.wrapV', fileTex+'.wrapV', force=True )\nmc.connectAttr ( uv+'.repeatUV', fileTex+'.repeatUV', force=True )\nmc.connectAttr ( uv+'.offset', fileTex+'.offset', force=True )\nmc.connectAttr ( uv+'.rotateUV', fileTex+'.rotateUV', force=True )\nmc.connectAttr ( uv+'.noiseUV', fileTex+'.noiseUV', force=True )\nmc.connectAttr ( uv+'.vertexUvOne', fileTex+'.vertexUvOne', force=True )\nmc.connectAttr ( uv+'.vertexUvTwo', fileTex+'.vertexUvTwo', force=True )\nmc.connectAttr ( uv+'.vertexUvThree', fileTex+'.vertexUvThree', force=True )\nmc.connectAttr ( uv+'.vertexCameraOne', fileTex+'.vertexCameraOne', force=True )\nmc.connectAttr( uv+'.outUV', fileTex+'.uv', force=True )\nmc.connectAttr ( uv+'.outUvFilterSize', fileTex+'.uvFilterSize', force=True )\n\nmc.setAttr ( fileTex+'.alphaIsLuminance', 1)\nmc.setAttr (fileTex+'.defaultColor', 0.25, 0.5, 1, type='double3')\n\n\n#---------------------------------\n# create utilities\nclamp = core.createArnoldNode(\"aiClamp\")\nexposureEnd = core.createArnoldNode(\"aiColorCorrect\", name='exposureBoost')\nmc.setAttr (exposureEnd+'.exposure', 1.5)\nnoiseCC = core.createArnoldNode(\"aiColorCorrect\", name='noise_CC')\nclothCC = core.createArnoldNode(\"aiColorCorrect\", name='cloth_CC')\nmultA = core.createArnoldNode(\"aiMultiply\", name='multCloth')\nmultB = core.createArnoldNode(\"aiMultiply\", name='multColor')\n#colorTemp = mc.shadingNode ('gammaCorrect', asUtility=True, name='TexColor_PlaceHolder')\n#mc.setAttr (colorTemp+'.value', 0.25, 0.5, 1, type='double3')\n\n# create noise\nnoise = core.createArnoldNode(\"aiNoise\")\nmc.setAttr (noise+'.octaves', 3)\nmc.setAttr (noise+'.scaleX', 7)\nmc.setAttr (noise+'.scaleY', 7)\nmc.setAttr (noise+'.scaleZ', 7)\n\n# create cloth weave\nclothTex = mc.shadingNode ('cloth', asShader=True )\nclothUV = mc.shadingNode ('place2dTexture', asUtility=True)\nmc.connectAttr (clothUV+'.outUV', clothTex+'.uv' )\nmc.connectAttr (clothUV+'.outUvFilterSize', clothTex+'.uvFilterSize')\n\n# set cloth attr...\nmc.setAttr (clothUV+'.repeatU', 200)\nmc.setAttr (clothUV+'.repeatV', 200)\nmc.setAttr (clothTex+'.brightSpread', 0.2)\nmc.setAttr (clothTex+'.randomness', 0.2)\nmc.setAttr (clothTex+'.gapColor', 0.1, 0.1, 0.1, type='double3')\n\n# create shader\nclothShader = core.createArnoldNode(\"aiStandardSurface\", name='aiClothShader')\nmc.setAttr ( clothShader+'.transmitAovs', 1)\nmc.setAttr ( clothShader+'.base', 0.1)\nmc.setAttr ( clothShader+'.diffuseRoughness', 1)\nmc.setAttr ( clothShader+'.specularIOR', 100)\nmc.setAttr ( clothShader+'.specularRoughness', 0.8)\nmc.setAttr ( clothShader+'.sheen', 0.5)\nmc.setAttr ( clothShader+'.sheenRoughness', 0.1)\n\n# CONNECT NODES...\n#--------------------------------\nmc.connectAttr ( clothTex+'.outColor', clothCC+'.input', force=True )\nmc.connectAttr ( noise+'.outColor', noiseCC+'.input', force=True )\n\nmc.connectAttr ( clothCC+'.outColor', multA+'.input1', force=True )\nmc.connectAttr ( noiseCC+'.outColor', multA+'.input2', force=True )\n\nmc.connectAttr ( multA+'.outColor', multB+'.input2', force=True )\nmc.connectAttr ( multB+'.outColor', exposureEnd+'.input', force=True )\nmc.connectAttr ( exposureEnd+'.outColor', clamp+'.input', force=True )\nmc.connectAttr ( clamp+'.outColor', clothShader+'.specularColor', force=True )\n\nmc.connectAttr ( fileTex+'.outColor', multB+'.input1', force=True )\nmc.connectAttr ( fileTex+'.outColor', clothShader+'.baseColor', force=True )\nmc.connectAttr ( fileTex+'.outColor', clothShader+'.sheenColor', force=True )\n\nmc.select ( d=True )\n#mc.nodeEditor ('getCurrentNodeEditor',  e=True, graphSelectedConnections=True )" 
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1
@@ -557,19 +488,19 @@ global proc shelf_DF_Zdrive () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 64
+        -flexibleWidthValue 32
         -enable 1
         -width 35
         -height 34
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "Substance Painter To Maya Arnold" 
+        -annotation "Substance Painter to Maya Arnold" 
         -enableBackground 0
         -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
-        -label "SubstancePainterToMaya " 
+        -label "SubstancePaintertoMaya" 
         -labelOffset 0
         -rotation 0
         -flipX 0
