@@ -27,6 +27,7 @@ A Maya shelf containing the above scripts and some other goodies. This goes in y
 |----|----
 | Windows: | %USERPROFILE%\Documents\maya\2022\prefs\
 | Mac OS X: |  /Users/[username]/Library/Preferences/Autodesk/maya/2022/prefs/
+| School Z drive | Z:\maya\2022\prefs\
 
 There are two shelves: 
 *shelf_DF_docs.mel* points to the above Windows location for custom icons.
