@@ -53,7 +53,7 @@ The script is included in the [custom Maya shelf](Maya.md#maya-shelf).
 
 Click the shelf button to launch the GUI. 
 
-<img src="img/sp2m_gui1.jpg" width="50%">
+<img src="img/sp2m_gui1.jpg" width="100%">
 
 **Texture file location**
 
