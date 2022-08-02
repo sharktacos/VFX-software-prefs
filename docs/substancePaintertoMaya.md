@@ -5,38 +5,38 @@ Tool to automatically connect Substance 3D Painter textures to Maya shaders. Bas
 ## Usage
 
 The script works by parsing the texture maps in a folder based on a defined naming convention, and then assigning these found maps to their corresponding shaders.
-For example if we have the following naming for a texture map:
+For example say we have the following naming for a texture map:
 
 ```[assetName]_[shaderName]_[mapType]_[version]_[artist].[ext]```
 
-Example: car_hubcap_bmp_v01_lelgin.exr
+Example: ```car_hubcap_bmp_v01_dflood.exr```
 
 There are two parts of this file name we need to identify.
 
 **ShaderName**
 
-This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet". That is, the names of the shaders assigned in Maya and exported as an FBX become the "texture sets" when the FBX is imported into Substance Painter. 
+This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet". That is, the names of the shaders assigned in Maya and exported as an FBX become the "texture sets" when the FBX is imported into Substance Painter. The texture maps containing this name will be assigned to the shader with the same name. 
 
 **map type**
 
  The 3 letter code of the texture map type:
 
-| map | name | method 
+| map | name | texture creation method 
 |----|----|----
-| diffuse/base color | dif | export textures
-| metalness | met  | export textures
-|  bump | bmp  | export textures
-| specular roughness | spc, ruf | export mask
-| layer mix | lyr | export mask
+| diffuse/base color | dif | Substance Painter: export textures
+| metalness | met  | Substance Painter: export textures
+|  bump | bmp  | Substance Painter: export textures
+| specular roughness | spc, ruf | Substance Painter: export mask to file
+| layer mix | lyr | Substance Painter: export mask to file
 
 ## Mari, Zbrush, Photoshop 
 
-As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. 
+As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. For example
 
-| map | name
-|----|----
-normal | nor 
-| displacement | dsp 
+| map | name | texture creation method 
+|----|----|----
+normal | nor | Zbrush: Multi-map exporter
+| displacement | dsp | Zbrush: Multi-map exporter
 
 
 Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because they are not modeling programs. 
@@ -53,11 +53,11 @@ Click the shelf button to launch the GUI.
 
 **texture set/shader name**
 
-In *the second field* put one of the textureSets (i.e. the shader name) included in your texture's file name. The maps with this name will be assigned to the shader with the same name. 
+In *the second field* put one of the textureSets (i.e. the shader name) included in your texture's file name. You only need to enter one texture set and the script will find all the others.  
 
 **map type**
 
-In *the third field* put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). You only need one example type and the script will find all the others. 
+In *the third field* put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). Assuming you are using the naming convention of "dif" for your diffuse map you can just leave this as is.
 
 Click  the "Launch" button and the script will search your textures for matches. This will open the second panel, shown below, where all the texure matches are listed. 
 
