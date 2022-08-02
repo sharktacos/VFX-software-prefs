@@ -47,6 +47,10 @@ Note that only Zbrush can derive a displacement or normal map from a sculpt. Pai
 
 ## GUI
 
+The script is included in the [custom Maya shelf](docs/Maya.md).
+
+![img](img/maya_shelf.jpg)
+
 Click the shelf button to launch the GUI. 
 
 <img src="img/sp2m_gui1.jpg" width="50%">
