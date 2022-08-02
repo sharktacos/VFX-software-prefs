@@ -49,11 +49,11 @@ Note that only Zbrush can derive a displacement or normal map from a sculpt. Pai
 
 The script is included in the [custom Maya shelf](Maya.md#maya-shelf).
 
- <img src="../Maya/2022/prefs/icons/sp2.png" width="10%"> 
+ <img src="../Maya/2022/prefs/icons/sp2.png" width="50"> 
 
 Click the shelf button to launch the GUI. 
-
- <img src="img/sp2m_gui1.jpg" width="60%"> 
+ 
+ ![img](img/sp2m_gui1.jpg)
 
 **Texture file location**
 
@@ -79,13 +79,13 @@ Select the desired options, and click the "Proceed" button. If you have the (def
 
 ## Enhancements
 
-### Specular Roughness mix network
+### Specular Roughness mask network
  
-As you can see below, in addition to color, bump, normal, and metalness texture maps, specular roughness maps are connected with a blend that allows artists to use the texture as a mask to define regions that are remaped to two roughness sliders (color1 and color2 shown in the Attribute Editor below). This provides artistic control, rather than having the roughness slider locked off with a texture map.
+While color, bump, and metalness texture maps are exported from Substance using the "export textures" dialog, specular roughness maps are instead made with a alpha mask and exported via "export mask to file" in Substance Painter, using the naming convention of either ruf or spc. The black and white values of this mask are then remaped to two roughness sliders (color1 and color2 shown in the Attribute Editor below). This provides artistic control, rather than having the roughness slider locked off with a texture map.
 
 ![img](img/sp2m_roughness.jpg)
 
-Note that this workflow is also included in the roughness section of my "UberShader" Smartmaterial included in the [Substance tools](Substance.md). The technique is also shown here:
+Note that this workflow is also included in the roughness section of my "UberShader" Smart Material included in the [Substance tools](Substance.md). The technique is also demonstrated here:
 
 <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/326948120?h=da9e609785&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Substance Painter: A better way to export roughness maps for artistic control"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script><br>
 
