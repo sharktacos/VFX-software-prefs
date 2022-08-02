@@ -81,7 +81,7 @@ class PainterToMayaUI:
         self.grpNamingConvention.setLayout(self.namingConventionLayout)
 
         self.nomenclatureInfo = QtWidgets.QLabel(
-            'Enter the name of one of your shaders, and an example map type\n (dif, bmp, etc.) used in the texture file\'s naming convention.'
+            'Enter the name of one of the Texture Sets (i.e shader name),\nand an example map type (dif, bmp, etc.) \nused in the texture file\'s naming convention.\n'
         )
         self.nomenclatureInfo.setToolTip(
             'The script uses the defined textureSet and map\'s names to understand your naming convention. \nI.e: myProject_character_left_arm_metalness.png will have character_left_arm as textureSet and metalness as map\nThen the script will find all your textureSets and maps, looking for the different parts of your files names'
@@ -98,7 +98,7 @@ class PainterToMayaUI:
         self.namingConventionSubLayout1.insertLayout(2, self.namingConventionSubLayoutValue, stretch=0)
 
         # Add Naming Convention widgets
-        self.textureSetLabel = QtWidgets.QLabel('Texture Set/Shader Name')
+        self.textureSetLabel = QtWidgets.QLabel('Texture Set')
         self.namingConventionSubLayoutLabel.addWidget(self.textureSetLabel)
 
         self.textureSet = QtWidgets.QLineEdit('enter_shader_name')
