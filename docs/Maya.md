@@ -79,6 +79,7 @@ Shelf items shown above are oranized into the following sections:
      Two roughness values based on masked regions.
    - *Cloth Shader Network*<br>
       See [docs](https://docs.sharktacos.com/texture/FabricArnold.html) for more detail. Defaults to plain weave but pattern can be swapped out with maps provided in docs [download](https://docs.sharktacos.com/images/tutorials/Assets/Maya/fabricMaps.zip)
-
+   - *Layer Shader Network*<br>
+     Converts the selected shader (aiStandardSurface) into a Layer Shader network, making a duplicate of the aiStandardSurface shader and its input texture connections and hooking these into the aiLayerShader. 
    
    
