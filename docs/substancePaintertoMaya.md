@@ -67,7 +67,7 @@ Select the desired options, and click the "Proceed" button. If you have the (def
 
 
 ## Limitations
- - Only the Arnold renderer is supported. I have not had a chance to test this out in Renderman or Vray. Maybe some day.
+ - Only the Arnold renderer is supported. I have not had a chance to test this out in Renderman or Vray. Maybe some day, but don't hold your breath.
 
 ## Enhancements
 
