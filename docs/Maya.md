@@ -38,6 +38,9 @@ If your prefs directory is in a different location you can edit the file to poin
 Shelf items shown above are oranized into the following sections:
 
  ## Lights
+ 
+ ![img](img/maya_shelf_lights.jpg)
+ 
    - *custom point light*<br>
      This creates a point light with a templated sphere showing the size (radius) of the light.
    - *custom area light (Arnold)*
@@ -45,6 +48,9 @@ Shelf items shown above are oranized into the following sections:
    - *custom dome light (Arnold)*
  
  ## Scripts
+ 
+  ![img](img/maya_shelf_scripts.jpg)
+  
    - *Material Transfer GUI*<br>
      Used to transfer shader assignments from a lookdev asset to its corresponding Alembic cache. [Watch a video](https://vimeo.com/252241167) showing the use of this GUI. 
    - *UV Transfer GUI*
@@ -52,16 +58,22 @@ Shelf items shown above are oranized into the following sections:
     converts the custom LPEs (provided in the .json file described above) to Light Groups.
    - *Remove Light Group AOVs* 
    - *Renderman MakeTX GUI*<br>
-     GUI for MakeTx to convert textures to mipmap TX files with an OCIO config in Renderman. See the [doc page](https://docs.sharktacos.com/texture/mipmap.html) for usage.
-    - *Substance to Maya*<br>
+   GUI for MakeTx to convert textures to mipmap TX files with an OCIO config in Renderman. See the [doc page](https://docs.sharktacos.com/texture/mipmap.html) for usage.
+   - *Substance to Maya*<br>
       Automatic creation of shader networks and textures from Substance 3D Painter. See the [dedicated page](substancePaintertoMaya.md) for details.
 
 ## Arnold
+
+ ![img](img/maya_shelf_arnold.jpg)
+ 
    - *Arnold Render View*
    - *Create Texture File Node*
    - *Create Arnold Standard Shader*
    
 ## Shader Networks
+
+ ![img](img/maya_shelf_networks.jpg)
+ 
    - *Blend Roughness*<br>
      Two roughness values based on masked regions.
    - *Cloth Shader Network*<br>
