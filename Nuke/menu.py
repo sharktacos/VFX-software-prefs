@@ -12,6 +12,7 @@ toolbar.addCommand( "Gizmos/bm_OpticalGlow", "nuke.createNode('bm_OpticalGlow')"
 toolbar.addCommand( "Gizmos/bm_OpticalLightwrap", "nuke.createNode('bm_OpticalLightwrap')")
 toolbar.addCommand( "Gizmos/mmColorTarget", "nuke.createNode('mmColorTarget')")
 toolbar.addCommand( "Gizmos/OpticalZDefocus", "nuke.createNode('OpticalZDefocus')")
+toolbar.addCommand( "Gizmos/bokeh_blur", "nuke.createNode('bokeh_blur')")
 
 # obsolete
 '''
