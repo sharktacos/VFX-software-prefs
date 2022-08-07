@@ -27,11 +27,21 @@ This needs to match the name of the shader assigned in Maya. In Substance this i
 
 | map | name | texture creation method 
 |----|----|----
-| diffuse/base color | dif | Substance Painter: export textures
-| metalness | met  | Substance Painter: export textures
-|  bump | bmp  | Substance Painter: export textures
-| specular roughness | spc, ruf | Substance Painter: export mask to file
-| layer mix | lyr | Substance Painter: export mask to file
+| diffuse/base color | dif | Export Textures "DF - Arnold (Color Bump Metal SpcMask)"
+|  bump | bmp  | Export Textures "DF - Arnold (Color Bump Metal SpcMask)"
+| metalness | met  | Export Textures "DF - Arnold (Color Bump Metal SpcMask)"
+| specular roughness | spc, ruf | Export Textures "DF - Arnold (Color Bump Metal SpcMask)"
+| layer mix | lyr | Mask context menu "Export mask to file"
+
+ ![img](img/Substance_texOut.jpg)
+Color, bump, metalness, and specular roughness masks call all be exported from Substance Painter using the "DF - Arnold (Color Bump Metal SpcMask)" output template included in the [Substance tools](Substance.md).
+
+Layer masks need to be saved manually by right-clicking on the mask in the Layers and selecting "Export Mask to File" from the context menu.
+
+
+ ![img](img/Substance_maskMenu.jpg)
+ 
+
 
 ## Mari, Zbrush, Photoshop 
 
@@ -81,7 +91,7 @@ Select the desired options, and click the "Proceed" button. If you have the (def
 
 ### Specular Roughness mask network
  
-While color, bump, and metalness texture maps are exported from Substance using the "export textures" dialog, specular roughness maps are instead made with a alpha mask and exported via "export mask to file" in Substance Painter, using the naming convention of either ruf or spc. The black and white values of this mask are then remaped to two roughness sliders (color1 and color2 shown in the Attribute Editor below). This provides artistic control, rather than having the roughness slider locked off with a texture map.
+While color, bump, and metalness texture maps are connected directly to the shader attributes, specular roughness maps are instead made with an alpha mask which is exported through a custom user channel. The black and white values of this mask are then remaped to two roughness sliders (color1 and color2 shown in the Attribute Editor below). This provides artistic control, rather than having the roughness slider locked off with a texture map.
 
 ![img](img/sp2m_roughness.jpg)
 
