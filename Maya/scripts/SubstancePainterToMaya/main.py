@@ -218,14 +218,14 @@ def proceed(ui, foundTextures, renderer, uiElements):
             # Create file node and 2dPlacer
             fileNode = helper.createFileNode(texture, UDIMs)
 
-        # Create material
-        material, materialNotFound = helper.checkCreateMaterial(ui, texture, renderer)
+            # Create material
+            material, materialNotFound = helper.checkCreateMaterial(ui, texture, renderer)
 
-        if materialNotFound:
-            continue
+            if materialNotFound:
+                continue
 
-        texture.textureSet = material
-        render_helper.connect(ui, texture, renderer, fileNode)
+            texture.textureSet = material
+            render_helper.connect(ui, texture, renderer, fileNode)
 
         # Add subdivisions
         if subdivisions == True:

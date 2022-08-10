@@ -1,6 +1,7 @@
 import maya.cmds as mc
 import os
 from PySide2 import QtWidgets
+import PySide2
 import re
 
 
@@ -278,6 +279,7 @@ def createFileNode(texture, UDIMS):
 
     # Set the file path of the file node
     mc.setAttr(fileNode + '.fileTextureName', itemPath, type='string')
+
     # Set alpha is luminance
     mc.setAttr(fileNode + '.alphaIsLuminance', True)
 
@@ -481,6 +483,18 @@ def createDisplacementMap(texture, fileNode, colorCorrect=False, forceTexture=Tr
             mc.connectAttr(displaceNode + '.displacement',
                            shadingGroup + '.displacementShader', force=forceTexture)
 
+def is_black_constant(path):
+    img = PySide2.QtGui.QImage(path)
+
+    if img.isNull():
+        return False 
+
+    if not img.format() == img.Format_Grayscale8:
+        img.convertTo(img.Format_Grayscale8)
+
+    return not any(img.constBits())
+
+
 def createSpecMap(texture, fileNode, colorCorrect=False, forceTexture=True):
     """
     Connect the specRoughness map with the mix nodes
@@ -495,28 +509,35 @@ def createSpecMap(texture, fileNode, colorCorrect=False, forceTexture=True):
     material = texture.textureSet
     attributeName = texture.materialAttribute
 
-    # Create the blendColor and luminance nodes and set attributes
-    blendNode = mc.shadingNode(blendNode, asUtility=True, name='blendRoughness')
-    mc.setAttr (blendNode + ".color1", 0.2, 0.2, 0.2, type='double3')
-    mc.setAttr (blendNode + ".color2", 0.5, 0.5, 0.5, type='double3')
+    
+    # if mask is empty (all black pixels) don't connect it
+    empty = is_black_constant(texture.filePath)
+    print (texture.textureSet + ' is ' + str(empty) )
+    if not empty:
+        print ('connecting: ' + texture.textureSet )
 
-    # Connect the file to blend, and blend to luma 
-    connectTexture(fileNode, 'outColorR', blendNode, 'blender', colorCorrect)
+        # Create the blendColor and luminance nodes and set attributes
+        blendNode = mc.shadingNode(blendNode, asUtility=True, name='blendRoughness')
+        mc.setAttr (blendNode + ".color1", 0.2, 0.2, 0.2, type='double3')
+        mc.setAttr (blendNode + ".color2", 0.5, 0.5, 0.5, type='double3')
 
-    # List all the connection in the material attribute
-    connectedNodes = mc.listConnections(material + '.' + attributeName)
+        # Connect the file to blend, and blend to luma 
+        connectTexture(fileNode, 'outColorR', blendNode, 'blender', colorCorrect)
 
-    # If there's connections
-    if connectedNodes:
+        # List all the connection in the material attribute
+        connectedNodes = mc.listConnections(material + '.' + attributeName)
 
-        for node in connectedNodes:
+        # If there's connections
+        if connectedNodes:
 
-            # Replace the connection by the spec node tree if the force texture is true
+            for node in connectedNodes:
+
+                # Replace the connection by the spec node tree if the force texture is true
+                mc.connectAttr(blendNode + '.outputR', material + '.' + attributeName, force=forceTexture)
+
+        # If there's not connections
+        else:
+
+            # Connect the spec node tree to the material attribute
             mc.connectAttr(blendNode + '.outputR', material + '.' + attributeName, force=forceTexture)
-
-    # If there's not connections
-    else:
-
-        # Connect the spec node tree to the material attribute
-        mc.connectAttr(blendNode + '.outputR', material + '.' + attributeName, force=forceTexture)
 
