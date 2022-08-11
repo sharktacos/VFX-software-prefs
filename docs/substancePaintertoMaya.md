@@ -34,6 +34,7 @@ This needs to match the name of the shader assigned in Maya. In Substance this i
 | layer mix | lyr | Mask context menu "Export mask to file"
 
  ![img](img/Substance_texOut.jpg)
+ 
 Color, bump, metalness, and specular roughness masks call all be exported from Substance Painter using the "DF - Arnold (Color Bump Metal SpcMask)" output template included in the [Substance tools](Substance.md).
 
 Layer masks need to be saved manually by right-clicking on the mask in the Layers and selecting "Export Mask to File" from the context menu.
@@ -43,7 +44,7 @@ Layer masks need to be saved manually by right-clicking on the mask in the Layer
  
 
 
-## Mari, Zbrush, Photoshop 
+## Textures from Other Programs - Mari, Zbrush, Photoshop 
 
 As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. For example here are displacement and normal maps exported from Zbrush: 
 
@@ -85,19 +86,10 @@ Select the desired options, and click the "Proceed" button. If you have the (def
 
 
 ## Limitations
- - Only the Arnold renderer is supported (AiStandardSurface and AiLayerShader). I have not had a chance to test this out in Renderman or Vray. Maybe some day, but don't hold your breath.
+ - Only the Arnold renderer is supported (AiStandardSurface and AiLayerShader). I have not had a chance to test this out in Renderman or Vray. Maybe some day, but don't hold your breath! :)
 
 ## Enhancements
 
-### Specular Roughness mask network
- 
-While color, bump, and metalness texture maps are connected directly to the shader attributes, specular roughness maps are instead made with an alpha mask which is exported through a custom user channel. The black and white values of this mask are then remaped to two roughness sliders (color1 and color2 shown in the Attribute Editor below). This provides artistic control, rather than having the roughness slider locked off with a texture map.
-
-![img](img/sp2m_roughness.jpg)
-
-Note that this workflow is also included in the roughness section of my "UberShader" Smart Material included in the [Substance tools](Substance.md). The technique is also demonstrated here:
-
-<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/326948120?h=da9e609785&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Substance Painter: A better way to export roughness maps for artistic control"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script><br>
 
 ### Color maps multiple inputs, and default shader settings
 
@@ -113,6 +105,21 @@ Additionally the following attributes are set on all the aiStandardSurface shade
 - subsurface scale: 0.1
 - subsurface anisotropy: 0.8
 
+### Specular Roughness mask network
+ 
+While color, bump, and metalness texture maps are connected directly to the shader attributes, specular roughness maps are instead made with an alpha mask which is exported through a custom user channel. The black and white values of this mask are then remaped to two roughness sliders (color1 and color2 shown in the Attribute Editor below). This provides artistic control, rather than having the roughness slider locked off with a texture map.
+
+![img](img/sp2m_roughness.jpg)
+
+Note that this workflow is also included in the roughness section of my "UberShader" Smart Material included in the [Substance tools](Substance.md). The technique is also demonstrated here:
+
+<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/326948120?h=da9e609785&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Substance Painter: A better way to export roughness maps for artistic control"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script><br>
+
+### Constant Color detection
+
+For a metallness map, Arnold uses the "constant color detect" function of maketx. So if the metallness map is a 2048x2048 solid white texture, instead of storing all those pixels in memory it will instead uses a 64x64 pixel texture. 
+
+Similar to the constant color detect for metallness maps, the script has added functionlaity to parse specular roughness texture maps to detect if they are empty (all black pixels), indicating that they were output by Substance Painter, but were not painted. In this case it will skip that texture, not connecting the spec mask network to the roughness slider.
 
 ### Layer Shader network option
  
