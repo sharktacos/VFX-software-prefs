@@ -115,17 +115,16 @@ Note that this workflow is also included in the roughness section of my "UberSha
 
 <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/326948120?h=da9e609785&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Substance Painter: A better way to export roughness maps for artistic control"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script><br>
 
-### Constant Color detection
-
-For a metallness map, Arnold uses the "constant color detect" function of maketx. So if the metallness map is a 2048x2048 solid white texture, instead of storing all those pixels in memory it will instead uses a 64x64 pixel texture. 
-
-Similar to the constant color detect for metallness maps, the script has added functionlaity to parse specular roughness texture maps to detect if they are empty (all black pixels), indicating that they were output by Substance Painter, but were not painted. In this case it will skip that texture, not connecting the spec mask network to the roughness slider.
 
 ### Layer Shader network option
  
 If a layer map is found (naming: 'Layer', 'layer', 'lyr') the aiStandardSurface shader is duplicated with all of its input connections, and these two shaders are then connected to a layerShader. Finally the layer texture map is input into the layer mix. 
  
 ![img](img/sp2m_layer.jpg)
+
+## Zero Pixel detection
+
+For a metallness map, Arnold uses the "constant color detect" function of maketx, so if the metallness map is a 2048x2048 solid white texture, instead of storing all those pixels in memory it will instead uses a 64x64 pixel texture. In addition to this, the script has added functionlaity to parse all mask texture maps (metalness, specular roughness, layer mix) to detect zero pixel files, i.e. files where are the pixels are black, indicating that they were output by Substance Painter, but were not painted. In this case the script will skip that texture, leaving the slider free. The skipped files are listed on the Script Editor output.
    
 
 
