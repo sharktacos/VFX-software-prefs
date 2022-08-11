@@ -37,7 +37,7 @@ The exported texture files must contain the *shader name* and *map type* in the 
 
  ![img](img/Substance_texOut.jpg)
 
-Layer shader masks are exported manually by right-clicking the mask in the layers panel and selecting "Export mask to file" from using the context menu.
+Layer shader masks are exported manually by right-clicking the mask in the layers panel and selecting "Export mask to file" from the context menu.
 
  ![img](img/Substance_maskMenu.jpg)
 
