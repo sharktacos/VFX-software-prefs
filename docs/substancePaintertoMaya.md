@@ -41,7 +41,7 @@ Layer shader masks are exported manually by right-clicking the mask in the layer
 
  ![img](img/Substance_maskMenu.jpg)
 
-## Textures from Other Programs - Mari, Zbrush, Photoshop 
+## Exporting Textures from Other Programs - Mari, Zbrush, Photoshop 
 
 As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. For example here are displacement and normal maps exported from Zbrush: 
 
