@@ -22,11 +22,13 @@ This needs to match the name of the shader assigned in Maya. In Substance this i
 
 | map | name | 
 |----|----
-| diffuse/base color | dif 
-|  bump/height | bmp  
-| metalness | met 
-| specular roughness | spc, ruf 
-| layer mix | lyr 
+| diffuse/base color | 'dif', 'baseColor', 'BaseColor', 'basecolor', 'color', 'Color','albedo', 'Albedo', 'diffuse', 'Diffuse', 'diff', 'Diff'
+|  bump/height | 'bmp', 'height', 'Height','bump', 'Bump', 'BumpMap', 'bumpMap'
+| metalness | 'met', 'metal', 'Metal', 'metalness', 'Metalness', 'metallic', 'Metallic', 'mtl'
+| specular roughness mask | 'spc', 'ruf', 'roughness', 'Roughness', 'specularRoughness', 'SpecularRoughness', 'specular', 'Specular', 'spec', 'Spec',
+| layer mix | 'lyr', 'Layer', 'layer'
+| normal | 'nor', 'normal', 'Normal', 'normalMap', 'NormalMap', 'nor'
+| displacement | 'dsp', 'displace', 'Displace', 'Displacement', 'displacement', 'displacementMap', 'DisplacementMap', 'disp'
 
 
 # Exporting Texture Maps 
@@ -42,12 +44,6 @@ Layer shader masks are exported manually by right-clicking the mask in the layer
 ## Textures from Other Programs - Mari, Zbrush, Photoshop 
 
 As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. For example here are displacement and normal maps exported from Zbrush: 
-
-| map | name 
-|----|----
-normal | nor 
-| displacement | dsp 
-
 
 Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because they are not modeling programs. Substance when it generates a normal map is simply converting a 2D hight map into the normal map format, not deriving it from a 3D sculpt.
 
