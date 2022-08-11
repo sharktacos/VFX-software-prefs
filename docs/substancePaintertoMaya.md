@@ -1,12 +1,39 @@
-# Substance 3D Painter to Maya (Arnold)
+# Sp2M: Substance 3D Painter to Maya (Arnold)
 
 Tool to automatically connect Substance 3D Painter textures to Maya shaders. Based on [the original script by Tristan Le Granche](https://github.com/Strangenoise/SubstancePainterToMaya). This version has been updated for Python 3 (required for Maya 2022 and up), and has added functionlaity described below.
 
+## Naming Convention
+
+The script works by parsing the texture maps in a folder based on a defined naming convention, and then assigning these found maps to their corresponding shaders. For example say we have the following naming for a texture map:
+
+```[assetName]_[shaderName]_[mapType]_[version]_[artist].[ext]```
+
+Example: ```car_hubcap_bmp_v01_dflood.exr```
+
+There are two parts of this file name we need to identify. The shader name and the map type.
+
+**ShaderName**
+
+This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet". That is, the names of the shaders assigned in Maya and exported as an FBX become the "texture sets" when the FBX is imported into Substance Painter. The texture maps containing this name will be assigned to the shader with the same name. 
+
+**map type**
+
+ The texture map type. In the case of our school's naming convention we use a 3 letter code (bmp for bump, and so on). The script recognizes several names for the map type, listed below. 
+
+| map | name | 
+|----|----
+| diffuse/base color | dif 
+|  bump/height | bmp  
+| metalness | met 
+| specular roughness | spc, ruf 
+| layer mix | lyr 
+
+
 # Exporting Texture Maps 
 
+The exported texture files must contain the shader name and map type in the file name. In Substance Painter this included in most Output templages through the $textureSet variable (for the shader name). Our recomended workflow is to use the  "DF - Arnold (Color Bump Metal SpcMask)" Output Template in combination with my uber shader Smart Material, all included in the [Substance tools](Substance.md). This will export out Color, bump, metalness, and specular roughness masks.
+
  ![img](img/Substance_texOut.jpg)
- 
-Color, bump, metalness, and specular roughness masks can all be exported from Substance Painter using my "DF - Arnold (Color Bump Metal SpcMask)" Output Template in combination with my uber shader Smart Material, all included in the [Substance tools](Substance.md). 
 
 Layer shader masks are exported manually by right-clicking the mask in the layers panel and selecting "Export mask to file" from using the context menu.
 
@@ -25,31 +52,6 @@ normal | nor
 Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because they are not modeling programs. Substance when it generates a normal map is simply converting a 2D hight map into the normal map format, not deriving it from a 3D sculpt.
 
 
-## Naming Convention
-
-The script works by parsing the texture maps in a folder based on a defined naming convention, and then assigning these found maps to their corresponding shaders. For example say we have the following naming for a texture map:
-
-```[assetName]_[shaderName]_[mapType]_[version]_[artist].[ext]```
-
-Example: ```car_hubcap_bmp_v01_dflood.exr```
-
-There are two parts of this file name we need to identify. The shader name and the map type.
-
-**ShaderName**
-
-This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet". That is, the names of the shaders assigned in Maya and exported as an FBX become the "texture sets" when the FBX is imported into Substance Painter. The texture maps containing this name will be assigned to the shader with the same name. 
-
-**map type**
-
- The 3 letter code of the texture map type:
-
-| map | name | 
-|----|----
-| diffuse/base color | dif 
-|  bump/height | bmp  
-| metalness | met 
-| specular roughness | spc, ruf 
-| layer mix | lyr 
 
 
 
