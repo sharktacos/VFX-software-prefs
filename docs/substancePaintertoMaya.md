@@ -14,11 +14,11 @@ There are two parts of this file name we need to identify. The shader name and t
 
 **Shader Name**
 
-This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet". That is, the names of the shaders assigned in Maya and exported as an FBX become the "texture sets" when the FBX is imported into Substance Painter. The texture maps containing this name will be assigned to the shader with the same name. 
+This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet" (called with the $textureSet variable in Output presets). That is, the names of the shaders assigned to a model in Maya become the "texture sets" when the FBX is imported into Substance Painter. The script will find texture maps containing this name and assign these to the shader with the same name in Maya. 
 
 **Map Type Name**
 
-The texture map type name. In the case of our school's naming convention, we use a 3 letter code (dif for diffuse, bmp for bump, and so on). The script recognizes several names for the map type, listed below. 
+The texture map type name. In the case of our school's naming convention, we use a 3 letter code (dif for diffuse, bmp for bump, and so on). The script recognizes several names for the map type, listed below. Based on these names in the texture file the script will know where to connect the map to the shader in Maya.
 
 | map | name | 
 |----|----
@@ -33,7 +33,7 @@ The texture map type name. In the case of our school's naming convention, we use
 
 # Exporting Texture Maps 
 
-The exported texture files must contain the shader name and map type in the file name. In Substance Painter this included in most Output templages through the $textureSet variable (for the shader name). Our recomended workflow is to use the  "DF - Arnold (Color Bump Metal SpcMask)" Output Template in combination with my uber shader Smart Material, all included in the [Substance tools](Substance.md). This will export out Color, bump, metalness, and specular roughness masks.
+The exported texture files must contain the *shader name* and *map type* in the texture file name. In Substance Painter this is included in most Output templages through the $textureSet variable (for the shader name). For our recomended workflow we use the  ```DF - Arnold (Color Bump Metal SpcMask)``` Output Template (pictured below) which works in combination with my uber shader Smart Material, all included in the [Substance tools](Substance.md). This will export out Color, bump, metalness, and specular roughness masks.
 
  ![img](img/Substance_texOut.jpg)
 
