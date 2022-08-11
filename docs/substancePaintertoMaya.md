@@ -12,13 +12,13 @@ Example: ```car_hubcap_bmp_v01_dflood.exr```
 
 There are two parts of this file name we need to identify. The shader name and the map type.
 
-**ShaderName**
+**Shader Name**
 
 This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet". That is, the names of the shaders assigned in Maya and exported as an FBX become the "texture sets" when the FBX is imported into Substance Painter. The texture maps containing this name will be assigned to the shader with the same name. 
 
-**map type**
+**Map Type Name**
 
- The texture map type. In the case of our school's naming convention we use a 3 letter code (bmp for bump, and so on). The script recognizes several names for the map type, listed below. 
+The texture map type name. In the case of our school's naming convention, we use a 3 letter code (dif for diffuse, bmp for bump, and so on). The script recognizes several names for the map type, listed below. 
 
 | map | name | 
 |----|----
