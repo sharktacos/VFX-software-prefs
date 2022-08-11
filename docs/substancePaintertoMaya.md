@@ -22,13 +22,13 @@ The texture map type name. In the case of our school's naming convention, we use
 
 | map | name | 
 |----|----
-| diffuse/base color | 'dif', 'baseColor', 'BaseColor', 'basecolor', 'color', 'Color','albedo', 'Albedo', 'diffuse', 'Diffuse', 'diff', 'Diff'
-|  bump/height | 'bmp', 'height', 'Height','bump', 'Bump', 'BumpMap', 'bumpMap'
-| metalness | 'met', 'metal', 'Metal', 'metalness', 'Metalness', 'metallic', 'Metallic', 'mtl'
-| specular roughness mask | 'spc', 'ruf', 'roughness', 'Roughness', 'specularRoughness', 'SpecularRoughness', 'specular', 'Specular', 'spec', 'Spec',
-| layer mix | 'lyr', 'Layer', 'layer'
-| normal | 'nor', 'normal', 'Normal', 'normalMap', 'NormalMap', 'nor'
-| displacement | 'dsp', 'displace', 'Displace', 'Displacement', 'displacement', 'displacementMap', 'DisplacementMap', 'disp'
+| diffuse/base color | '**dif**', 'baseColor', 'BaseColor', 'basecolor', 'color', 'Color','albedo', 'Albedo', 'diffuse', 'Diffuse', 'diff', 'Diff'
+|  bump/height | '**bmp**', 'height', 'Height','bump', 'Bump', 'BumpMap', 'bumpMap'
+| metalness | '**met**', 'metal', 'Metal', 'metalness', 'Metalness', 'metallic', 'Metallic', 'mtl'
+| specular roughness mask | '**spc**', 'ruf', 'roughness', 'Roughness', 'specularRoughness', 'SpecularRoughness', 'specular', 'Specular', 'spec', 'Spec',
+| layer mix | '**lyr**', 'Layer', 'layer'
+| normal | '**nor**', 'normal', 'Normal', 'normalMap', 'NormalMap', 'nor'
+| displacement | '**dsp**', 'displace', 'Displace', 'Displacement', 'displacement', 'displacementMap', 'DisplacementMap', 'disp'
 
 
 # Exporting Texture Maps 
