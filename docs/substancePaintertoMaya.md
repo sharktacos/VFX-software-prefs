@@ -63,11 +63,11 @@ Click the shelf button to launch the GUI.
  
 There are three fields we need to look at
 
-1. **Texture file location** *The first field* will default to the texture directory defined in your Maya project settings. If your textures are in a sub folder, you can navigate there. 
+1. **Texture file location** This will default to the texture directory defined in your Maya project settings. If your textures are in a sub folder, you can navigate there. 
 
-2. **texture set/shader name** In *the second field* put one of the textureSets (i.e. the shader name) included in your texture's file name. You only need to enter one texture set and the script will find all the others.  
+2. **texture set/shader name** Enter the name of one of the textureSets (i.e. the shader name) included in your texture's file name. You only need to enter one texture set and the script will find all the others.  
 
-3. **map type** In *the third field* put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). Assuming you are using the naming convention of "dif" for your diffuse map you can just leave this as is.
+3. **map type** In the third field put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). Assuming you are using the naming convention of "dif" for your diffuse map you can just leave this as is.
 
 Click  the "Launch" button and the script will search your textures for matches. This will open the second panel, shown below, where all the texure matches are listed. 
 
@@ -115,7 +115,7 @@ If a layer map is found (naming: 'Layer', 'layer', 'lyr') the aiStandardSurface 
 
 ## Zero Pixel detection
 
-For a metallness map, Arnold uses the "constant color detect" function of maketx, so if the metallness map is a 2048x2048 solid white texture, instead of storing all those pixels in memory it will instead uses a 64x64 pixel texture. In addition to this, the script has added functionlaity to parse all mask texture maps (metalness, specular roughness, layer mix) to detect zero pixel files, i.e. files where are the pixels are black, indicating that they were output by Substance Painter, but were not painted. In this case the script will skip that texture, leaving the slider free. The skipped files are listed on the Script Editor output.
+For a metallness map, Arnold uses the "constant color detect" function of maketx, so if the metallness map is a 2048x2048 solid white texture, instead of storing all those pixels in memory it will instead uses a 64x64 pixel texture. In addition to this, the script has added functionlaity to parse all mask texture maps (metalness, specular roughness, layer mix) to detect zero pixel files, i.e. files where all the pixels are black, indicating that they were output by Substance Painter, but were not painted. In this case the script will skip these empty texture map files, leaving the slider free. The skipped files are listed on the Script Editor output.
    
 
 
