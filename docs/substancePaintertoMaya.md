@@ -33,7 +33,7 @@ The texture map type name. In the case of our school's naming convention, we use
 
 # Exporting Texture Maps 
 
-The exported texture files must contain the *shader name* and *map type* in the texture file name. In Substance Painter this is included in most Output templages through the $textureSet variable (for the shader name). For our recomended workflow we use the  ```DF - Arnold (Color Bump Metal SpcMask)``` Output Template (pictured below) which works in combination with my uber shader Smart Material, all included in the [Substance tools](Substance.md). This will export out Color, bump, metalness, and specular roughness masks.
+The exported texture files must contain the *shader name* and *map type* in the texture file name. In Substance Painter this is included in most Output templages through the $textureSet variable (for the shader name). For our recomended workflow we use the  ```DF - Arnold (Color Bump Metal SpcMask)``` Output Template (pictured below) which works in combination with my uber shader Smart Material, which mirrors the aiStandardSurface shader. All of these are included in the [Substance tools](Substance.md). This will export out Color, bump, metalness, and specular roughness masks.
 
  ![img](img/Substance_texOut.jpg)
 
