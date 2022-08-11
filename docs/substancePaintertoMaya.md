@@ -6,7 +6,9 @@ Tool to automatically connect Substance 3D Painter textures to Maya shaders. Bas
 
  ![img](img/Substance_texOut.jpg)
  
-Color, bump, metalness, specular roughness masks, and layer shader masks can all be exported from Substance Painter using my "DF - Arnold (Color Bump Metal SpcMask Layer)" Output Template in combination with my uber shader Smart Material, all included in the [Substance tools](Substance.md). 
+Color, bump, metalness, and specular roughness masks can all be exported from Substance Painter using my "DF - Arnold (Color Bump Metal SpcMask)" Output Template in combination with my uber shader Smart Material, all included in the [Substance tools](Substance.md). 
+
+Layer shader masks are exported manually by right-clicking the mask in the layers panel and selecting "Export mask to file" from using the context menu.
 
  ![img](img/Substance_maskMenu.jpg)
 
