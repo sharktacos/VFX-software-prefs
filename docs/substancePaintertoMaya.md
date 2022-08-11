@@ -60,18 +60,14 @@ The script is included in the [custom Maya shelf](Maya.md#maya-shelf).
 Click the shelf button to launch the GUI. 
  
  ![img](img/sp2m_gui1.jpg)
+ 
+There are three fields we need to look at
 
-**Texture file location**
+1. **Texture file location** *The first field* will default to the texture directory defined in your Maya project settings. If your textures are in a sub folder, you can navigate there. 
 
-*The first field* will default to the texture directory defined in your Maya project settings. If your textures are in a sub folder, you can navigate there. 
+2. **texture set/shader name** In *the second field* put one of the textureSets (i.e. the shader name) included in your texture's file name. You only need to enter one texture set and the script will find all the others.  
 
-**texture set/shader name**
-
-In *the second field* put one of the textureSets (i.e. the shader name) included in your texture's file name. You only need to enter one texture set and the script will find all the others.  
-
-**map type**
-
-In *the third field* put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). Assuming you are using the naming convention of "dif" for your diffuse map you can just leave this as is.
+3. **map type** In *the third field* put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). Assuming you are using the naming convention of "dif" for your diffuse map you can just leave this as is.
 
 Click  the "Launch" button and the script will search your textures for matches. This will open the second panel, shown below, where all the texure matches are listed. 
 
