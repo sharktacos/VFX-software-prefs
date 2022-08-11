@@ -1,6 +1,7 @@
 import maya.cmds as mc
 from SubstancePainterToMaya import helper
 from importlib import reload
+import PySide2
 reload(helper)
 
 def addSubdivisions(ui, texture):
@@ -158,35 +159,42 @@ def createLayerNetwork(texture, renderer, fileNode):
     materialTypeLyr = renderer.renderParameters.SHADER_LYR
     mixNode = renderer.renderParameters.MIX_NODE
     attributeName = texture.materialAttribute
+    
+    # if mask is empty (all black pixels) don't connect it
+    empty = helper.is_black_constant(texture.filePath)
 
-    # Get shader group connection
-    SG = mc.listConnections (materialName + '.outColor', d=True, s=False)[0] or []
+    if empty: 
+        print('Detected zero pixel texture map, skipping: ' + texture.textureName)
 
-    # check if layer network already exists
-    if mc.objectType(SG) == 'shadingEngine':
+    if not empty:
 
-        # duplicate material with inputs
-        materialName_top = mc.duplicate(materialName, ic=True, name=materialName + '_top')[0] or []
+        # Get shader group connection
+        SG = mc.listConnections (materialName + '.outColor', d=True, s=False)[0] or []
 
-        # create layer shader and connect mix
-        layer_material = mc.shadingNode(materialTypeLyr, asShader=True, name=materialName + '_lyr')
-        mc.setAttr( layer_material+'.enable2', 1)
-        mc.connectAttr(fileNode + '.outAlpha', layer_material + '.' + mixNode, force=True)
+        # check if layer network already exists
+        if mc.objectType(SG) == 'shadingEngine':
 
-        # Connect the shading network
-        mc.connectAttr (materialName + '.outColor', layer_material + '.input1')
-        mc.connectAttr (materialName_top + '.outColor', layer_material + '.input2')
+            # duplicate material with inputs
+            materialName_top = mc.duplicate(materialName, ic=True, name=materialName + '_top')[0] or []
 
-        # Connect the lyr material to the original shading group
-        mc.connectAttr(layer_material + '.outColor', SG + '.surfaceShader', force=True)
+            # create layer shader and connect mix
+            layer_material = mc.shadingNode(materialTypeLyr, asShader=True, name=materialName + '_lyr')
+            mc.setAttr( layer_material+'.enable2', 1)
+            mc.connectAttr(fileNode + '.outAlpha', layer_material + '.' + mixNode, force=True)
+
+            # Connect the shading network
+            mc.connectAttr (materialName + '.outColor', layer_material + '.input1')
+            mc.connectAttr (materialName_top + '.outColor', layer_material + '.input2')
+
+            # Connect the lyr material to the original shading group
+            mc.connectAttr(layer_material + '.outColor', SG + '.surfaceShader', force=True)
         
-        # Connect displacement map
-        if attributeName == 'displacementShader':
-            helper.createDisplacementMap(texture, fileNode)
+            # Connect displacement map
+            if attributeName == 'displacementShader':
+                helper.createDisplacementMap(texture, fileNode)
 
-
-    else:
-        print('The shader \"' + materialName + '\" has already been assigned a layer shader network. Skipping.')
+        else:
+            print('The shader \"' + materialName + '\" has already been assigned a layer shader network. Skipping.')
 
 #    return materialName
     
@@ -233,7 +241,43 @@ def createSSSMap(texture, fileNode, colorCorrect=False, forceTexture=True):
         mc.connectAttr(fileNode + '.outColor', material + sssColor, force=forceTexture)
         mc.connectAttr(fileNode + '.outColor', material + baseColor, force=forceTexture)
 
+def createMetalMap(texture, fileNode, colorCorrect=False, forceTexture=True):
+    """
+    Connect the metalness map
+    :param material: The name of the material
+    :param attributeName: The name of the material attribute to use
+    :param forceTexture: Specify if the texture connection is forced
+    :param imageNode: The file node to connect
+    :return: None
+    """
 
+    material = texture.textureSet
+    attributeName = texture.materialAttribute
+    metalness = '.metalness'
+    empty = helper.is_black_constant(texture.filePath)
+
+    # if mask is empty (all black pixels) don't connect it
+    if empty: 
+        print('Detected zero pixel texture map, skipping: ' + texture.textureName)
+
+    if not empty:
+
+        # List all the connection in the material attribute
+        connectedNodes = mc.listConnections(material + '.' + attributeName)
+
+        # If there's connections
+        if connectedNodes:
+
+            for node in connectedNodes:
+
+                # Replace the connection if the force texture is true
+                mc.connectAttr(fileNode + '.outColorR', material + metalness, force=forceTexture)
+
+        # If there's not connections
+        else:
+
+            # Connect the color texture map to the SSS
+            mc.connectAttr(fileNode + '.outColorR', material + metalness, force=forceTexture)
 
 
 def connect(ui, texture, renderer, fileNode):
@@ -277,8 +321,11 @@ def connect(ui, texture, renderer, fileNode):
     elif attributeName == 'baseColor':
         createSSSMap(texture, fileNode, colorCorrect)
 
+    # If metalness 
+    elif attributeName == 'metalness':
+        createMetalMap(texture, fileNode, colorCorrect)
+
     # If it's another type of map
     else:
         helper.connectTexture(fileNode, texture.output, texture.textureSet, attributeName, colorCorrect)
-
 

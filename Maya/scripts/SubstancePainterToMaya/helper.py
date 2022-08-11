@@ -436,7 +436,7 @@ def connectTexture(textureNode, textureOutput, targetNode, targetInput, colorCor
     :param targetInput: Input attribute of the material node we need to use
     :return: None
     """
-    
+
     # If use colorCorrect
     if colorCorrect == True:
 
@@ -451,7 +451,7 @@ def connectTexture(textureNode, textureOutput, targetNode, targetInput, colorCor
         # Connect the color correct to the material
         mc.connectAttr(colorCorrect + '.' + textureOutput, targetNode + '.' + targetInput, force=forceTexture)
 
-    # Connect the file node output to material input, except fot mix2
+    # Connect the file node output to material input, except for mix2
     elif targetInput != 'mix2' and targetInput != 'displacementShader':
         mc.connectAttr(textureNode + '.' + textureOutput, targetNode + '.' + targetInput, force=forceTexture)
 
@@ -512,9 +512,10 @@ def createSpecMap(texture, fileNode, colorCorrect=False, forceTexture=True):
     
     # if mask is empty (all black pixels) don't connect it
     empty = is_black_constant(texture.filePath)
-    print (texture.textureSet + ' is ' + str(empty) )
+    if empty: 
+        print('Detected zero pixel texture map, skipping: ' + texture.textureName)
+
     if not empty:
-        print ('connecting: ' + texture.textureSet )
 
         # Create the blendColor and luminance nodes and set attributes
         blendNode = mc.shadingNode(blendNode, asUtility=True, name='blendRoughness')
