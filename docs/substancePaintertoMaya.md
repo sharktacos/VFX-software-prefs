@@ -1,21 +1,37 @@
 # Substance 3D Painter to Maya (Arnold)
 
-Tool to automatically connect Substance 3D Painter textures to Maya shaders. Based on [the original script by Tristan Le Granche](https://github.com/Strangenoise/SubstancePainterToMaya). This version has been updated for Python 3 (required for Maya 2022 and up). 
+Tool to automatically connect Substance 3D Painter textures to Maya shaders. Based on [the original script by Tristan Le Granche](https://github.com/Strangenoise/SubstancePainterToMaya). This version has been updated for Python 3 (required for Maya 2022 and up), and has added functionlaity described below.
 
-Note that as long as the texture maps follow the naming convention described below, they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. 
+# Exporting Texture Maps 
 
-This script is much more sophisticaed than [the one provided by Adobe/Substance](https://substance3d.adobe.com/documentation/integrations/apply-workflow-to-maps-223054251.html) in that it allows you to connect more complex shader networks, such as masked specular roughtness or layer shader networks, as described below. This results in more artistic control.
+ ![img](img/Substance_texOut.jpg)
+ 
+Color, bump, metalness, specular roughness masks, and layer shader masks can all be exported from Substance Painter using my "DF - Arnold (Color Bump Metal SpcMask Layer)" Output Template in combination with my uber shader Smart Material, all included in the [Substance tools](Substance.md). 
 
-## Usage
+ ![img](img/Substance_maskMenu.jpg)
 
-The script works by parsing the texture maps in a folder based on a defined naming convention, and then assigning these found maps to their corresponding shaders.
-For example say we have the following naming for a texture map:
+## Textures from Other Programs - Mari, Zbrush, Photoshop 
+
+As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. For example here are displacement and normal maps exported from Zbrush: 
+
+| map | name 
+|----|----
+normal | nor 
+| displacement | dsp 
+
+
+Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because they are not modeling programs. Substance when it generates a normal map is simply converting a 2D hight map into the normal map format, not deriving it from a 3D sculpt.
+
+
+## Naming Convention
+
+The script works by parsing the texture maps in a folder based on a defined naming convention, and then assigning these found maps to their corresponding shaders. For example say we have the following naming for a texture map:
 
 ```[assetName]_[shaderName]_[mapType]_[version]_[artist].[ext]```
 
 Example: ```car_hubcap_bmp_v01_dflood.exr```
 
-There are two parts of this file name we need to identify.
+There are two parts of this file name we need to identify. The shader name and the map type.
 
 **ShaderName**
 
@@ -25,36 +41,15 @@ This needs to match the name of the shader assigned in Maya. In Substance this i
 
  The 3 letter code of the texture map type:
 
-| map | name | texture creation method 
-|----|----|----
-| diffuse/base color | dif | Export Textures "DF - Arnold (Color Bump Metal SpcMask)"
-|  bump | bmp  | Export Textures "DF - Arnold (Color Bump Metal SpcMask)"
-| metalness | met  | Export Textures "DF - Arnold (Color Bump Metal SpcMask)"
-| specular roughness | spc, ruf | Export Textures "DF - Arnold (Color Bump Metal SpcMask)"
-| layer mix | lyr | Mask context menu "Export mask to file"
-
- ![img](img/Substance_texOut.jpg)
- 
-Color, bump, metalness, and specular roughness masks call all be exported from Substance Painter using the "DF - Arnold (Color Bump Metal SpcMask)" output template included in the [Substance tools](Substance.md).
-
-Layer masks need to be saved manually by right-clicking on the mask in the Layers and selecting "Export Mask to File" from the context menu.
+| map | name | 
+|----|----
+| diffuse/base color | dif 
+|  bump/height | bmp  
+| metalness | met 
+| specular roughness | spc, ruf 
+| layer mix | lyr 
 
 
- ![img](img/Substance_maskMenu.jpg)
- 
-
-
-## Textures from Other Programs - Mari, Zbrush, Photoshop 
-
-As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. For example here are displacement and normal maps exported from Zbrush: 
-
-| map | name | texture creation method 
-|----|----|----
-normal | nor | Zbrush: Multi-map exporter
-| displacement | dsp | Zbrush: Multi-map exporter
-
-
-Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because they are not modeling programs. Substance when it generates a normal map is simply converting a 2D hight map into the normal map format, not deriving it from a 3D sculpt.
 
 ## GUI
 
