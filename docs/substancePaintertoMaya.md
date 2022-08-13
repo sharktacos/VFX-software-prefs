@@ -113,9 +113,17 @@ If a layer map is found (naming: 'Layer', 'layer', 'lyr') the aiStandardSurface 
  
 ![img](img/sp2m_layer.jpg)
 
-## Zero Pixel detection
+## Detect Flat Color Texture Maps
 
-For a metallness map, Arnold uses the "constant color detect" function of maketx, so if the metallness map is a 2048x2048 solid white texture, instead of storing all those pixels in memory it will instead uses a 64x64 pixel texture. In addition to this, the script has added functionlaity to parse all mask texture maps (metalness, specular roughness, layer mix) to detect zero pixel files, i.e. files where all the pixels are black, indicating that they were output by Substance Painter, but were not painted. In this case the script will skip these empty texture map files, leaving the slider free. The skipped files are listed on the Script Editor output.
+The script parses the texture maps recognizing when an image is a flat solid color, indicating textures output by Substance Painter that were not painted. It will then do the following depending on the texture map type:
+
+- **BaseColor/diffuse maps** Will sample the color and put this in the color swatch, rather than connecting the flat texture map. 
+- **Metalness maps** Will set the slider to that value, rather than connecting the flat texture map.
+- **Bump & Normal maps** Will not connect the flat map, as it will have no effect on the shader.
+- **Spec roughness maps** Will not connect the flat map and network. Roughness value remains at its default settings.
+- **Layer Masks** Will not convert the shader to a Layer Shader network.
+
+Similiar to the "constant color detect" function of maketx for mipmap textures, the scri so if the metallness map is a 2048x2048 solid white texture, instead of storing all those pixels in memory it will instead uses a 64x64 pixel texture. In addition to this, the script has added functionlaity to parse all mask texture maps (metalness, specular roughness, layer mix) to detect zero pixel files, i.e. files where all the pixels are black, indicating that they were output by Substance Painter, but were not painted. In this case the script will skip these empty texture map files, leaving the slider free. The skipped files are listed on the Script Editor output.
    
 
 
