@@ -31,7 +31,7 @@ The texture map type name. In the case of our school's naming convention, we use
 | displacement | '**dsp**', 'displace', 'Displace', 'Displacement', 'displacement', 'displacementMap', 'DisplacementMap', 'disp'
 
 
-# Exporting Texture Maps 
+## Exporting Texture Maps 
 
 The exported texture files must contain the *shader name* and *map type* in the texture file name. In Substance Painter this is included in most Output templages through the $textureSet variable (for the shader name). For our recomended workflow we use the  ```DF - Arnold (Color Bump Metal SpcMask)``` Output Template (pictured below) which works in combination with my uber shader Smart Material, which mirrors a standard BRDF shader such as the aiStandardSurface in Arnold. All of these are included in the [Substance tools](Substance.md). This will export out Color, bump, metalness, and specular roughness masks.
 
@@ -49,9 +49,7 @@ Note that only Zbrush can derive a displacement or normal map from a sculpt. Pai
 
 
 
-
-
-## GUI
+## Using the GUI
 
 The script is included in the [custom Maya shelf](Maya.md#maya-shelf).
 
