@@ -115,15 +115,11 @@ If a layer map is found (naming: 'Layer', 'layer', 'lyr') the aiStandardSurface 
 
 ## Detect Flat Color Texture Maps
 
-The script parses the texture maps recognizing when an image is a flat solid color, indicating textures output by Substance Painter that were not painted. It will then do the following depending on the texture map type:
+The script parses the texture maps to detect when an image is a flat solid color, indicating textures output by Substance Painter that were not painted. It will then do the following depending on the texture map type:
 
-- **BaseColor/diffuse maps** Will sample the color and put this in the color swatch, rather than connecting the flat texture map. 
-- **Metalness maps** Will set the slider to that value, rather than connecting the flat texture map.
-- **Bump & Normal maps** Will not connect the flat map, as it will have no effect on the shader.
-- **Spec roughness maps** Will not connect the flat map and network. Roughness value remains at its default settings.
-- **Layer Masks** Will not convert the shader to a Layer Shader network.
-
-Similiar to the "constant color detect" function of maketx for mipmap textures, the scri so if the metallness map is a 2048x2048 solid white texture, instead of storing all those pixels in memory it will instead uses a 64x64 pixel texture. In addition to this, the script has added functionlaity to parse all mask texture maps (metalness, specular roughness, layer mix) to detect zero pixel files, i.e. files where all the pixels are black, indicating that they were output by Substance Painter, but were not painted. In this case the script will skip these empty texture map files, leaving the slider free. The skipped files are listed on the Script Editor output.
-   
-
+- **BaseColor/diffuse and SSS maps** Keep. These are connected, but the mipmap used is only a single tile via the --constant-color-detect option of maketx
+- **Metalness maps** Substitute value. Will set the slider to the pixel value, rather than connecting the flat texture map.
+- **Bump & Normal maps** Skipped. Will not connect the flat texture map, as it will have no effect on the shader.
+- **Spec roughness maps** Skipped. Will not connect the flat map and network. Roughness value remains at its default settings.
+- **Layer Masks** Skipped. Will not convert the shader to a Layer Shader network.
 
