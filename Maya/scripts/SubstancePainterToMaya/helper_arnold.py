@@ -43,53 +43,94 @@ def createNormalMap(texture, renderer, fileNode, colorCorrect, forceTexture=True
     material = texture.textureSet
     attributeName = texture.materialAttribute
 
-    # Create the normal utility
-    normalNode = mc.shadingNode(normalNode, asUtility=True)
+    # if texture is flat (all pixels the same value) skip
+    flat = helper.is_flat_color(texture.filePath)[0]
+    
+    if flat:
+        print('Normal map: Detected flat texture map. Skipping: ' + texture.textureName)
 
-    # Connect the file node to the normal utility node
-    helper.connectTexture(fileNode, 'outColor', normalNode, 'input', colorCorrect)
+    if not flat:
+        # Create the normal utility
+        normalNode = mc.shadingNode(normalNode, asUtility=True)
 
-    # List the connections in the material input attribute
-    connectedNodes = mc.listConnections(material + '.' + attributeName)
+        # Connect the file node to the normal utility node
+        helper.connectTexture(fileNode, 'outColor', normalNode, 'input', colorCorrect)
 
-    # If there's connected nodes
-    if connectedNodes:
+        # List the connections in the material input attribute
+        connectedNodes = mc.listConnections(material + '.' + attributeName)
 
-        for node in connectedNodes:
+        # If there's connected nodes
+        if connectedNodes:
 
-            # If this is already a normal utility node
-            if mc.objectType(node) == normalNode:
+            for node in connectedNodes:
 
-                # Connect the new utility instead if forceTexture is true
-                mc.connectAttr(normalNode + '.outValue', material + '.' + attributeName,
-                               force=forceTexture)
+                # If this is already a normal utility node
+                if mc.objectType(node) == normalNode:
 
-            # If it's a bump node
-            elif mc.objectType(node) == bumpNode:
+                    # Connect the new utility instead if forceTexture is true
+                    mc.connectAttr(normalNode + '.outValue', material + '.' + attributeName, force=forceTexture)
 
-                # Get the input file of the bump node
-                connectedBumpNodes = mc.listConnections(node + '.bumpMap')
-                for connectedBumpNode in connectedBumpNodes:
+                # If it's a bump node
+                elif mc.objectType(node) == bumpNode:
 
-                    # If it's a colorCorrect or a file node with '_file' in it's name
-                    if '_file' in connectedBumpNode or 'colorCorrect' in connectedBumpNode:
+                    # Get the input file of the bump node
+                    connectedBumpNodes = mc.listConnections(node + '.bumpMap')
+                    for connectedBumpNode in connectedBumpNodes:
 
-                        # Connect the utility node in the bump node
-                        mc.connectAttr(normalNode + '.outValue', node + '.normal',
-                                       force=forceTexture)
+                        # If it's a colorCorrect or a file node with '_file' in it's name
+                        if '_file' in connectedBumpNode or 'colorCorrect' in connectedBumpNode:
 
-                    else:
+                            # Connect the utility node in the bump node
+                            mc.connectAttr(normalNode + '.outValue', node + '.normal', force=forceTexture)
 
-                        # Instead replace the bump node by the normal utility node
-                        mc.connectAttr(normalNode + '.outValue', material + '.' + attributeName,
-                                       force=forceTexture)
+                        else:
+                            # Instead replace the bump node by the normal utility node
+                            mc.connectAttr(normalNode + '.outValue', material + '.' + attributeName, force=forceTexture)
 
-    # If there's no connections in the material attribute
-    else:
+        # If there's no connections in the material attribute
+        else:
+            # Connect the normal utility to the material attribute
+            mc.connectAttr(normalNode + '.outValue', material + '.' + attributeName, force=forceTexture)
 
-        # Connect the normal utility to the material attribute
-        mc.connectAttr(normalNode + '.outValue', material + '.' + attributeName,
-                       force=forceTexture)
+def createMetalMap(texture, fileNode, colorCorrect=False, forceTexture=True):
+    """
+    Connect the metalness map
+    :param material: The name of the material
+    :param attributeName: The name of the material attribute to use
+    :param forceTexture: Specify if the texture connection is forced
+    :param imageNode: The file node to connect
+    :return: None
+    """
+
+    material = texture.textureSet
+    attributeName = texture.materialAttribute
+    metalness = '.metalness'
+
+    # if mask is flat (all pixels the same value) insert value in slider
+    flat,r,g,b = helper.is_flat_color(texture.filePath)
+
+    if flat: 
+        print('Metalness: Detected flat texture map. Substuting pixel value ' + str(r) + ' in shader \"' + material + '\""' )
+
+        mc.setAttr ( material + '.metalness', r )
+
+    if not flat:
+        # List all the connection in the material attribute
+        connectedNodes = mc.listConnections(material + '.' + attributeName)
+
+        # If there's connections
+        if connectedNodes:
+
+            for node in connectedNodes:
+
+                # Replace the connection if the force texture is true
+                mc.connectAttr(fileNode + '.outColorR', material + metalness, force=forceTexture)
+
+        # If there's not connections
+        else:
+
+            # Connect the color texture map to the SSS
+            mc.connectAttr(fileNode + '.outColorR', material + metalness, force=forceTexture)
 
 def createBumpMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
     """
@@ -106,45 +147,49 @@ def createBumpMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
     material = texture.textureSet
     attributeName = texture.materialAttribute
 
-    # Create the bump utility node
-    bumpNode = mc.shadingNode(bumpNode, asUtility=True)
-    mc.setAttr (bumpNode + ".bumpHeight", 0.1)
+    # if texture is flat (all pixels the same value) skip
+    flat = helper.is_flat_color(texture.filePath)[0]
+    
+    if flat: 
+        print('Bump map: Detected flat texture map. Skipping: ' + texture.textureName)
 
-    # Connect the file node to the bump utility node
-    helper.connectTexture(fileNode, 'outColorR', bumpNode, 'bumpMap', colorCorrect)
+    if not flat:
+        # Create the bump utility node
+        bumpNode = mc.shadingNode(bumpNode, asUtility=True)
+        mc.setAttr (bumpNode + ".bumpHeight", 2)
 
-    # List all the connection in the material attribute
-    connectedNodes = mc.listConnections(material + '.' + attributeName)
+        # Connect the file node to the bump utility node
+        helper.connectTexture(fileNode, 'outColorR', bumpNode, 'bumpMap', colorCorrect)
 
-    # If there's connections
-    if connectedNodes:
+        # List all the connection in the material attribute
+        connectedNodes = mc.listConnections(material + '.' + attributeName)
 
-        for node in connectedNodes:
+        # If there's connections
+        if connectedNodes:
 
-            # If it's a normal utility node
-            if mc.objectType(node) == normalNode:
+            for node in connectedNodes:
 
-                # Connect the normal utility node to to bump utility
-                mc.connectAttr(node + '.outValue', bumpNode + '.normal',
-                               force=forceTexture)
+                # If it's a normal utility node
+                if mc.objectType(node) == normalNode:
 
-                # Connect the bump node to the material attribute
-                mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName,
-                               force=forceTexture)
+                    # Connect the normal utility node to to bump utility
+                    mc.connectAttr(node + '.outValue', bumpNode + '.normal', force=forceTexture)
 
-            # If it's not a normal utility node
-            else:
+                    # Connect the bump node to the material attribute
+                    mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName, force=forceTexture)
 
-                # Replace the connection by the bump node if the force texture is true
-                mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName,
-                               force=forceTexture)
+                # If it's not a normal utility node
+                else:
 
-    # If there's not connections
-    else:
+                    # Replace the connection by the bump node if the force texture is true
+                    mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName, force=forceTexture)
 
-        # Connect the bump utility to the material attribute
-        mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName,
-                       force=forceTexture)
+        # If there's not connections
+        else:
+
+            # Connect the bump utility to the material attribute
+            mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName, force=forceTexture)
+
 
 def createLayerNetwork(texture, renderer, fileNode):
     """
@@ -159,14 +204,14 @@ def createLayerNetwork(texture, renderer, fileNode):
     materialTypeLyr = renderer.renderParameters.SHADER_LYR
     mixNode = renderer.renderParameters.MIX_NODE
     attributeName = texture.materialAttribute
-    
-    # if mask is empty (all black pixels) don't connect it
-    empty = helper.is_black_constant(texture.filePath)
 
-    if empty: 
-        print('Detected zero pixel texture map, skipping: ' + texture.textureName)
+    # if texture is flat (all pixels the same value) skip
+    flat = helper.is_flat_color(texture.filePath)[0]
 
-    if not empty:
+    if flat: 
+        print('Layer mask: Detected flat texture map: ' + texture.textureName + ' skipping layer shader creation.')
+
+    if not flat:
 
         # Get shader group connection
         SG = mc.listConnections (materialName + '.outColor', d=True, s=False)[0] or []
@@ -222,6 +267,19 @@ def createSSSMap(texture, fileNode, colorCorrect=False, forceTexture=True):
     sssColor = '.subsurfaceColor'
     baseColor = '.baseColor'
 
+    '''
+    # if mask is flat (all pixels the same value) insert value in slider
+    flat,r,g,b = helper.is_flat_color(texture.filePath)
+    rgb = str(r) + ', ' + str(g) + ', ' + str(b)
+    
+    if flat: 
+        print('Detected flat texture map \"' + texture.textureName + '\" substuting value ' + rgb + ' in BaseColor and SSS for shader \"' + material + '\""' )
+        mc.setAttr ( material+ '.baseColor', r, g, b, type='double3')
+        mc.setAttr ( material+ '.subsurfaceColor', r, g, b, type='double3')
+
+    if not flat:
+    '''
+
     # List all the connection in the material attribute
     connectedNodes = mc.listConnections(material + '.' + attributeName)
 
@@ -240,44 +298,6 @@ def createSSSMap(texture, fileNode, colorCorrect=False, forceTexture=True):
         # Connect the color texture map to the SSS
         mc.connectAttr(fileNode + '.outColor', material + sssColor, force=forceTexture)
         mc.connectAttr(fileNode + '.outColor', material + baseColor, force=forceTexture)
-
-def createMetalMap(texture, fileNode, colorCorrect=False, forceTexture=True):
-    """
-    Connect the metalness map
-    :param material: The name of the material
-    :param attributeName: The name of the material attribute to use
-    :param forceTexture: Specify if the texture connection is forced
-    :param imageNode: The file node to connect
-    :return: None
-    """
-
-    material = texture.textureSet
-    attributeName = texture.materialAttribute
-    metalness = '.metalness'
-    empty = helper.is_black_constant(texture.filePath)
-
-    # if mask is empty (all black pixels) don't connect it
-    if empty: 
-        print('Detected zero pixel texture map, skipping: ' + texture.textureName)
-
-    if not empty:
-
-        # List all the connection in the material attribute
-        connectedNodes = mc.listConnections(material + '.' + attributeName)
-
-        # If there's connections
-        if connectedNodes:
-
-            for node in connectedNodes:
-
-                # Replace the connection if the force texture is true
-                mc.connectAttr(fileNode + '.outColorR', material + metalness, force=forceTexture)
-
-        # If there's not connections
-        else:
-
-            # Connect the color texture map to the SSS
-            mc.connectAttr(fileNode + '.outColorR', material + metalness, force=forceTexture)
 
 
 def connect(ui, texture, renderer, fileNode):
@@ -303,11 +323,7 @@ def connect(ui, texture, renderer, fileNode):
 
             # If bump
             if useBump:
-                createBumpMap(texture, renderer, fileNode, colorCorrect)
-
-            # If displace
-#            if useDisplace:
-#                helper.createDisplacementMap(texture, fileNode, colorCorrect)
+               createBumpMap(texture, renderer, fileNode, colorCorrect)
 
         # If normalMap
         elif texture.output == 'outColor':
@@ -328,4 +344,6 @@ def connect(ui, texture, renderer, fileNode):
     # If it's another type of map
     else:
         helper.connectTexture(fileNode, texture.output, texture.textureSet, attributeName, colorCorrect)
+        
+
 

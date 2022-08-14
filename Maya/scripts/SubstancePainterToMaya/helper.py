@@ -495,6 +495,63 @@ def is_black_constant(path):
     return not any(img.constBits())
 
 
+'''
+def is_flat_color_old(path):
+    img = PySide2.QtGui.QImage(path)
+
+    # sample pixel color
+    pix = img.pixel(5,5)
+    r = round(PySide2.QtGui.qRed(pix) / 255, 4)
+    g = round(PySide2.QtGui.qGreen(pix) / 255, 4)
+    b = round(PySide2.QtGui.qBlue(pix) / 255, 4)
+
+    # Fail-safe for invalid image formats (EXR)
+    if img.isNull():
+        return False 
+
+    # convert to grayscale
+    if not img.format() == img.Format_Grayscale8:
+        img.convertTo(img.Format_Grayscale8)
+
+    #iterate through bits to see if they are all the same
+    it = iter(img.constBits())
+    first = next(it)
+    while True:
+        try:
+            if first != next(it):
+                return False
+        except StopIteration:
+
+            return True, r, g, b
+'''
+
+def is_flat_color(path):
+    img = PySide2.QtGui.QImage(path)
+
+    # sample pixel color
+    pix = img.pixel(5,5)
+    r = round(PySide2.QtGui.qRed(pix) / 255, 4)
+    g = round(PySide2.QtGui.qGreen(pix) / 255, 4)
+    b = round(PySide2.QtGui.qBlue(pix) / 255, 4)
+
+    # Fail-safe for invalid image formats (EXR)
+    null = False
+    if img.isNull():
+        file = path.rsplit('/', 1)[1]
+        # print ('Unable to do flat texture detection for 16/32 bit float image: ' + file)
+        flat = False
+        return flat, r, g, b 
+
+    # convert to grayscale
+    if not img.format() == img.Format_Grayscale8:
+        img.convertTo(img.Format_Grayscale8)
+
+    #iterate through bits to see if they are all the same
+    bits = img.constBits()
+    first = bits[0]
+    flat = all(first == next for next in bits)
+    return flat, r, g, b
+
 def createSpecMap(texture, fileNode, colorCorrect=False, forceTexture=True):
     """
     Connect the specRoughness map with the mix nodes
@@ -509,13 +566,14 @@ def createSpecMap(texture, fileNode, colorCorrect=False, forceTexture=True):
     material = texture.textureSet
     attributeName = texture.materialAttribute
 
-    
-    # if mask is empty (all black pixels) don't connect it
-    empty = is_black_constant(texture.filePath)
-    if empty: 
-        print('Detected zero pixel texture map, skipping: ' + texture.textureName)
 
-    if not empty:
+    # if texture is flat (all pixels the same value) skip
+    flat = is_flat_color(texture.filePath)[0]
+
+    if flat: 
+        print('Spec Roughness: Detected flat texture map. Skipping: ' + texture.textureName)
+
+    if not flat:
 
         # Create the blendColor and luminance nodes and set attributes
         blendNode = mc.shadingNode(blendNode, asUtility=True, name='blendRoughness')
