@@ -115,7 +115,7 @@ If a layer map is found (naming: 'Layer', 'layer', 'lyr') the aiStandardSurface 
 
 The script parses the texture maps to detect when an image is a flat solid color, indicating textures output by Substance Painter that were not painted. It will then do the following depending on the texture map type:
 
-- **BaseColor/diffuse and SSS maps**<br> Keep. These are connected, but the mipmap created by maketx are only a single tile (8x8 pixels).
+- **BaseColor/diffuse and SSS maps**<br> Keep. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels).
 - **Metalness maps**<br> Substitute value. Will set the slider to the pixel value, rather than connecting the flat texture map.
 - **Bump & Normal maps**<br> Skipped. Will not connect the flat texture map, as it will have no effect on the shader.
 - **Spec roughness maps**<br> Skipped. Will not connect the flat map and network. Roughness value remains at its default settings.
