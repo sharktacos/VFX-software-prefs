@@ -74,13 +74,19 @@ Click  the "Launch" button and the script will search your textures for matches.
 Select the desired options, and click the "Proceed" button. If you have the (default) option "use all found texture sets" the script will assign the texture maps to all the shaders it finds. If you only want to assign textures to one shader use the "use only specified texture set" option.
 
 
-## Limitations
- - Only the Arnold renderer is supported (AiStandardSurface and AiLayerShader). I have not had a chance to test this out in Renderman or Vray. Maybe some day, but don't hold your breath! :)
+## Detect Flat Color Texture Maps
 
-## Enhancements
+The script parses the texture maps to detect when an image is a flat solid color, indicating textures output by Substance Painter that were not painted. It will then do the following depending on the texture map type:
+
+- **BaseColor/diffuse and SSS maps**<br> Keep. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
+- **Metalness maps**<br> Substitute value. Will set the slider to the pixel value, rather than connecting the flat texture map.
+- **Bump & Normal maps**<br> Skipped. Will not connect the flat texture map, as it will have no effect on the shader.
+- **Spec roughness maps**<br> Skipped. Will not connect the flat map and spec mask network (see below). The roughness slider value remains at its default settings.
+
+**Delete Flat Texture Map Files**<br> Option to delete the unused flat texture map files from disc. Does not apply to color texture maps. Defaults to unchecked.
 
 
-### Color maps multiple inputs, and default shader settings
+## Color maps multiple inputs, and default shader settings
 
 The color map is connected to both the base color and the subsurface color. This allows you to paint one color map in Substance Painter, and saves on disc space as well. Since the subsurface weight on the AiStandardSurface is set to zero by default, if you wish to use sss you just need to turn the subsurface weight on (and the base color weight off).
 
@@ -94,7 +100,7 @@ Additionally the following attributes are set on all the aiStandardSurface shade
 - subsurface scale: 0.1
 - subsurface anisotropy: 0.8
 
-### Specular Roughness mask network
+## Specular Roughness mask network
  
 While color, bump, and metalness texture maps are connected directly to the shader attributes, specular roughness maps are instead made with an alpha mask which is exported through a custom user channel. The black and white values of this mask are then remaped to two roughness sliders (color1 and color2 shown in the Attribute Editor below). This provides artistic control, rather than having the roughness slider locked off with a texture map.
 
@@ -105,19 +111,10 @@ Note that this workflow is also included in the roughness section of my "UberSha
 <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/326948120?h=da9e609785&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Substance Painter: A better way to export roughness maps for artistic control"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script><br>
 
 
-### Layer Shader network option
+## Layer Shader network option
  
 If a layer map is found (naming: 'Layer', 'layer', 'lyr') the aiStandardSurface shader is duplicated with all of its input connections, and these two shaders are then connected to a layerShader. Finally the layer texture map is input into the layer mix. 
  
 ![img](img/sp2m_layer.jpg)
 
-## Detect Flat Color Texture Maps
-
-The script parses the texture maps to detect when an image is a flat solid color, indicating textures output by Substance Painter that were not painted. It will then do the following depending on the texture map type:
-
-- **BaseColor/diffuse and SSS maps**<br> Keep. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels).
-- **Metalness maps**<br> Substitute value. Will set the slider to the pixel value, rather than connecting the flat texture map.
-- **Bump & Normal maps**<br> Skipped. Will not connect the flat texture map, as it will have no effect on the shader.
-- **Spec roughness maps**<br> Skipped. Will not connect the flat map and network. Roughness value remains at its default settings.
-- **Layer Masks**<br> Skipped. Will not convert the shader to a Layer Shader network.
 
