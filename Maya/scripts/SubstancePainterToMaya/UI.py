@@ -247,9 +247,9 @@ class PainterToMayaUI:
         self.checkbox3.setVisible(False)
         self.optionsSubLayout1.addWidget(self.checkbox3)
 
-        #self.checkboxSpcMask = QtWidgets.QCheckBox('Create specular roughness mask networks')
-        #self.checkboxSpcMask.setChecked(True)
-        #self.optionsSubLayout1.addWidget(self.checkboxSpcMask)
+        self.checkboxRem = QtWidgets.QCheckBox('Delete flat texture map files (bump, normal, spec, metal)')
+        self.checkboxRem.setChecked(False)
+        self.optionsSubLayout1.addWidget(self.checkboxRem)
 
         self.checkbox4 = QtWidgets.QCheckBox('Create layer shader networks (When \"layer\"" texture map found)')
         self.checkbox4.setChecked(True)

@@ -234,7 +234,7 @@ def displaySecondPartOfUI(ui, renderer):
 
     else:
         ui.checkbox1.setVisible(True)
-        ui.checkbox2.setVisible(True)
+#        ui.checkbox2.setVisible(True)
 #        ui.checkbox4.setVisible(False)
 
 
@@ -271,6 +271,10 @@ def createFileNode(texture, UDIMS):
     material = texture.textureSet
     textureName = texture.mapName
     itemPath = texture.filePath
+
+    # if mask is flat (all pixels the same value) insert value in slider
+    flat,r,g,b = is_flat_color(texture.filePath)
+
 
     # Create a file node
     fileNode = mc.shadingNode('file', asTexture=True, isColorManaged=True, name=material + '_' + textureName + '_file')
@@ -552,7 +556,18 @@ def is_flat_color(path):
     flat = all(first == next for next in bits)
     return flat, r, g, b
 
-def createSpecMap(texture, fileNode, colorCorrect=False, forceTexture=True):
+def cleanUp(texture, fileNode):
+
+    if os.path.exists(texture.filePath):
+        mc.delete(fileNode)
+        #print('    Removing file: ' + fileNode)
+        os.remove(texture.filePath)
+        print('    Deleting file: ' + texture.textureName)
+    else:
+        print('    '+ texture.filePath + " does not exist")
+
+
+def createSpecMap(texture, fileNode, clean, colorCorrect=False, forceTexture=True):
     """
     Connect the specRoughness map with the mix nodes
     :param material: The name of the material
@@ -571,7 +586,10 @@ def createSpecMap(texture, fileNode, colorCorrect=False, forceTexture=True):
     flat = is_flat_color(texture.filePath)[0]
 
     if flat: 
-        print('Spec Roughness: Detected flat texture map. Skipping: ' + texture.textureName)
+        print('Spec Roughness: Found flat texture map. Skipping: ' + texture.textureName)
+
+        if clean:
+            cleanUp(texture, fileNode)
 
     if not flat:
 
