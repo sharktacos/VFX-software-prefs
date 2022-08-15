@@ -50,8 +50,11 @@ def createNormalMap(texture, renderer, fileNode, clean, colorCorrect, forceTextu
     if flat:
         print('Normal map: Found flat texture map. Skipping: ' + texture.textureName)
 
+        # if delete option is set, delete flat texture files, else delete unused nodes
         if clean:
-            helper.cleanUp(texture, fileNode)
+            helper.cleanFiles(texture, fileNode)
+        else:
+            helper.cleanNodes(texture, fileNode)
 
     if not flat:
         # Create the normal utility
@@ -118,8 +121,11 @@ def createMetalMap(texture, fileNode, clean, colorCorrect=False, forceTexture=Tr
         print('Metalness: Found flat texture map. Substuting pixel value ' + str(r) + ' in shader \"' + material + '\""' )
         mc.setAttr ( material + '.metalness', r )
 
+        # if delete option is set, delete flat texture files, else delete unused nodes
         if clean:
-            helper.cleanUp(texture, fileNode)
+            helper.cleanFiles(texture, fileNode)
+        else:
+            helper.cleanNodes(texture, fileNode)
 
             
     if not flat:
@@ -161,8 +167,11 @@ def createBumpMap(texture, renderer, fileNode, clean, colorCorrect, forceTexture
     if flat: 
         print('Bump map: Found flat texture map. Skipping: ' + texture.textureName)
 
+        # if delete option is set, delete flat texture files, else delete unused nodes
         if clean:
-            helper.cleanUp(texture, fileNode)
+            helper.cleanFiles(texture, fileNode)
+        else:
+            helper.cleanNodes(texture, fileNode)
 
     if not flat:
         # Create the bump utility node

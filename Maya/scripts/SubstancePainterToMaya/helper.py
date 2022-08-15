@@ -556,13 +556,24 @@ def is_flat_color(path):
     flat = all(first == next for next in bits)
     return flat, r, g, b
 
-def cleanUp(texture, fileNode):
+def cleanFiles(texture, fileNode):
 
     if os.path.exists(texture.filePath):
+        place2d = mc.listConnections(fileNode, t='place2dTexture')[0]
         mc.delete(fileNode)
+        mc.delete(place2d)
         #print('    Removing file: ' + fileNode)
         os.remove(texture.filePath)
         print('    Deleting file: ' + texture.textureName)
+    else:
+        print('    '+ texture.filePath + " does not exist")
+
+def cleanNodes(texture, fileNode):
+
+    if os.path.exists(texture.filePath):
+        place2d = mc.listConnections(fileNode, t='place2dTexture')[0]
+        mc.delete(fileNode)
+        mc.delete(place2d)
     else:
         print('    '+ texture.filePath + " does not exist")
 
@@ -588,8 +599,11 @@ def createSpecMap(texture, fileNode, clean, colorCorrect=False, forceTexture=Tru
     if flat: 
         print('Spec Roughness: Found flat texture map. Skipping: ' + texture.textureName)
 
+        # if delete option is set, delete flat texture files, else delete unused nodes
         if clean:
-            cleanUp(texture, fileNode)
+            cleanFiles(texture, fileNode)
+        else:
+            cleanNodes(texture, fileNode)
 
     if not flat:
 
