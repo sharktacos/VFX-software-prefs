@@ -18,15 +18,15 @@ Alternately a custom location for assets can be defined in `edit>settings>librar
 
 ## Usage
 
-When starting a project, select the latest version DF template.
+When starting a project, select the latest version **DF template**. This will load in all the tools and settings. 
 
 ![img](img/sp_template.jpg)
 
-This will load in all the tools and settings. Begin by applying the uber-shader to all your texture assets. This is a Smart Material which rather than having a set look is instead intended to provide a starting place to create your own textures. Its strucure mirrors that of a BRDF shader such as the aiStandard or PxrSurface shaders. See the video below for a walk through of all of its features.
+Begin by applying the **uber-shader** to all your texture assets. This is a Smart Material which rather than having a set look is instead intended to provide a starting place to create your own textures. Its strucure mirrors that of a BRDF shader such as the aiStandard or PxrSurface shaders. See the video below for a walk through of all of its features.
 
 ![img](img/sp_uber.jpg)
 
-To output textures use the DF output template. This will write out color, bump, metalness, and specular roughness masks (using the user0 channel).
+To output textures use the **DF output template**. This will write out color, bump, metalness, and specular roughness masks (using the user0 channel for the mask).
 
 ![img](img/Substance_texOut.jpg)
 
