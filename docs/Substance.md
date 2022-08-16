@@ -32,7 +32,7 @@ To output textures use the **DF output template**. This will write out color, bu
 
 If you have other masks, such as a layer mask, you can output these manually by right-clicking the mask in the layers panel and selecting "Export mask to file" from the context menu.
 
-![img](img/sp2m_layer.jpg)
+![img](img/Substance_maskMenu.jpg)
 
 Watch a <a href="https://vimeo.com/469364354">video walkthrough</a> of the tools and how they are used to optimze your workflow.<br>
 
@@ -40,7 +40,9 @@ Watch a <a href="https://vimeo.com/469364354">video walkthrough</a> of the tools
 
 To import the textures into Maya see my [substancePaintertoMaya.md](Substance to Maya Bridge).
 
-## Userful Hotkeys
+## Useful Hotkeys
+
+As a bonus, here is a list of hotkeys I use frequently, but always forget. Hense this list!
 
 | shortcut | Description 
 |----|----
