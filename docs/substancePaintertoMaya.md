@@ -79,11 +79,11 @@ Select the desired options, and click the "Proceed" button. If you have the (def
 The script parses the texture maps to detect when an image is a flat solid color, indicating textures output by Substance Painter that were not painted. It will then do the following depending on the texture map type:
 
 - **BaseColor/diffuse and SSS maps**<br> Keep. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
-- **Metalness maps**<br> Substitute value. Will set the slider to the pixel value, rather than connecting the flat texture map.
+- **Metalness maps**<br> Keep. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
 - **Bump & Normal maps**<br> Skipped. Will not connect the flat texture map, as it will have no effect on the shader.
 - **Spec roughness maps**<br> Skipped. Will not connect the flat map and spec mask network (see below). The roughness slider value remains at its default settings.
 
-**Delete Flat Texture Map Files**<br> Option to delete the unused flat texture map files from disc. Does not apply to color texture maps. Defaults to unchecked.
+**Delete Flat Texture Map Files**<br> Option to delete the unused flat texture map files from disc. Defaults to unchecked.
 
 
 ## Color maps multiple inputs, and default shader settings
