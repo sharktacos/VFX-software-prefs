@@ -272,10 +272,6 @@ def createFileNode(texture, UDIMS):
     textureName = texture.mapName
     itemPath = texture.filePath
 
-    # if mask is flat (all pixels the same value) insert value in slider
-    flat,r,g,b = is_flat_color(texture.filePath)
-
-
     # Create a file node
     fileNode = mc.shadingNode('file', asTexture=True, isColorManaged=True, name=material + '_' + textureName + '_file')
     # Create a place2d node
@@ -498,9 +494,8 @@ def is_black_constant(path):
 
     return not any(img.constBits())
 
-
-'''
-def is_flat_color_old(path):
+"""
+def is_flat_colorRGB(path):
     img = PySide2.QtGui.QImage(path)
 
     # sample pixel color
@@ -508,36 +503,7 @@ def is_flat_color_old(path):
     r = round(PySide2.QtGui.qRed(pix) / 255, 4)
     g = round(PySide2.QtGui.qGreen(pix) / 255, 4)
     b = round(PySide2.QtGui.qBlue(pix) / 255, 4)
-
-    # Fail-safe for invalid image formats (EXR)
-    if img.isNull():
-        return False 
-
-    # convert to grayscale
-    if not img.format() == img.Format_Grayscale8:
-        img.convertTo(img.Format_Grayscale8)
-
-    #iterate through bits to see if they are all the same
-    it = iter(img.constBits())
-    first = next(it)
-    while True:
-        try:
-            if first != next(it):
-                return False
-        except StopIteration:
-
-            return True, r, g, b
-'''
-
-def is_flat_color(path):
-    img = PySide2.QtGui.QImage(path)
-
-    # sample pixel color
-    pix = img.pixel(5,5)
-    r = round(PySide2.QtGui.qRed(pix) / 255, 4)
-    g = round(PySide2.QtGui.qGreen(pix) / 255, 4)
-    b = round(PySide2.QtGui.qBlue(pix) / 255, 4)
-
+    
     # Fail-safe for invalid image formats (EXR)
     null = False
     if img.isNull():
@@ -555,6 +521,25 @@ def is_flat_color(path):
     first = bits[0]
     flat = all(first == next for next in bits)
     return flat, r, g, b
+"""
+
+def is_flat_colorRGB(path):
+    img = PySide2.QtGui.QImage(path)
+    
+    # Fail-safe for invalid image formats (EXR 16/32b float)
+    null = False
+    if img.isNull():
+        return False
+
+    # convert to grayscale
+    if not img.format() == img.Format_Grayscale8:
+        img.convertTo(img.Format_Grayscale8)
+
+    # iterate through bits to see if they are all the same
+    bits = img.constBits()
+    first = bits[0]   
+    all(first == next for next in bits)
+
 
 def cleanFiles(texture, fileNode):
 
