@@ -80,8 +80,8 @@ The script parses the texture maps to detect when an image is a flat solid color
 
 - **BaseColor/diffuse and SSS maps**<br> Keep. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
 - **Metalness maps**<br> Keep. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
-- **Bump & Normal maps**<br> Skipped. Will not connect the flat texture map, as it will have no effect on the shader.
-- **Spec roughness maps**<br> Skipped. Will not connect the flat map and spec mask network (see below). The roughness slider value remains at its default settings.
+- **Bump & Normal maps**<br> Unused. Will not connect the flat texture map, as it will have no effect on the shader.
+- **Spec roughness maps**<br> Unused. Will not connect the flat map and spec mask network (see below). The roughness slider value remains at its default settings.
 
 **Delete Flat Texture Map Files**<br> Option to delete the unused flat texture map files from disc. Defaults to unchecked.
 
