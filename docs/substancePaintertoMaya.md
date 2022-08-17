@@ -33,13 +33,7 @@ The texture map type name. In the case of our school's naming convention, we use
 
 ## Exporting Texture Maps 
 
-The exported texture files must contain the *shader name* and *map type* in the texture file name. In Substance Painter this is included in most Output templages through the $textureSet variable (for the shader name). For our recomended workflow we use the  ```DF - Arnold (Color Bump Metal SpcMask)``` Output Template (pictured below) which works in combination with my uber shader Smart Material, which mirrors a standard BRDF shader such as the aiStandardSurface in Arnold. All of these are included in the [Substance tools](Substance.md). This will export out Color, bump, metalness, and specular roughness masks.
-
- ![img](img/Substance_texOut.jpg)
-
-Layer shader masks are exported manually by right-clicking the mask in the layers panel and selecting "Export mask to file" from the context menu.
-
- ![img](img/Substance_maskMenu.jpg)
+The exported texture files must contain the *shader name* and *map type* in the texture file name. In Substance Painter this is included in most Output templages through the $textureSet variable (for the shader name). For our recomended workflow the provided output template will create maps for color, bump, metalness, and specular roughness masks. Layer masks are output manually. See the [Substance tools](Substance.md) help for details of this workflow. 
 
 ## Exporting Textures from Other Programs - Mari, Zbrush, Photoshop 
 
@@ -80,8 +74,8 @@ The script parses the texture maps to detect when an image is a flat solid color
 
 - **BaseColor/diffuse and SSS maps**<br> Keep. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
 - **Metalness maps**<br> Keep. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
-- **Bump & Normal maps**<br> Skipped. Will not connect the flat texture map, as it will have no effect on the shader.
-- **Spec roughness maps**<br> Skipped. Will not connect the flat map and spec mask network (see below). The roughness slider value remains at its default settings.
+- **Bump & Normal maps**<br> Unused. Will not connect the flat texture map, as it will have no effect on the shader.
+- **Spec roughness maps**<br> Unused. Will not connect the flat map and spec mask network (see below). The roughness slider value remains at its default settings.
 
 **Delete Flat Texture Map Files**<br> Option to delete the unused flat texture map files from disc. Defaults to unchecked.
 
