@@ -523,7 +523,7 @@ def is_flat_colorRGB(path):
     return flat, r, g, b
 """
 
-def is_flat_colorRGB(path):
+def is_flat_color(path):
     img = PySide2.QtGui.QImage(path)
     
     # Fail-safe for invalid image formats (EXR 16/32b float)
@@ -538,7 +538,7 @@ def is_flat_colorRGB(path):
     # iterate through bits to see if they are all the same
     bits = img.constBits()
     first = bits[0]   
-    all(first == next for next in bits)
+    return all(first == next for next in bits)
 
 
 def cleanFiles(texture, fileNode):
@@ -577,9 +577,9 @@ def createSpecMap(texture, fileNode, clean, colorCorrect=False, forceTexture=Tru
     material = texture.textureSet
     attributeName = texture.materialAttribute
 
-
+    flat = is_black_constant(texture.filePath)
     # if texture is flat (all pixels the same value) skip
-    flat = is_flat_color(texture.filePath)[0]
+    #flat = is_flat_color(texture.filePath)[0]
 
     if flat: 
         print('Spec Roughness: Found flat texture map. Skipping: ' + texture.textureName)
