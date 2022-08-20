@@ -45,7 +45,7 @@ def createNormalMap(texture, renderer, fileNode, clean, colorCorrect, forceTextu
     attributeName = texture.materialAttribute
 
     # if texture is flat (all pixels the same value) skip
-    flat = helper.is_flat_color(texture.filePath)[0]
+    flat = helper.is_flat_color(texture.filePath)
     
     if flat:
         print('Normal map: Found flat texture map. Skipping: ' + texture.textureName)
@@ -101,6 +101,7 @@ def createNormalMap(texture, renderer, fileNode, clean, colorCorrect, forceTextu
 
 
 def createMetalMap(texture, fileNode, clean, colorCorrect=False, forceTexture=True):
+
     """
     Connect the metalness map
     :param material: The name of the material
@@ -114,6 +115,7 @@ def createMetalMap(texture, fileNode, clean, colorCorrect=False, forceTexture=Tr
     attributeName = texture.materialAttribute
     metalness = '.metalness'
 
+    """
     # if mask is flat (all pixels the same value) insert value in slider
     flat,r,g,b = helper.is_flat_color(texture.filePath)
 
@@ -145,6 +147,25 @@ def createMetalMap(texture, fileNode, clean, colorCorrect=False, forceTexture=Tr
 
             # Connect the color texture map to the SSS
             mc.connectAttr(fileNode + '.outColorR', material + metalness, force=forceTexture)
+    """
+
+    # List all the connection in the material attribute
+    connectedNodes = mc.listConnections(material + '.' + attributeName)
+
+    # If there's connections
+    if connectedNodes:
+
+        for node in connectedNodes:
+
+            # Replace the connection if the force texture is true
+            mc.connectAttr(fileNode + '.outColorR', material + metalness, force=forceTexture)
+
+    # If there's not connections
+    else:
+
+        # Connect the color texture map to the SSS
+        mc.connectAttr(fileNode + '.outColorR', material + metalness, force=forceTexture)
+
 
 def createBumpMap(texture, renderer, fileNode, clean, colorCorrect, forceTexture=True):
     """
@@ -162,7 +183,7 @@ def createBumpMap(texture, renderer, fileNode, clean, colorCorrect, forceTexture
     attributeName = texture.materialAttribute
 
     # if texture is flat (all pixels the same value) skip
-    flat = helper.is_flat_color(texture.filePath)[0]
+    flat = helper.is_flat_color(texture.filePath)
     
     if flat: 
         print('Bump map: Found flat texture map. Skipping: ' + texture.textureName)
