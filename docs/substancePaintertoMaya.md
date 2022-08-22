@@ -2,6 +2,10 @@
 
 Tool to automatically connect Substance 3D Painter textures to Maya shaders. Based on [the original script by Tristan Le Granche](https://github.com/Strangenoise/SubstancePainterToMaya). This version has been updated for Python 3 (required for Maya 2022 and up), and has added functionlaity described below.
 
+Here's a demo of the script in action. Below are details about principles and functionality.
+
+<div style="padding:56.15% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/742025520?h=e1e9c0ce0a&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="SP2M Substance 3D Painter to Maya Bridge"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
+
 ## Naming Convention
 
 The script works by parsing the texture maps in a folder based on a defined naming convention, and then assigning these found maps to their corresponding shaders. For example say we have the following naming for a texture map:
