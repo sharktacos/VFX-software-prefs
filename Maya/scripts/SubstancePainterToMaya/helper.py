@@ -529,6 +529,7 @@ def is_flat_color(path):
     # Fail-safe for invalid image formats (EXR 16/32b float)
     null = False
     if img.isNull():
+        print('null!')
         return False
 
     # convert to grayscale

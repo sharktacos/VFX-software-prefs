@@ -45,7 +45,7 @@ def createNormalMap(texture, renderer, fileNode, clean, colorCorrect, forceTextu
     attributeName = texture.materialAttribute
 
     # if texture is flat (all pixels the same value) skip
-    flat = helper.is_flat_color(texture.filePath)[0]
+    flat = helper.is_flat_color(texture.filePath)
     
     if flat:
         print('Normal map: Found flat texture map. Skipping: ' + texture.textureName)
@@ -183,7 +183,7 @@ def createBumpMap(texture, renderer, fileNode, clean, colorCorrect, forceTexture
     attributeName = texture.materialAttribute
 
     # if texture is flat (all pixels the same value) skip
-    flat = helper.is_flat_color(texture.filePath)[0]
+    flat = helper.is_flat_color(texture.filePath)
     
     if flat: 
         print('Bump map: Found flat texture map. Skipping: ' + texture.textureName)
