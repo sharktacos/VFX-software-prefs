@@ -10,11 +10,11 @@ Here's a demo of the script in action. Below are details about principles and fu
 
 The script works by parsing the texture maps in a folder based on a defined naming convention, and then assigning these found maps to their corresponding shaders. For example say we have the following naming for a texture map:
 
-```[assetName]_[shaderName]_[mapType]_[version]_[artist].[ext]```
+```
+[assetName]_[shaderName]_[mapType]_[version]_[artist].[ext]
+```
 
-So for example, the bump map for the hubcap shader would be: 
-
-```car_hubcap_bmp_v01_dflood.exr```
+So for example, the bump map for the hubcap shader would be *car_hubcap_bmp_v01_dflood.exr*
 
 There are two parts of this file name we need to identify. The shader name and the map type.
 
