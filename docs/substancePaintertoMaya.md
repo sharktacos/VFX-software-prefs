@@ -74,14 +74,32 @@ Select the desired options, and click the "Proceed" button. If you have the (def
 
 ## Detect Flat Color Texture Maps
 
-The script parses the texture maps to detect when an image is a flat solid color, indicating textures output by Substance Painter that were not painted. It will then do the following depending on the texture map type:
+Substance Painter exports all texture map types in the output template, regardless of whether they have been painted. It is of course undesireble and confusing to have, for example, a bump map connected to a shader that does nothing because it is unpainted. To address this, the script parses the texture maps to detect for flat solid color (all pixels have the same value) or for zero value (all pixels are black). It will then do the following depending on the texture map type:
 
-- **BaseColor/diffuse and SSS maps**<br> Keep. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
-- **Metalness maps**<br> Keep. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
+- **BaseColor/diffuse and SSS maps**<br> No detection. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
+- **Metalness maps**<br> No detection. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
 - **Bump & Normal maps**<br> Unused. Will not connect the flat texture map, as it will have no effect on the shader.
-- **Spec roughness maps**<br> Unused. Will not connect the flat map and spec mask network (see below). The roughness slider value remains at its default settings.
+- **Spec roughness maps**<br> Unused. Will not connect the flat map and correspronding spec mask network (see below). The roughness slider value remains at its default settings.
+- **Layer Mask Maps**<br> No detection. Because these are exported manually, it is assumed you are not exporting an empty map.
 
 **Delete Flat Texture Map Files**<br> Option to delete the unused flat texture map files from disc. Defaults to unchecked.
+
+## Flat Detection of EXR textures
+
+To parse OpenEXR files the script requires the Python module *imageio* together with the *freeimage* plugin. These are installed on the school's lab computers, but if working on your own computer you will need to add these to Maya's Python interpreteer using the [mayapy](https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2022/ENU/Maya-Scripting/files/GUID-72A245EC-CDB4-46AB-BEE0-4BBBF9791627-htm.html) command from a command terminal.
+
+```
+mayapy -m pip install imageio
+```
+
+This will install *imageio* as well as its dependancies *numpy* and *pillow*. Next, open Maya and run the following in the Python tab of the Script Editor to download the *freeimage* plugin:
+
+```python
+import imageio
+imageio.plugins.freeimage.download()
+```
+
+If you run the script without these installed, the script will throw an error saying it is unable to parse the EXR files, but will otherwise work fine.
 
 
 ## Color maps multiple inputs, and default shader settings
