@@ -12,7 +12,9 @@ The script works by parsing the texture maps in a folder based on a defined nami
 
 ```[assetName]_[shaderName]_[mapType]_[version]_[artist].[ext]```
 
-So for example, the bump map for the hubcap shader would be: ```car_hubcap_bmp_v01_dflood.exr```
+So for example, the bump map for the hubcap shader would be: 
+
+```car_hubcap_bmp_v01_dflood.exr```
 
 There are two parts of this file name we need to identify. The shader name and the map type.
 
