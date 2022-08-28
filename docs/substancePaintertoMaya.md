@@ -12,7 +12,7 @@ The script works by parsing the texture maps in a folder based on a defined nami
 
 ```[assetName]_[shaderName]_[mapType]_[version]_[artist].[ext]```
 
-Example: ```car_hubcap_bmp_v01_dflood.exr```
+So for example, the bump map for the hubcap shader would be: ```car_hubcap_bmp_v01_dflood.exr```
 
 There are two parts of this file name we need to identify. The shader name and the map type.
 
@@ -22,7 +22,7 @@ This needs to match the name of the shader assigned in Maya. In Substance this i
 
 **Map Type Name**
 
-The texture map type name. In the case of our school's naming convention, we use a 3 letter code (dif for diffuse, bmp for bump, and so on). The script recognizes several names for the map type, listed below. Based on these names in the texture file the script will know where to connect the map to the shader in Maya.
+The texture map type name. In the case of our school's naming convention, we use a 3 letter code (dif for diffuse, bmp for bump, and so on). The script recognizes several names for the map type, listed below. Based on these names in the texture file name the script will know where to connect the map to the shader in Maya.
 
 | map | name | 
 |----|----
@@ -37,15 +37,11 @@ The texture map type name. In the case of our school's naming convention, we use
 
 ## Exporting Texture Maps 
 
-The exported texture files must contain the *shader name* and *map type* in the texture file name. In Substance Painter this is included in most Output templages through the $textureSet variable (for the shader name). For our recomended workflow the provided output template will create maps for color, bump, metalness, and specular roughness masks. Layer masks are output manually. See the [Substance tools](Substance.md) help for details of this workflow. 
+The exported texture files must contain the *shader name* and *map type* in the texture file name. In Substance Painter this is included in most Output templates through the $textureSet variable (for the shader name). For our recomended workflow the provided output template will create maps for color, bump, metalness, and specular roughness masks. Layer masks being less common are output manually. See the [Substance tools](Substance.md) help for details of this workflow. 
 
 ## Exporting Textures from Other Programs - Mari, Zbrush, Photoshop 
 
-As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. For example here are displacement and normal maps exported from Zbrush: 
-
-Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because they are not modeling programs. Substance when it generates a normal map is simply converting a 2D hight map into the normal map format, not deriving it from a 3D sculpt.
-
-
+As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. Note that only a modeling program like Zbrush can derive a displacement or normal map from a sculpt. Paint programs like Substance or Mari cannot because they are not modeling programs. Substance or Mari when they generate a normal map are simply converting a 2D hight map into the normal map format, not deriving it from a 3D sculpt. The same is true for displacement maps in Substance which are simply height maps (i.e. bump maps) used as displacement, as opposed to a displacement map derived from a sculpt. 
 
 ## Using the GUI
 
