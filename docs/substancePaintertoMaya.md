@@ -80,15 +80,15 @@ Substance Painter exports all texture map types in the output template, regardle
 
 - **BaseColor/diffuse and SSS maps**<br> No detection. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
 - **Metalness maps**<br> No detection. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
-- **Bump & Normal maps**<br> Unused. Will not connect the flat texture map, as it will have no effect on the shader.
-- **Spec roughness maps**<br> Unused. Will not connect the flat map and correspronding spec mask network (see below). The roughness slider value remains at its default settings.
+- **Bump & Normal maps**<br> If detected will not connect the flat texture map, as it will have no effect on the shader.
+- **Spec roughness maps**<br> If detected will not connect the flat map and correspronding spec mask network (see below). The roughness slider value remains at its default settings.
 - **Layer Mask Maps**<br> No detection. Because these are exported manually, it is assumed you are not exporting an empty map.
 
 **Delete Flat Texture Map Files**<br> Option to delete the unused flat texture map files from disc. Defaults to unchecked.
 
 ## Flat Detection of EXR textures
 
-To parse OpenEXR files the script requires the Python module *imageio* together with the *freeimage* plugin. These are installed on the school's lab computers. If you are working on your own computer the script will display a message 
+The scrip supports flat detection of OpenEXR files via the Python module *imageio*. This is installed on the school's lab computers. If you are working on your a computer where this is not installed the script will display a message 
 saying it cannot parse the exr for flat detection for that map. The imageio module can easily be added to Maya's Python interpreter using the following [mayapy](https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2022/ENU/Maya-Scripting/files/GUID-72A245EC-CDB4-46AB-BEE0-4BBBF9791627-htm.html) command from a terminal:
 
 ```
