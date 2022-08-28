@@ -88,7 +88,7 @@ Substance Painter exports all texture map types in the output template, regardle
 
 ## Flat Detection of EXR textures
 
-The script requires *imageoio* to perform flat detection of OpenEXR files. If you do not have this installed, it's easy to do by entering the following [mayapy](https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2022/ENU/Maya-Scripting/files/GUID-72A245EC-CDB4-46AB-BEE0-4BBBF9791627-htm.html) command from a terminal:
+The script requires *imageoio* to perform flat detection of OpenEXR files. If you do not have this installed (the script will display a message telling you) it's easy to do by entering the following [mayapy](https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2022/ENU/Maya-Scripting/files/GUID-72A245EC-CDB4-46AB-BEE0-4BBBF9791627-htm.html) command from a terminal:
 
 ```
 mayapy -m pip install imageio
