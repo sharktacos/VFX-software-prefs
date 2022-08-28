@@ -88,8 +88,8 @@ Substance Painter exports all texture map types in the output template, regardle
 
 ## Flat Detection of EXR textures
 
-To parse OpenEXR files the script requires the Python module *imageio* together with the *freeimage* plugin. These are installed on the school's lab computers. If you are working on your own computer the script will throw an area
-error saying it cannot parse the exr for flat detection for that map. The module can easily be added to Maya's Python interpreteer using the following [mayapy](https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2022/ENU/Maya-Scripting/files/GUID-72A245EC-CDB4-46AB-BEE0-4BBBF9791627-htm.html) command from a terminal:
+To parse OpenEXR files the script requires the Python module *imageio* together with the *freeimage* plugin. These are installed on the school's lab computers. If you are working on your own computer the script will display a message 
+saying it cannot parse the exr for flat detection for that map. The imageio module can easily be added to Maya's Python interpreter using the following [mayapy](https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2022/ENU/Maya-Scripting/files/GUID-72A245EC-CDB4-46AB-BEE0-4BBBF9791627-htm.html) command from a terminal:
 
 ```
 mayapy -m pip install imageio
