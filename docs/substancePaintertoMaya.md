@@ -41,7 +41,11 @@ The exported texture files must contain the *shader name* and *map type* in the 
 
 ## Exporting Textures from Other Programs - Mari, Zbrush, Photoshop 
 
-As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. Note that only a modeling program like Zbrush can derive a displacement or normal map from a sculpt. Paint programs like Substance or Mari cannot because they are not modeling programs. Substance or Mari when they generate a normal map are simply converting a 2D hight map into the normal map format, not deriving it from a 3D sculpt. The same is true for displacement maps in Substance which are simply height maps (i.e. bump maps) used as displacement, as opposed to a displacement map derived from a sculpt. 
+As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. 
+
+## Normal and Displacement Maps
+
+Normal and Displacement maps are not included in our [Substance texture export template](Substance.md). This is because only a modeling program like Zbrush can derive a displacement or normal map from a sculpt. Paint programs like Substance or Mari cannot because they are not modeling programs. Substance or Mari when they generate a normal map are simply converting a 2D hight map into the normal map format, not deriving it from a 3D sculpt. The same is true for displacement maps in Substance which are simply height maps (i.e. bump maps) used as displacement, as opposed to a displacement map derived from a sculpt. 
 
 ## Using the GUI
 
