@@ -115,40 +115,6 @@ def createMetalMap(texture, fileNode, clean, colorCorrect=False, forceTexture=Tr
     attributeName = texture.materialAttribute
     metalness = '.metalness'
 
-    """
-    # if mask is flat (all pixels the same value) insert value in slider
-    flat,r,g,b = helper.is_flat_color(texture.filePath)
-
-    if flat: 
-        print('Metalness: Found flat texture map. Substuting pixel value ' + str(r) + ' in shader \"' + material + '\""' )
-        mc.setAttr ( material + '.metalness', r )
-
-        # if delete option is set, delete flat texture files, else delete unused nodes
-        if clean:
-            helper.cleanFiles(texture, fileNode)
-        else:
-            helper.cleanNodes(texture, fileNode)
-
-            
-    if not flat:
-        # List all the connection in the material attribute
-        connectedNodes = mc.listConnections(material + '.' + attributeName)
-
-        # If there's connections
-        if connectedNodes:
-
-            for node in connectedNodes:
-
-                # Replace the connection if the force texture is true
-                mc.connectAttr(fileNode + '.outColorR', material + metalness, force=forceTexture)
-
-        # If there's not connections
-        else:
-
-            # Connect the color texture map to the SSS
-            mc.connectAttr(fileNode + '.outColorR', material + metalness, force=forceTexture)
-    """
-
     # List all the connection in the material attribute
     connectedNodes = mc.listConnections(material + '.' + attributeName)
 
@@ -182,9 +148,13 @@ def createBumpMap(texture, renderer, fileNode, clean, colorCorrect, forceTexture
     material = texture.textureSet
     attributeName = texture.materialAttribute
 
+    # check for EXR texture
+    if texture.extension=='exr':
+        flat = helper.is_black_EXR(texture.filePath)
+    else:
+        flat = helper.is_flat_color(texture.filePath)
+        
     # if texture is flat (all pixels the same value) skip
-    flat = helper.is_flat_color(texture.filePath)
-    
     if flat: 
         print('Bump map: Found flat texture map. Skipping: ' + texture.textureName)
 
@@ -197,7 +167,10 @@ def createBumpMap(texture, renderer, fileNode, clean, colorCorrect, forceTexture
     if not flat:
         # Create the bump utility node
         bumpNode = mc.shadingNode(bumpNode, asUtility=True)
-        mc.setAttr (bumpNode + ".bumpHeight", 2)
+        if texture.extension=='exr':
+            mc.setAttr (bumpNode + ".bumpHeight", 1)
+        else:
+            mc.setAttr (bumpNode + ".bumpHeight", 2)
 
         # Connect the file node to the bump utility node
         helper.connectTexture(fileNode, 'outColorR', bumpNode, 'bumpMap', colorCorrect)

@@ -523,13 +523,34 @@ def is_flat_colorRGB(path):
     return flat, r, g, b
 """
 
+def is_black_EXR(path):
+    black = False
+    # try to import imgeio and numpy
+    try:
+        import imageio.v3 as iio
+        import numpy as np
+
+    except ImportError:
+        print ('Required imageio module not found. See docs for installation. Cannot parse EXR: ' + path)
+
+    else:
+        # read in the exr with freeimage plugin
+        img = iio.imread(path, plugin="EXR-FI")
+        #detect for zero pixel value with numpy
+        zero = np.count_nonzero(img)
+        if zero==0:
+            black = True
+
+    return black
+
+
 def is_flat_color(path):
     img = PySide2.QtGui.QImage(path)
     
     # Fail-safe for invalid image formats (EXR 16/32b float)
     null = False
     if img.isNull():
-        print('null!')
+        print('Invalid 16/32b image format. Try OpenEXR instead. Cannot parse: ' + path)
         return False
 
     # convert to grayscale
@@ -577,11 +598,14 @@ def createSpecMap(texture, fileNode, clean, colorCorrect=False, forceTexture=Tru
     blendNode = 'blendColors'
     material = texture.textureSet
     attributeName = texture.materialAttribute
+    
+    # check for EXR texture
+    if texture.extension=='exr':
+        flat = is_black_EXR(texture.filePath)
+    else:
+        flat = is_black_constant(texture.filePath)
 
-    flat = is_black_constant(texture.filePath)
     # if texture is flat (all pixels the same value) skip
-    #flat = is_flat_color(texture.filePath)[0]
-
     if flat: 
         print('Spec Roughness: Found flat texture map. Skipping: ' + texture.textureName)
 
