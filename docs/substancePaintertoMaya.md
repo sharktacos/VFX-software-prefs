@@ -10,11 +10,11 @@ Here's a demo of the script in action. Below are details about principles and fu
 
 The script works by parsing the texture maps in a folder based on a defined naming convention, and then assigning these found maps to their corresponding shaders. For example say we have the following naming for a texture map:
 
-```[assetName]_[shaderName]_[mapType]_[version]_[artist].[ext]```
+```
+[assetName]_[shaderName]_[mapType]_[version]_[artist].[ext]
+```
 
-Example: ```car_hubcap_bmp_v01_dflood.exr```
-
-There are two parts of this file name we need to identify. The shader name and the map type.
+There are two parts of this file name we need to identify. The shader name and the map type. For example, the bump map for the hubcap shader would be *car_**hubcap_bmp**_v01_dflood.exr*
 
 **Shader Name**
 
@@ -22,7 +22,7 @@ This needs to match the name of the shader assigned in Maya. In Substance this i
 
 **Map Type Name**
 
-The texture map type name. In the case of our school's naming convention, we use a 3 letter code (dif for diffuse, bmp for bump, and so on). The script recognizes several names for the map type, listed below. Based on these names in the texture file the script will know where to connect the map to the shader in Maya.
+The texture map type name. In the case of our school's naming convention, we use a 3 letter code (dif for diffuse, bmp for bump, and so on). The script recognizes several names for the map type, listed below. Based on these names in the texture file name the script will know where to connect the map to the shader in Maya.
 
 | map | name | 
 |----|----
@@ -37,15 +37,15 @@ The texture map type name. In the case of our school's naming convention, we use
 
 ## Exporting Texture Maps 
 
-The exported texture files must contain the *shader name* and *map type* in the texture file name. In Substance Painter this is included in most Output templages through the $textureSet variable (for the shader name). For our recomended workflow the provided output template will create maps for color, bump, metalness, and specular roughness masks. Layer masks are output manually. See the [Substance tools](Substance.md) help for details of this workflow. 
+The exported texture files must contain the *shader name* and *map type* in the texture file name. In Substance Painter this is included in most Output templates through the $textureSet variable (for the shader name). For our recomended workflow the provided output template will create maps for color, bump, metalness, and specular roughness masks. Layer masks being less common are output manually. See the [Substance tools](Substance.md) help for details of this workflow. 
 
 ## Exporting Textures from Other Programs - Mari, Zbrush, Photoshop 
 
-As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. For example here are displacement and normal maps exported from Zbrush: 
+As long as the names follow this naming convention they can be exported from any program: Photoshop, Mari, or even Zbrush for a normal or displacement map derived from a sculpt. 
 
-Note that only Zbrush can derive a displacement or normal map from a sculpt. Paint programs like substance or Mari cannot because they are not modeling programs. Substance when it generates a normal map is simply converting a 2D hight map into the normal map format, not deriving it from a 3D sculpt.
+## Normal and Displacement Maps
 
-
+Normal and Displacement maps are not included in our [Substance texture export template](Substance.md). This is because only a modeling program like Zbrush can derive a displacement or normal map from a sculpt. Paint programs like Substance or Mari cannot because they are not modeling programs. Substance or Mari when they generate a normal map are simply converting a 2D hight map into the normal map format, not deriving it from a 3D sculpt. The same is true for displacement maps in Substance which are simply height maps (i.e. bump maps) used as displacement, as opposed to a displacement map derived from a sculpt. 
 
 ## Using the GUI
 
@@ -74,14 +74,30 @@ Select the desired options, and click the "Proceed" button. If you have the (def
 
 ## Detect Flat Color Texture Maps
 
-The script parses the texture maps to detect when an image is a flat solid color, indicating textures output by Substance Painter that were not painted. It will then do the following depending on the texture map type:
+Substance Painter exports all texture map types in the output template, regardless of whether they have been painted. It is of course undesireble and confusing to have, for example, a bump map connected to a shader that does nothing because it is unpainted. To address this, the script parses the texture maps to detect for flat solid color (all pixels have the same value) or for zero value (all pixels are black). It will then do the following depending on the texture map type:
 
-- **BaseColor/diffuse and SSS maps**<br> Keep. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
-- **Metalness maps**<br> Keep. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
-- **Bump & Normal maps**<br> Unused. Will not connect the flat texture map, as it will have no effect on the shader.
-- **Spec roughness maps**<br> Unused. Will not connect the flat map and spec mask network (see below). The roughness slider value remains at its default settings.
+- **BaseColor/diffuse and SSS maps**<br> No detection. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
+- **Metalness maps**<br> No detection. These are connected, but the mipmap created by ```maketx``` are only a single tile (8x8 pixels) to save memory.
+- **Bump & Normal maps**<br> If detected will not connect the flat texture map, as it will have no effect on the shader.
+- **Spec roughness maps**<br> If detected will not connect the flat map and correspronding spec mask network (see below). The roughness slider value remains at its default settings.
+- **Layer Mask Maps**<br> No detection. Because these are exported manually, it is assumed you are not exporting an empty map.
 
 **Delete Flat Texture Map Files**<br> Option to delete the unused flat texture map files from disc. Defaults to unchecked.
+
+## Flat Detection of EXR textures
+
+The script requires *imageoio* to perform flat detection of OpenEXR files. If you do not have this installed (the script will display a message telling you) it's easy to do by entering the following [mayapy](https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2022/ENU/Maya-Scripting/files/GUID-72A245EC-CDB4-46AB-BEE0-4BBBF9791627-htm.html) command from a terminal:
+
+```
+mayapy -m pip install imageio
+```
+
+Next, open Maya and run the following in the Python tab of the Script Editor to download the *freeimage* plugin:
+
+```python
+import imageio
+imageio.plugins.freeimage.download()
+```
 
 
 ## Color maps multiple inputs, and default shader settings
