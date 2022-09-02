@@ -92,11 +92,12 @@ The script requires *imageoio* to perform flat detection of OpenEXR files. If yo
 mayapy -m pip install imageio
 ```
 
-Next, open Maya and run the following in the Python tab of the Script Editor to download the *freeimage* plugin:
+The *freeimage* plugin is included in this repo and set to work with Windows OS. If you are on a MacOS you can edit the [Maya.env file](../Maya/2022/Maya.env) and uncomment the line:
 
-```python
-import imageio
-imageio.plugins.freeimage.download()
+```
+# Imageio freeimage plugin for Mac OS:
+# IMAGEIO_FREEIMAGE_LIB = $MAYA_APP_DIR/scripts/SubstancePainterToMaya/imageio/libfreeimage-3.16.0-osx10.6.dylib
+
 ```
 
 
