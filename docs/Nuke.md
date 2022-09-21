@@ -21,9 +21,9 @@ In the finder menu select **go>home**. This folder is hidden by default. To show
 
 - **df Night Adaptation** <br> Created by Derek Flood. Simulate perceptual loss of color and blue-shift in low-light conditions by desaturating and color balancing low luminance colors. Based on ZoneSat and ZoneGrade tools by Jed Smith.
 
-- **dWrite dailies mov** <br> Created by Derek Flood. Writes a dailies movie using the Nuke script name with a frame burn-in listing the script name, the output color space, and frame count. Text placement is based on project settings.
+- **dWrite dailies mov** <br> Created by Derek Flood. Writes a dailies movie with options for resizing and burn-in text (includes script name, output color space, and frame count). Text placement is based on project settings.
 
-[img](img/nuke_dailies.jpg)
+![img](img/nuke_dailies.jpg)
 
 - **ACES Ref Gamut Compress** <br> [Created by the ACES Gamut Mapping Workgroup](https://github.com/ampas/aces-vwg-gamut-mapping-2020). <br>Located in ```Color > OCIO``` menu.
 
