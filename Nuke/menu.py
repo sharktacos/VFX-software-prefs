@@ -6,13 +6,15 @@ from shuffleLayers import mylayerPanel
 
 toolbar = nuke.toolbar("Nodes")
 
-toolbar.addCommand( "Color/OCIO/ACES Ref Gamut Compress", "nuke.createNode('ACES_ref_gamut_compress')")
 
-toolbar.addCommand( "Gizmos/bm_OpticalGlow", "nuke.createNode('bm_OpticalGlow')")
-toolbar.addCommand( "Gizmos/bm_OpticalLightwrap", "nuke.createNode('bm_OpticalLightwrap')")
-toolbar.addCommand( "Gizmos/mmColorTarget", "nuke.createNode('mmColorTarget')")
-toolbar.addCommand( "Gizmos/OpticalZDefocus", "nuke.createNode('OpticalZDefocus')")
-toolbar.addCommand( "Gizmos/bokeh_blur", "nuke.createNode('bokeh_blur')")
+toolbar.addCommand( "Studio/bm_OpticalGlow", "nuke.createNode('bm_OpticalGlow')")
+toolbar.addCommand( "Studio/bm_OpticalLightwrap", "nuke.createNode('bm_OpticalLightwrap')")
+toolbar.addCommand( "Studio/mmColorTarget", "nuke.createNode('mmColorTarget')")
+#toolbar.addCommand( "Gizmos/OpticalZDefocus", "nuke.createNode('OpticalZDefocus')")
+#toolbar.addCommand( "Gizmos/bokeh_blur", "nuke.createNode('bokeh_blur')")
+toolbar.addCommand( "Studio/ACES Ref Gamut Compress", "nuke.createNode('ACES_ref_gamut_compress')")
+toolbar.addCommand( "Studio/Write Dailies Movie", "nuke.createNode('WriteDailiesMov')")
+
 
 # obsolete
 '''

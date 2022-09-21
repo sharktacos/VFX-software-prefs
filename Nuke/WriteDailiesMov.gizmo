@@ -1,0 +1,100 @@
+#! /Applications/Nuke13.1v1/Nuke13.1v1.app/Contents/MacOS/libnuke-13.1.1.dylib -nx
+#write_info Write1 file:"[value path]/[file rootname [file tail [value root.name]]].mov" format:"2002 1393 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"1 100" fps:"23.976" colorspace:"Low Contrast +1 Stop (Rec709)" datatype:"unknown" transfer:"unknown" views:"main" timecode:"01:01:53:17" colorManagement:"OCIO"
+version 13.1 v1
+Gizmo {
+ label "\n\[basename \[value this.file ]]\n"
+ addUserKnob {20 User l "Write Movie with Burn-in"}
+ addUserKnob {26 Burnin l "Burn-In Text"}
+ addUserKnob {41 disable_1 l disable T Text2.disable}
+ addUserKnob {26 resize l Resize}
+ addUserKnob {41 scale T Reformat1.scale}
+ addUserKnob {26 ""}
+ addUserKnob {2 path l "File Path"}
+ path /Users/Derek/Documents/VFX/StdX-ACES/show/
+ addUserKnob {26 note l note: T "File name is set automatically from Nuke script name."}
+ addUserKnob {41 file +INVISIBLE T Write1.file}
+ addUserKnob {26 ""}
+ addUserKnob {41 Render l "Render Movie" T Write1.Render}
+ addUserKnob {41 mov_prores_codec_profile l "Codec Profile" T Write1.mov_prores_codec_profile}
+ addUserKnob {41 colorspace l "output transform" T Write1.colorspace}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -170
+  ypos -297
+ }
+ Reformat {
+  type scale
+  scale 0.45
+  name Reformat1
+  xpos -170
+  ypos -251
+ }
+ Text2 {
+  font_size_toolbar 50
+  font_width_toolbar 50
+  font_height_toolbar 50
+  message "\[file rootname \[file tail \[value root.name]]]\n\[value parent.colorspace]\n\[frame]\n\n"
+  old_message {{76 79 84 82 95 50 48 52 48 95 99 111 109 112 95 108 115 107 121 119 97 108 107 101 114 95 118 48 50 10 76 111 119 32 67 111 110 116 114 97 115 116 32 43 49 32 83 116 111 112 32 40 82 101 99 55 48 57 41 10 49 10 10}
+    }
+  old_expression_markers {{0 28 30 58 60 60}
+    }
+  box {0 0 {"\[value root.width]*\[value parent.scale]-100"} 0}
+  xjustify right
+  yjustify bottom
+  transforms {{0 2}
+    }
+  cursor_position 72
+  global_font_scale {{"0.7*\[value parent.scale]"}}
+  font_size 50
+  font_width 50
+  font_height 50
+  center {1024 778}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{0 1556}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 1024 778 0 0 1 1 0 0 0 0}
+    }
+  enable_background true
+  background_opacity 0.5
+  background_border_x 5
+  background_border_y 2
+  name Text2
+  selected true
+  xpos -170
+  ypos -211
+ }
+ Write {
+  file "\[value path]/\[file rootname \[file tail \[value root.name]]].mov"
+  colorspace "Low Contrast +1 Stop (Rec709)"
+  file_type mov
+  mov64_format "mov (QuickTime / MOV)"
+  mov64_codec appr
+  mov_prores_codec_profile "ProRes 4:2:2 Proxy 10-bit"
+  mov_h264_codec_profile "High 4:2:0 8-bit"
+  mov64_pixel_format {{0}}
+  mov64_quality High
+  mov64_fast_start true
+  mov64_write_timecode true
+  mov64_gop_size 12
+  mov64_b_frames 0
+  mov64_bitrate 20000
+  mov64_bitrate_tolerance 4000000
+  mov64_quality_min 1
+  mov64_quality_max 3
+  create_directories true
+  checkHashOnRead false
+  version 1
+  name Write1
+  xpos -170
+  ypos -161
+ }
+ Output {
+  name Output1
+  xpos -170
+  ypos -54
+ }
+end_group
