@@ -21,7 +21,7 @@ In the finder menu select **go>home**. This folder is hidden by default. To show
 
 - **df Night Adaptation** <br> Created by Derek Flood. Simulate perceptual loss of color and blue-shift in low-light conditions by desaturating and color balancing low luminance colors. Based on ZoneSat and ZoneGrade tools by Jed Smith.
 
-- **dWrite dailies mov** <br> Created by Derek Flood. Writes a dailies movie with options for resizing and burn-in text (includes script name, output color space, and frame count). Text placement is based on project settings.
+- **Write dailies mov** <br> Created by Derek Flood. Writes a dailies movie with options for resizing and burn-in text (includes script name, output color space, and frame count). Text placement is based on project settings.
 
 ![img](img/nuke_dailies.jpg)
 
