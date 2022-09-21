@@ -13,6 +13,8 @@ In the finder menu select **go>home**. This folder is hidden by default. To show
 # Tools/Gizmos
 
 - **Shuffle EXR** <br> [Created by Nacho Igea](http://www.nukepedia.com/python/import/export/shufflelayers). The older EXR shuffle was incompatible with Nuke 13. The new one has options to extract all AOVs or select the AOVs to extract. <br>Located in the ```User``` tab of a ```Read``` node.
+![img](img/nuke_shuffle.jpg)
+
 - **bm Optical Glow** <br> [Created by Ben McEwan](https://github.com/BenMcEwan/nuke_public). Adds exponentially-increasing blurs together to produce a more optically-correct, natural glow. <br>Located in the ```Gizmos``` menu.
 
 - **bm Optical Light Wrap** <br> [Created by Ben McEwan](https://github.com/BenMcEwan/nuke_public). Adds exponentially-increasing blurs together to produce a more optically-correct, natural light wrap. <br>Located in the ```Gizmos``` menu.
@@ -21,7 +23,7 @@ In the finder menu select **go>home**. This folder is hidden by default. To show
 
 - **df Night Adaptation** <br> Created by Derek Flood. Simulate perceptual loss of color and blue-shift in low-light conditions by desaturating and color balancing low luminance colors. Based on ZoneSat and ZoneGrade tools by Jed Smith.
 
-- **Write dailies mov** <br> Created by Derek Flood. Writes a dailies movie with options for resizing and burn-in text (includes script name, output color space, and frame count). Text placement is based on project settings.
+- **Write dailies mov** <br> Created by Derek Flood. Writes a dailies movie with options for resizing and burn-in text (text includes script name, output color space, and frame count). Burn-in text placement is based on resolution in project settings.
 
 ![img](img/nuke_dailies.jpg)
 
