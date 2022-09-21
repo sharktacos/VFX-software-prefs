@@ -25,7 +25,7 @@ In the finder menu select **go>home**. This folder is hidden by default. To show
 
 ![img](img/nuke_dailies.jpg)
 
-- **ACES Ref Gamut Compress** <br> [Created by the ACES Gamut Mapping Workgroup](https://github.com/ampas/aces-vwg-gamut-mapping-2020). <br>Located in ```Color > OCIO``` menu.
+- **ACES Ref Gamut Compress** <br> [Created by the ACES Gamut Mapping Workgroup](https://github.com/ampas/aces-vwg-gamut-mapping-2020). See the [ACES Ref Gamut Compression](https://sharktacos.github.io/OpenColorIO-configs/docs/gamut.html) page for details.
 
 - **mm Color Target** <br> [Created by Marco Myer](https://www.marcomeyer-vfx.de/posts/mmcolortarget-nuke-gizmo/). Neutralize film footage with a Macbeth color chart to a target color space. <br>Located in the ```Gizmos``` menu. Note that this Giszmo requires NumPy. For Windows you can unzip the included numpy_win_python3.7.zip file and place it in your .nuke folder. See the video below for an example
 
