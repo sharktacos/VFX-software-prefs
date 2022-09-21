@@ -7,13 +7,14 @@ from shuffleLayers import mylayerPanel
 toolbar = nuke.toolbar("Nodes")
 
 
-toolbar.addCommand( "Studio/bm_OpticalGlow", "nuke.createNode('bm_OpticalGlow')")
-toolbar.addCommand( "Studio/bm_OpticalLightwrap", "nuke.createNode('bm_OpticalLightwrap')")
-toolbar.addCommand( "Studio/mmColorTarget", "nuke.createNode('mmColorTarget')")
+toolbar.addCommand( "Studio/Optical Glow", "nuke.createNode('bm_OpticalGlow')")
+toolbar.addCommand( "Studio/Optical Lightwrap", "nuke.createNode('bm_OpticalLightwrap')")
+toolbar.addCommand( "Studio/Night Shift", "nuke.createNode('df_nightShift2')")
+toolbar.addCommand( "Studio/mm Color Target", "nuke.createNode('mmColorTarget')")
 #toolbar.addCommand( "Gizmos/OpticalZDefocus", "nuke.createNode('OpticalZDefocus')")
-#toolbar.addCommand( "Gizmos/bokeh_blur", "nuke.createNode('bokeh_blur')")
+toolbar.addCommand( "Studio/bokeh blur", "nuke.createNode('BokehBlur.gizmo')")
 toolbar.addCommand( "Studio/ACES Ref Gamut Compress", "nuke.createNode('ACES_ref_gamut_compress')")
-toolbar.addCommand( "Studio/Write Dailies Movie", "nuke.createNode('WriteDailiesMov')")
+toolbar.addCommand( "Studio/Write Dailies Mov", "nuke.createNode('df_WriteDailiesMov2')")
 
 
 # obsolete

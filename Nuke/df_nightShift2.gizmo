@@ -2,25 +2,26 @@
 version 13.1 v1
 Gizmo {
  label "dev v1\n"
- addUserKnob {20 ZoneGrade_tab l NightAdaptation}
- addUserKnob {7 dechroma l "dechroma shadows" t "Simulate perceptual loss of color in low-light conditions by desaturating low luminance colors.\n"}
- dechroma 0.3
- addUserKnob {7 kelvin l "shadow temp (B/Y)" t "Adjust color temperature (blue to yellow) of low luminance colors.<br>\n\nCan be used to simulate perceptual shift to blue/green due to night shift.\n" R -2 2}
- addUserKnob {7 tint l "shadow tint (G/M)" t "Adjust color tint (green to magenta) of low luminance colors.<br>\n\nCan be used to simulate perceptual shift to blue/green due to night shift." R -2 2}
+ addUserKnob {20 ZoneGrade_tab l "Night Shift"}
+ addUserKnob {7 dechroma l "dark dechroma" t "Simulate perceptual loss of color in low-light conditions by desaturating low luminance colors.\n"}
+ dechroma 0.14
+ addUserKnob {7 kelvin l "dark temperature (B/Y)" t "Adjust color temperature (blue to yellow) of low luminance colors.<br>\n\nCan be used to simulate perceptual shift to blue/green due to night shift.\n" R -2 2}
+ kelvin -0.98
+ addUserKnob {7 tint l "dark tint (G/M)" t "Adjust color tint (green to magenta) of low luminance colors.<br>\n\nCan be used to simulate perceptual shift to blue/green due to night shift." R -2 2}
  addUserKnob {26 ""}
- addUserKnob {26 credit l "" +STARTLINE T "<br>\nby Derek Flood<br>\nBased on ZoneSat and ZoneGrade tools by Jed Smith<br>\n"}
+ addUserKnob {26 credit l "" +STARTLINE T "<br>\n<a href=https://sharktacos.github.io/VFX-software-prefs>sharktacos.github.io/VFX-software-prefs</a><br>\n\n"}
 }
  Input {
   inputs 0
   name Input
-  xpos -40
-  ypos -220
+  xpos -42
+  ypos -247
  }
  Group {
   name RGB_to_XYZ
   tile_color 0x429940ff
-  xpos -40
-  ypos -177
+  xpos -42
+  ypos -204
   addUserKnob {20 InputGamut_to_XYZ_tab l InputGamut_to_XYZ}
   addUserKnob {4 gamut l "input gamut" M {ACES ACEScg P3D65 Rec.2020 Rec.709 AlexaWideGamut RedWideGamutRGB "Filmlight E-Gamut" "DaVinci Wide Gamut" ""}}
   gamut ACEScg
@@ -38,7 +39,7 @@ Gizmo {
    xpos 324
    ypos -546
   }
-set N4beba400 [stack 0]
+set Na2ab9c00 [stack 0]
   ColorMatrix {
    matrix {
        {{"SwitchGamut.input\[value SwitchGamut.which].matrix"} {"SwitchGamut.input\[value SwitchGamut.which].matrix"} {"SwitchGamut.input\[value SwitchGamut.which].matrix"}}
@@ -54,14 +55,14 @@ set N4beba400 [stack 0]
    xpos 290
    ypos -250
   }
-push $N4beba400
+push $Na2ab9c00
   Dot {
    name Dot391
    label " *RGB to XYZ D65 CAT: XYZ Scaling"
    xpos 434
    ypos -546
   }
-set N4beb9800 [stack 0]
+set Na2ab9000 [stack 0]
   ColorMatrix {
    matrix {
        {0.7006223202 0.1487748027 0.101058729}
@@ -73,7 +74,7 @@ set N4beb9800 [stack 0]
    xpos 1280
    ypos -465
   }
-push $N4beb9800
+push $Na2ab9000
   ColorMatrix {
    matrix {
        {0.705396831 0.1640413404 0.08101775497}
@@ -85,7 +86,7 @@ push $N4beb9800
    xpos 1170
    ypos -465
   }
-push $N4beb9800
+push $Na2ab9000
   ColorMatrix {
    matrix {
        {0.735275209 0.06860940903 0.1465712786}
@@ -97,7 +98,7 @@ push $N4beb9800
    xpos 1060
    ypos -465
   }
-push $N4beb9800
+push $Na2ab9000
   ColorMatrix {
    matrix {
        {0.6380076408 0.2147038132 0.09774445742}
@@ -109,7 +110,7 @@ push $N4beb9800
    xpos 950
    ypos -465
   }
-push $N4beb9800
+push $Na2ab9000
   ColorMatrix {
    matrix {
        {0.4123909175 0.3575843573 0.1804807931}
@@ -121,7 +122,7 @@ push $N4beb9800
    xpos 840
    ypos -465
   }
-push $N4beb9800
+push $Na2ab9000
   ColorMatrix {
    matrix {
        {0.6369581223 0.1446169168 0.1688809693}
@@ -133,7 +134,7 @@ push $N4beb9800
    xpos 730
    ypos -465
   }
-push $N4beb9800
+push $Na2ab9000
   ColorMatrix {
    matrix {
        {0.4865711331 0.2656677067 0.1982173175}
@@ -145,7 +146,7 @@ push $N4beb9800
    xpos 620
    ypos -465
   }
-push $N4beb9800
+push $Na2ab9000
   ColorMatrix {
    matrix {
        {0.6609312296 0.1336961389 0.1558285803}
@@ -157,7 +158,7 @@ push $N4beb9800
    xpos 510
    ypos -465
   }
-push $N4beb9800
+push $Na2ab9000
   ColorMatrix {
    matrix {
        {0.9503623843 0 9.346324805e-05}
@@ -179,14 +180,14 @@ push $N4beb9800
  end_group
  Dot {
   name Dot2
-  xpos -6
-  ypos -126
+  xpos -8
+  ypos -153
  }
-set N4be6ec00 [stack 0]
+set Na2a3a400 [stack 0]
  Dot {
   name Dot1
-  xpos -226
-  ypos -126
+  xpos -228
+  ypos -153
  }
  ColorMatrix {
   matrix {
@@ -195,13 +196,13 @@ set N4be6ec00 [stack 0]
       {0.01763986237 -0.04277062416 0.9421030879}
     }
   name XYZ_to_Rec2020_
-  xpos -260
-  ypos 36
+  xpos -262
+  ypos 9
  }
  Group {
   name GamutCompress1
-  xpos -260
-  ypos 84
+  xpos -262
+  ypos 57
   addUserKnob {20 GamutCompress}
   addUserKnob {26 label_1 l " " T "simple chromaticity-linear gamut compression"}
   addUserKnob {41 th T compress3.th}
@@ -218,7 +219,7 @@ set N4be6ec00 [stack 0]
    xpos 434
    ypos -294
   }
-set N4be6dc00 [stack 0]
+set Na2a39400 [stack 0]
   Expression {
    channel0 rgba
    expr0 max(r,g,b)
@@ -227,14 +228,14 @@ set N4be6dc00 [stack 0]
    xpos 290
    ypos -298
   }
-set N4be6d800 [stack 0]
+set Na2a39000 [stack 0]
   Dot {
    name Dot11
    xpos 324
    ypos -150
   }
-push $N4be6d800
-push $N4be6dc00
+push $Na2a39000
+push $Na2a39400
   MergeExpression {
    inputs 2
    expr0 Ar==0?0:Br/Ar
@@ -244,7 +245,7 @@ push $N4be6dc00
    xpos 400
    ypos -250
   }
-set N4be6d000 [stack 0]
+set Na2a38800 [stack 0]
   Expression {
    temp_name0 c
    temp_expr0 1-min(r,g,b)
@@ -264,7 +265,7 @@ set N4be6d000 [stack 0]
    addUserKnob {7 s}
    s {{(y0-th)/sqrt(x0-1)}}
   }
-push $N4be6d000
+push $Na2a38800
   MergeExpression {
    inputs 2
    temp_name0 f
@@ -293,8 +294,8 @@ push $N4be6d000
  end_group
  Group {
   name Rec2020_to_ICtCp4
-  xpos -260
-  ypos 132
+  xpos -262
+  ypos 105
   addUserKnob {20 User}
   addUserKnob {7 Lw R 100 10000}
   Lw 10000
@@ -368,12 +369,12 @@ push $N4be6d000
  end_group
  Dot {
   name Dot10
-  xpos -226
-  ypos 184
+  xpos -228
+  ypos 157
  }
-set N4bdf6000 [stack 0]
-push $N4bdf6000
-push $N4be6ec00
+set Na29d1800 [stack 0]
+push $Na29d1800
+push $Na2a3a400
  ColorMatrix {
   matrix {
       {{curve(illuminant) 0.171823 0.176293 0.17997 0.18295 0.18759 0.193087 0.257085} 0.859943 -0.031061}
@@ -382,23 +383,11 @@ push $N4be6ec00
     }
   name XYZ_to_tRGB
   label "\[value illuminant]"
-  xpos -40
-  ypos -108
+  xpos -42
+  ypos -135
   addUserKnob {20 Whitepoint_tab l Whitepoint}
   addUserKnob {4 illuminant t "Choose illuminant to scale to equal energy 1,1,1 LMS triplet. \nDisclaimer: No idea if this is remotely correct!\nIf LMS, output original Truelight RGB Matrix for CIE 1931 XYZ Conversion\nMethod: middle diagonal of matrix adjusted by hand (stop looking at me like that), to create equal energy 1,1,1 output from CIE XYZ triplet of illuminant on input." M {D50 D55 D60 D65 D75 D93 tRGB}}
   illuminant D65
- }
- Expression {
-  temp_name0 n
-  temp_expr0 r*0.33+g*(1-0.33-0.33)+b*0.33
-  temp_name3 f
-  temp_expr3 1
-  expr0 n*(1-f)+r*f
-  expr1 n*(1-f)+g*f
-  expr2 n*(1-f)+b*f
-  name sat_global
-  xpos -40
-  ypos -57
  }
  Expression {
   temp_name0 f0
@@ -414,8 +403,8 @@ push $N4be6ec00
   expr2 n*(1-s)+b*s
   expr3 f
   name sat_low
-  xpos -40
-  ypos -18
+  xpos -42
+  ypos -45
   addUserKnob {20 User}
   addUserKnob {78 p n 2}
   p {{0.18*pow(2,-6)} {0.18*pow(2,0.5)}}
@@ -428,10 +417,10 @@ push $N4be6ec00
     }
   invert true
   name tRGB_to_XYZ
-  xpos -40
-  ypos 36
+  xpos -42
+  ypos 9
  }
-set N4bdf4c00 [stack 0]
+set Na29d0c00 [stack 0]
  ColorMatrix {
   matrix {
       {1.71665132 -0.3556708097 -0.2533662617}
@@ -439,13 +428,13 @@ set N4bdf4c00 [stack 0]
       {0.01763986237 -0.04277062416 0.9421030879}
     }
   name XYZ_to_Rec2020_2
-  xpos -150
-  ypos 36
+  xpos -152
+  ypos 9
  }
  Group {
   name GamutCompress2
-  xpos -150
-  ypos 84
+  xpos -152
+  ypos 57
   addUserKnob {20 GamutCompress}
   addUserKnob {26 label_1 l " " T "simple chromaticity-linear gamut compression"}
   addUserKnob {41 th T compress3.th}
@@ -462,7 +451,7 @@ set N4bdf4c00 [stack 0]
    xpos 434
    ypos -294
   }
-set N4bd87c00 [stack 0]
+set Na2963c00 [stack 0]
   Expression {
    channel0 rgba
    expr0 max(r,g,b)
@@ -471,14 +460,14 @@ set N4bd87c00 [stack 0]
    xpos 290
    ypos -298
   }
-set N4bd87800 [stack 0]
+set Na2963800 [stack 0]
   Dot {
    name Dot11
    xpos 324
    ypos -150
   }
-push $N4bd87800
-push $N4bd87c00
+push $Na2963800
+push $Na2963c00
   MergeExpression {
    inputs 2
    expr0 Ar==0?0:Br/Ar
@@ -488,7 +477,7 @@ push $N4bd87c00
    xpos 400
    ypos -250
   }
-set N4bd87000 [stack 0]
+set Na2963000 [stack 0]
   Expression {
    temp_name0 c
    temp_expr0 1-min(r,g,b)
@@ -508,7 +497,7 @@ set N4bd87000 [stack 0]
    addUserKnob {7 s}
    s {{(y0-th)/sqrt(x0-1)}}
   }
-push $N4bd87000
+push $Na2963000
   MergeExpression {
    inputs 2
    temp_name0 f
@@ -537,8 +526,8 @@ push $N4bd87000
  end_group
  Group {
   name Rec2020_to_ICtCp1
-  xpos -150
-  ypos 132
+  xpos -152
+  ypos 105
   addUserKnob {20 User}
   addUserKnob {7 Lw R 100 10000}
   Lw {{parent.Rec2020_to_ICtCp4.Lw}}
@@ -619,21 +608,21 @@ push $N4bd87000
   from2 rgba.red
   to2 -rgba.red
   name Copy3
-  xpos -150
-  ypos 174
+  xpos -152
+  ypos 147
  }
  Copy {
   inputs 2
   from0 rgba.red
   to0 rgba.red
   name Copy2
-  xpos -150
-  ypos 236
+  xpos -152
+  ypos 209
  }
  Group {
   name ICtCp_to_Rec2020_
-  xpos -150
-  ypos 300
+  xpos -152
+  ypos 273
   addUserKnob {20 User}
   addUserKnob {7 Lw R 100 10000}
   Lw {{parent.Rec2020_to_ICtCp4.Lw}}
@@ -715,16 +704,16 @@ push $N4bd87000
     }
   invert true
   name Rec2020_to_XYZ
-  xpos -150
-  ypos 348
+  xpos -152
+  ypos 321
  }
-push $N4bdf4c00
+push $Na29d0c00
  Switch {
   inputs 2
   which 1
   name perceptual
-  xpos -40
-  ypos 348
+  xpos -42
+  ypos 321
  }
  ColorMatrix {
   matrix {
@@ -734,8 +723,9 @@ push $N4bdf4c00
     }
   invert true
   name XYZ_to_RGB
-  xpos -40
-  ypos 395
+  selected true
+  xpos -42
+  ypos 368
  }
  Expression {
   temp_name0 m
@@ -750,19 +740,24 @@ push $N4bdf4c00
   expr1 g*sg
   expr2 b*sb
   name temp_low
-  xpos -40
-  ypos 442
+  xpos -42
+  ypos 416
   addUserKnob {20 Params}
   addUserKnob {18 ex l exposure R -4 4}
   ex {{parent.kelvin*0.5} 0 {parent.kelvin*-0.5}}
+  addUserKnob {6 ex_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
   addUserKnob {18 p R 0 10}
   p {{min(3/2,3/2*pow(0.5,ex.r))} {min(3/2,3/2*pow(0.5,ex.b))} {min(3/2,3/2*pow(0.5,ex.b))}}
+  addUserKnob {6 p_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
   addUserKnob {18 _a R -10 10}
   _a {{p.r*(_c-1)/(0.36**(p.r+1))} {p.g*(_c-1)/(0.36**(p.g+1))} {p.b*(_c-1)/(0.36**(p.b+1))}}
+  addUserKnob {6 _a_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
   addUserKnob {18 _b R -10 10}
   _b {{(1-_c.r)*(p.r+1)/(0.36**p.r)} {(1-_c.g)*(p.g+1)/(0.36**p.g)} {(1-_c.b)*(p.b+1)/(0.36**p.b)}}
+  addUserKnob {6 _b_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
   addUserKnob {18 _c R 0 10}
   _c {{pow(2,ex.r)} {pow(2,ex.g)} {pow(2,ex.b)}}
+  addUserKnob {6 _c_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
  }
  Expression {
   temp_name0 m
@@ -776,10 +771,9 @@ push $N4bdf4c00
   expr0 r*sr
   expr1 g*sg
   expr2 b*sb
-  name temp_low1
-  selected true
-  xpos -40
-  ypos 489
+  name tint_low
+  xpos -42
+  ypos 461
   addUserKnob {20 Params}
   addUserKnob {18 ex l exposure R -4 4}
   ex {{parent.tint*0.333333} {parent.tint*-0.66666} {parent.tint*0.333333}}
@@ -801,13 +795,5 @@ push $N4bdf4c00
   name Output
   xpos -40
   ypos 539
- }
- Viewer {
-  frame 76
-  frame_range 1-77
-  viewerProcess "ACES 1.0 - SDR-video - RGC (Gamma 2.2)"
-  name Viewer1
-  xpos 114
-  ypos 575
  }
 end_group

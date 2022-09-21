@@ -1,20 +1,21 @@
-#! /data/studio/upipe/apps/nuke/11.1v1/bin/linux/centos7/libnuke-11.1.1.so -nx
-version 11.1 v1
-Group {
-name bm_OpticalGlow
+#! /Applications/Nuke13.1v1/Nuke13.1v1.app/Contents/MacOS/libnuke-13.1.1.dylib -nx
+version 13.1 v1
+Gizmo {
  knobChanged "n1 = nuke.thisNode()\nk1 = nuke.thisKnob()\nif k1.name() == \"effectOnly\":\n    if k1.value() == 1:\n        n1\[\"mergeType\"].setEnabled(False)\n    else:\n        n1\[\"mergeType\"].setEnabled(True) \n\n\nn2 = nuke.thisNode()\nk2 = nuke.thisKnob()\nif k2.name() == \"useThresholdCheckbox\":\n    if k2.value() == 1:\n        n2\[\"viewRange\"].setEnabled(True)\n    else:\n        n2\[\"viewRange\"].setEnabled(False)"
  tile_color 0x222222ff
  addUserKnob {20 Options}
- addUserKnob {4 mergeType l "Merge Operation" M {Max Over Screen Plus "" "" ""}}
+ addUserKnob {4 mergeType l "Merge Operation" +DISABLED M {Max Over Screen Plus "" "" ""}}
  addUserKnob {26 spacer_01 l "" -STARTLINE T "      "}
  addUserKnob {6 effectOnly l " Effect Only" -STARTLINE}
+ effectOnly true
  addUserKnob {4 glowType l "Glow Math" M {Double Fibonacci ""}}
  glowType Fibonacci
  addUserKnob {26 spacer_02 l "" -STARTLINE T "   "}
  addUserKnob {6 useThresholdCheckbox l "Use Threshold" -STARTLINE}
+ useThresholdCheckbox true
  addUserKnob {6 cropBboxCheck l "Crop BBox   " +STARTLINE}
  cropBboxCheck true
- addUserKnob {6 viewRange l "View Threshold" -STARTLINE +DISABLED}
+ addUserKnob {6 viewRange l "View Threshold" -STARTLINE}
  addUserKnob {26 ""}
  addUserKnob {20 tGrp l "Threshold Selector" n 1}
  tGrp 0
@@ -81,7 +82,7 @@ name bm_OpticalGlow
   xpos -1079
   ypos -918
  }
-set N98be530 [stack 0]
+set N291fa000 [stack 0]
  Dot {
   name Dot21
   label "  "
@@ -90,7 +91,7 @@ set N98be530 [stack 0]
   xpos -1079
   ypos 85
  }
-set N9a91590 [stack 0]
+set N291f9c00 [stack 0]
  Dot {
   name Dot25
   label "  "
@@ -107,21 +108,21 @@ set N9a91590 [stack 0]
   xpos -1304
   ypos 582
  }
-set Nac89d20 [stack 0]
+set N291f9400 [stack 0]
  Crop {
   box {0 0 {input.width} {input.height}}
   name Crop1
   xpos -1338
   ypos 1030
  }
-push $N98be530
+push $N291fa000
  Keyer {
   operation "luminance key"
   name Keyer1
   xpos -732
   ypos -927
  }
-set N9688300 [stack 0]
+set N291f8c00 [stack 0]
  Dot {
   name Dot27
   label "  "
@@ -138,7 +139,7 @@ set N9688300 [stack 0]
   xpos 554
   ypos 585
  }
-set N980f080 [stack 0]
+set N291f8400 [stack 0]
  Shuffle {
   in alpha
   red alpha
@@ -148,13 +149,13 @@ set N980f080 [stack 0]
   xpos 520
   ypos 883
  }
-push $N9688300
+push $N291f8c00
  Premult {
   name Premult1
   xpos -732
   ypos -891
  }
-push $N98be530
+push $N291fa000
  Switch {
   inputs 2
   which {{useThresholdCheckbox}}
@@ -170,7 +171,7 @@ push $N98be530
   xpos -698
   ypos -754
  }
-set N970e6f0 [stack 0]
+set N2912b400 [stack 0]
  Dot {
   name Dot11
   label "  "
@@ -179,7 +180,7 @@ set N970e6f0 [stack 0]
   xpos -578
   ypos -754
  }
-set N999c9a0 [stack 0]
+set N2912b000 [stack 0]
  Dot {
   name Dot10
   label "  "
@@ -188,7 +189,7 @@ set N999c9a0 [stack 0]
   xpos -444
   ypos -754
  }
-set N971c080 [stack 0]
+set N2912ac00 [stack 0]
  Dot {
   name Dot9
   label "  "
@@ -197,7 +198,7 @@ set N971c080 [stack 0]
   xpos -314
   ypos -754
  }
-set N98022d0 [stack 0]
+set N2912a800 [stack 0]
  Dot {
   name Dot8
   label "  "
@@ -206,7 +207,7 @@ set N98022d0 [stack 0]
   xpos -185
   ypos -754
  }
-set N8a6f360 [stack 0]
+set N2912a400 [stack 0]
  Dot {
   name Dot7
   label "  "
@@ -215,7 +216,7 @@ set N8a6f360 [stack 0]
   xpos -75
   ypos -754
  }
-set N9754320 [stack 0]
+set N2912a000 [stack 0]
  Dot {
   name Dot6
   label "  "
@@ -224,7 +225,7 @@ set N9754320 [stack 0]
   xpos 47
   ypos -754
  }
-set Na3ffd900 [stack 0]
+set N29129c00 [stack 0]
  Dot {
   name Dot5
   label "  "
@@ -233,7 +234,7 @@ set Na3ffd900 [stack 0]
   xpos 179
   ypos -754
  }
-set N5aef6300 [stack 0]
+set N29129800 [stack 0]
  Dot {
   name Dot4
   label "  "
@@ -242,7 +243,7 @@ set N5aef6300 [stack 0]
   xpos 301
   ypos -754
  }
-set N5aefa550 [stack 0]
+set N29129400 [stack 0]
  Dot {
   name Dot3
   label "  "
@@ -272,7 +273,7 @@ set N5aefa550 [stack 0]
   xpos 421
   ypos -92
  }
-push $N5aefa550
+push $N29129400
  Blur {
   size {{(glowType==0?(glowSize*12.8):(glowSize*3.4))*glowAspect} {glowType==0?(glowSize*12.8):(glowSize*3.4)}}
   name Blur9
@@ -294,7 +295,7 @@ push $N5aefa550
   xpos 301
   ypos -156
  }
-push $N5aef6300
+push $N29129800
  Blur {
   size {{(glowType==0?(glowSize*6.4):(glowSize*2.1))*glowAspect} {glowType==0?(glowSize*6.4):(glowSize*2.1)}}
   name Blur8
@@ -316,7 +317,7 @@ push $N5aef6300
   xpos 179
   ypos -221
  }
-push $Na3ffd900
+push $N29129c00
  Blur {
   size {{(glowType==0?(glowSize*3.2):(glowSize*1.3))*glowAspect} {glowType==0?(glowSize*3.2):(glowSize*1.3)}}
   name Blur7
@@ -338,7 +339,7 @@ push $Na3ffd900
   xpos 47
   ypos -285
  }
-push $N9754320
+push $N2912a000
  Blur {
   size {{(glowType==0?(glowSize*1.6):(glowSize/1.25))*glowAspect} {glowType==0?(glowSize*1.6):(glowSize/1.25)}}
   name Blur6
@@ -360,7 +361,7 @@ push $N9754320
   xpos -75
   ypos -354
  }
-push $N8a6f360
+push $N2912a400
  Blur {
   size {{(glowType==0?(glowSize/12.5):(glowSize/2))*glowAspect} {glowType==0?(glowSize/12.5):(glowSize/2)}}
   name Blur5
@@ -382,7 +383,7 @@ push $N8a6f360
   xpos -185
   ypos -421
  }
-push $N98022d0
+push $N2912a800
  Blur {
   size {{(glowType==0?(glowSize/2.5):(glowSize/3.3333))*glowAspect} {glowType==0?(glowSize/2.5):(glowSize/3.3333)}}
   name Blur4
@@ -404,7 +405,7 @@ push $N98022d0
   xpos -314
   ypos -479
  }
-push $N971c080
+push $N2912ac00
  Blur {
   size {{(glowSize/5)*glowAspect} {glowSize/5}}
   name Blur3
@@ -427,7 +428,7 @@ push $N971c080
   xpos -444
   ypos -535
  }
-push $N999c9a0
+push $N2912b000
  Blur {
   size {{(glowSize/10)*glowAspect} {glowSize/10}}
   name Blur2
@@ -449,7 +450,7 @@ push $N999c9a0
   xpos -578
   ypos -592
  }
-push $N970e6f0
+push $N2912b400
  Blur {
   size {{glowSize/50}}
   name Blur1
@@ -554,7 +555,7 @@ push $N970e6f0
   xpos -698
   ypos 149
  }
-set Nd01a2670 [stack 0]
+set Na20d9c00 [stack 0]
  Dot {
   name Dot22
   label "  "
@@ -571,9 +572,9 @@ set Nd01a2670 [stack 0]
   xpos -472
   ypos 420
  }
-set Nd01abc40 [stack 0]
-push $Nd01a2670
-push $N9a91590
+set Na20d9400 [stack 0]
+push $Na20d9c00
+push $N291f9c00
  Merge2 {
   inputs 2
   operation plus
@@ -581,8 +582,8 @@ push $N9a91590
   xpos -650
   ypos 258
  }
-push $Nd01a2670
-push $N9a91590
+push $Na20d9c00
+push $N291f9c00
  Merge2 {
   inputs 2
   operation screen
@@ -590,16 +591,16 @@ push $N9a91590
   xpos -752
   ypos 257
  }
-push $Nd01a2670
-push $N9a91590
+push $Na20d9c00
+push $N291f9c00
  Merge2 {
   inputs 2
   name Merge11
   xpos -860
   ypos 259
  }
-push $Nd01a2670
-push $N9a91590
+push $Na20d9c00
+push $N291f9c00
  Merge2 {
   inputs 2
   operation max
@@ -621,7 +622,7 @@ push $N9a91590
   xpos -819
   ypos 416
  }
-set Nac4765e0 [stack 0]
+set Na20a4800 [stack 0]
  Dot {
   name Dot29
   label "  "
@@ -638,8 +639,8 @@ set Nac4765e0 [stack 0]
   xpos -918
   ypos 718
  }
-push $N980f080
-push $Nac4765e0
+push $N291f8400
+push $Na20a4800
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -648,8 +649,8 @@ push $Nac4765e0
   xpos -564
   ypos 576
  }
-push $Nd01abc40
-push $Nac4765e0
+push $Na20d9400
+push $Na20a4800
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -658,8 +659,8 @@ push $Nac4765e0
   xpos -702
   ypos 574
  }
-push $Nac89d20
-push $Nac4765e0
+push $N291f9400
+push $Na20a4800
  Copy {
   inputs 2
   from0 rgba.alpha

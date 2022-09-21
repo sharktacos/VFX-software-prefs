@@ -1,5 +1,5 @@
 #! /Applications/Nuke13.1v1/Nuke13.1v1.app/Contents/MacOS/libnuke-13.1.1.dylib -nx
-#write_info Write1 file:"[value path]/[file rootname [file tail [value root.name]]].mov" format:"2002 1393 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"1 100" fps:"23.976" colorspace:"Low Contrast +1 Stop (Rec709)" datatype:"unknown" transfer:"unknown" views:"main" timecode:"01:01:53:17" colorManagement:"OCIO"
+#write_info Write1 file:"[value path]/[file rootname [file tail [value root.name]]].mov" format:"960 540 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"1 100" fps:"24" colorspace:"default (Raw)" datatype:"unknown" transfer:"unknown" views:"main" timecode:"00:00:00:00" colorManagement:"OCIO"
 version 13.1 v1
 Gizmo {
  label "\n\[basename \[value this.file ]]\n"
@@ -10,7 +10,7 @@ Gizmo {
  addUserKnob {41 scale T Reformat1.scale}
  addUserKnob {26 ""}
  addUserKnob {2 path l "File Path"}
- path /Users/Derek/Documents/VFX/StdX-ACES/show/
+ path /path/to/file/
  addUserKnob {26 note l note: T "File name is set automatically from Nuke script name."}
  addUserKnob {41 file +INVISIBLE T Write1.file}
  addUserKnob {26 ""}
@@ -26,8 +26,9 @@ Gizmo {
  }
  Reformat {
   type scale
-  scale 0.45
+  scale 0.5
   name Reformat1
+  selected true
   xpos -170
   ypos -251
  }
@@ -36,9 +37,9 @@ Gizmo {
   font_width_toolbar 50
   font_height_toolbar 50
   message "\[file rootname \[file tail \[value root.name]]]\n\[value parent.colorspace]\n\[frame]\n\n"
-  old_message {{76 79 84 82 95 50 48 52 48 95 99 111 109 112 95 108 115 107 121 119 97 108 107 101 114 95 118 48 50 10 76 111 119 32 67 111 110 116 114 97 115 116 32 43 49 32 83 116 111 112 32 40 82 101 99 55 48 57 41 10 49 10 10}
+  old_message {{100 102 95 101 120 112 83 119 101 101 112 10 100 101 102 97 117 108 116 10 49 10 10}
     }
-  old_expression_markers {{0 28 30 58 60 60}
+  old_expression_markers {{0 10 12 18 20 20}
     }
   box {0 0 {"\[value root.width]*\[value parent.scale]-100"} 0}
   xjustify right
@@ -63,13 +64,12 @@ Gizmo {
   background_border_x 5
   background_border_y 2
   name Text2
-  selected true
   xpos -170
-  ypos -211
+  ypos -197
  }
  Write {
   file "\[value path]/\[file rootname \[file tail \[value root.name]]].mov"
-  colorspace "Low Contrast +1 Stop (Rec709)"
+  colorspace default
   file_type mov
   mov64_format "mov (QuickTime / MOV)"
   mov64_codec appr
@@ -90,7 +90,7 @@ Gizmo {
   version 1
   name Write1
   xpos -170
-  ypos -161
+  ypos -138
  }
  Output {
   name Output1
