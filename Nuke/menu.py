@@ -13,7 +13,7 @@ toolbar.addCommand( "Studio/mm Color Target", "nuke.createNode('mmColorTarget')"
 #toolbar.addCommand( "Gizmos/OpticalZDefocus", "nuke.createNode('OpticalZDefocus')")
 toolbar.addCommand( "Studio/bokeh blur", "nuke.createNode('BokehBlur.gizmo')")
 toolbar.addCommand( "Studio/ACES Ref Gamut Compress", "nuke.createNode('ACES_ref_gamut_compress')")
-toolbar.addCommand( "Studio/Write Dailies Mov", "nuke.createNode('df_WriteDailiesMov2')")
+toolbar.addCommand( "Studio/Write Dailies", "nuke.createNode('df_WriteDailiesSeq')")
 
 
 # obsolete
