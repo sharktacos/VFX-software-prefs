@@ -1,5 +1,5 @@
 #! /Applications/Nuke13.1v1/Nuke13.1v1.app/Contents/MacOS/libnuke-13.1.1.dylib -nx
-#write_info Write1 file:"[value path]/[file rootname [file tail [value root.name]]].mov" format:"960 540 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"1 100" fps:"24" colorspace:"default (Raw)" datatype:"unknown" transfer:"unknown" views:"main" timecode:"00:00:00:00" colorManagement:"OCIO"
+#write_info Write1 file:"[value path]/[file rootname [file tail [value root.name]]]/[file rootname [file tail [value root.name]]].%04d.jpg" format:"2224 1548 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"1 100" fps:"0" colorspace:"ACES 1.0 SDR-video (Rec709)" datatype:"8 bit" transfer:"unknown" views:"main" colorManagement:"OCIO"
 version 13.1 v1
 Gizmo {
  label "\n\[basename \[value this.file ]]\n"
@@ -10,13 +10,12 @@ Gizmo {
  addUserKnob {41 scale T Reformat1.scale}
  addUserKnob {26 ""}
  addUserKnob {2 path l "File Path"}
- path /path/to/file/
- addUserKnob {26 note l note: T "File name is set automatically from Nuke script name."}
+ path path/to/file/
+ addUserKnob {26 note l Note: T "File name is set automatically from Nuke script name."}
  addUserKnob {41 file +INVISIBLE T Write1.file}
- addUserKnob {26 ""}
- addUserKnob {41 Render l "Render Movie" T Write1.Render}
- addUserKnob {41 mov_prores_codec_profile l "Codec Profile" T Write1.mov_prores_codec_profile}
  addUserKnob {41 colorspace l "output transform" T Write1.colorspace}
+ addUserKnob {26 ""}
+ addUserKnob {41 Render l "Render Sequence" T Write1.Render}
 }
  Input {
   inputs 0
@@ -28,7 +27,6 @@ Gizmo {
   type scale
   scale 0.5
   name Reformat1
-  selected true
   xpos -170
   ypos -251
  }
@@ -37,9 +35,9 @@ Gizmo {
   font_width_toolbar 50
   font_height_toolbar 50
   message "\[file rootname \[file tail \[value root.name]]]\n\[value parent.colorspace]\n\[frame]\n\n"
-  old_message {{100 102 95 101 120 112 83 119 101 101 112 10 100 101 102 97 117 108 116 10 49 10 10}
+  old_message {{76 79 84 82 95 50 48 52 48 95 99 111 109 112 95 108 115 107 121 119 97 108 107 101 114 95 118 48 50 10 65 67 69 83 32 49 46 48 32 83 68 82 45 118 105 100 101 111 32 40 82 101 99 55 48 57 41 10 49 10 10}
     }
-  old_expression_markers {{0 10 12 18 20 20}
+  old_expression_markers {{0 28 30 56 58 58}
     }
   box {0 0 {"\[value root.width]*\[value parent.scale]-100"} 0}
   xjustify right
@@ -68,27 +66,14 @@ Gizmo {
   ypos -197
  }
  Write {
-  file "\[value path]/\[file rootname \[file tail \[value root.name]]].mov"
-  colorspace default
-  file_type mov
-  mov64_format "mov (QuickTime / MOV)"
-  mov64_codec appr
-  mov_prores_codec_profile "ProRes 4:2:2 Proxy 10-bit"
-  mov_h264_codec_profile "High 4:2:0 8-bit"
-  mov64_pixel_format {{0}}
-  mov64_quality High
-  mov64_fast_start true
-  mov64_write_timecode true
-  mov64_gop_size 12
-  mov64_b_frames 0
-  mov64_bitrate 20000
-  mov64_bitrate_tolerance 4000000
-  mov64_quality_min 1
-  mov64_quality_max 3
+  file "\[value path]/\[file rootname \[file tail \[value root.name]]]/\[file rootname \[file tail \[value root.name]]].####.jpg"
+  colorspace "ACES 1.0 SDR-video (Rec709)"
+  file_type jpeg
   create_directories true
   checkHashOnRead false
-  version 1
+  version 2
   name Write1
+  selected true
   xpos -170
   ypos -138
  }
