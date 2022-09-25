@@ -1,9 +1,9 @@
 #! /Applications/Nuke13.1v1/Nuke13.1v1.app/Contents/MacOS/libnuke-13.1.1.dylib -nx
-#write_info Write1 file:"[value path]/[file rootname [file tail [value root.name]]]/[file rootname [file tail [value root.name]]].%04d.jpg" format:"2224 1548 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"1 100" fps:"0" colorspace:"ACES 1.0 SDR-video (Rec709)" datatype:"8 bit" transfer:"unknown" views:"main" colorManagement:"OCIO"
+#write_info Write1 file:"[value path]/[file rootname [file tail [value root.name]]]/[file rootname [file tail [value root.name]]].%04d.jpg" format:"512 389 1" chans:":rgba.red:rgba.green:rgba.blue:rgba.alpha:" framerange:"0 563" fps:"0" colorspace:"ACES 1.0 SDR-video (Rec709)" datatype:"8 bit" transfer:"unknown" views:"main" colorManagement:"OCIO"
 version 13.1 v1
 Gizmo {
  label "\n\[basename \[value this.file ]]\n"
- addUserKnob {20 User l "Write Movie with Burn-in"}
+ addUserKnob {20 User l "Write Dailies with Burn-in"}
  addUserKnob {26 Burnin l "Burn-In Text"}
  addUserKnob {41 disable_1 l disable T Text2.disable}
  addUserKnob {26 resize l Resize}
@@ -35,9 +35,9 @@ Gizmo {
   font_width_toolbar 50
   font_height_toolbar 50
   message "\[file rootname \[file tail \[value root.name]]]\n\[value parent.colorspace]\n\[frame]\n\n"
-  old_message {{76 79 84 82 95 50 48 52 48 95 99 111 109 112 95 108 115 107 121 119 97 108 107 101 114 95 118 48 50 10 65 67 69 83 32 49 46 48 32 83 68 82 45 118 105 100 101 111 32 40 82 101 99 55 48 57 41 10 49 10 10}
+  old_message {{10 65 67 69 83 32 49 46 48 32 83 68 82 45 118 105 100 101 111 32 40 82 101 99 55 48 57 41 10 51 10 10}
     }
-  old_expression_markers {{0 28 30 56 58 58}
+  old_expression_markers {{0 -1 1 27 29 29}
     }
   box {0 0 {"\[value root.width]*\[value parent.scale]-100"} 0}
   xjustify right
