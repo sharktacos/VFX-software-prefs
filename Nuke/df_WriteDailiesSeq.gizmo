@@ -1,13 +1,11 @@
 #! /Applications/Nuke13.1v1/Nuke13.1v1.app/Contents/MacOS/libnuke-13.1.1.dylib -nx
-#write_info Write1 file:"[value path]/[file rootname [file tail [value root.name]]]/[file rootname [file tail [value root.name]]].%04d.jpg" format:"512 389 1" chans:":rgba.red:rgba.green:rgba.blue:rgba.alpha:" framerange:"0 563" fps:"0" colorspace:"ACES 1.0 SDR-video (Rec709)" datatype:"8 bit" transfer:"unknown" views:"main" colorManagement:"OCIO"
+#write_info Write1 file:"[value path]/[file rootname [file tail [value root.name]]]/[file rootname [file tail [value root.name]]].%04d.jpg" format:"1920 1080 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"0 563" fps:"24" colorspace:"ACES 1.0 SDR-video (Rec709)" datatype:"8 bit" transfer:"unknown" views:"main" timecode:"00:00:00:00" colorManagement:"OCIO"
 version 13.1 v1
 Gizmo {
  label "\n\[basename \[value this.file ]]\n"
  addUserKnob {20 User l "Write Dailies with Burn-in"}
- addUserKnob {26 Burnin l "Burn-In Text"}
- addUserKnob {41 disable_1 l disable T Text2.disable}
- addUserKnob {26 resize l Resize}
- addUserKnob {41 scale T Reformat1.scale}
+ addUserKnob {41 scale l "Resize Scale" T Reformat1.scale}
+ addUserKnob {41 red l "Exposure Adjustment" T Exposure1.red}
  addUserKnob {26 ""}
  addUserKnob {2 path l "File Path"}
  path path/to/file/
@@ -21,34 +19,37 @@ Gizmo {
   inputs 0
   name Input1
   xpos -170
-  ypos -297
+  ypos -366
  }
  Reformat {
   type scale
-  scale 0.5
   name Reformat1
   xpos -170
-  ypos -251
+  ypos -328
+ }
+ EXPTool {
+  mode Stops
+  name Exposure1
+  selected true
+  xpos -170
+  ypos -262
  }
  Text2 {
-  font_size_toolbar 50
-  font_width_toolbar 50
-  font_height_toolbar 50
-  message "\[file rootname \[file tail \[value root.name]]]\n\[value parent.colorspace]\n\[frame]\n\n"
-  old_message {{10 65 67 69 83 32 49 46 48 32 83 68 82 45 118 105 100 101 111 32 40 82 101 99 55 48 57 41 10 51 10 10}
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  message "Exposure Stops: \[value Exposure1.red]\n\n"
+  old_message {{69 120 112 111 115 117 114 101 32 83 116 111 112 115 58 32 48 46 48 53 10 10}
     }
-  old_expression_markers {{0 -1 1 27 29 29}
+  old_expression_markers {{16 19}
     }
-  box {0 0 {"\[value root.width]*\[value parent.scale]-100"} 0}
+  box {0 0 {"\[value root.width]*\[value parent.scale]-200"} 0}
   xjustify right
   yjustify bottom
   transforms {{0 2}
     }
-  cursor_position 72
-  global_font_scale {{"0.7*\[value parent.scale]"}}
-  font_size 50
-  font_width 50
-  font_height 50
+  cursor_position 39
+  global_font_scale {{"0.5*\[value parent.scale]"}}
   center {1024 778}
   cursor_initialised true
   autofit_bbox false
@@ -58,12 +59,45 @@ Gizmo {
   animation_layers {{1 11 1024 778 0 0 1 1 0 0 0 0}
     }
   enable_background true
-  background_opacity 0.5
+  background_opacity 0.8
   background_border_x 5
   background_border_y 2
-  name Text2
+  name TextExp
   xpos -170
-  ypos -197
+  ypos -185
+  disable {{"Exposure1.red == 0 ? 1 : 0"}}
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  message "\[file rootname \[file tail \[value root.name]]]\n\[value parent.colorspace]\n\n\n"
+  old_message {{84 101 115 116 67 111 109 112 10 65 67 69 83 32 49 46 48 32 83 68 82 45 118 105 100 101 111 32 40 82 101 99 55 48 57 41 10 10 10}
+    }
+  old_expression_markers {{0 7 9 35}
+    }
+  box {0 0 {"\[value root.width]*\[value parent.scale]-200"} 0}
+  xjustify right
+  yjustify bottom
+  transforms {{0 2}
+    }
+  cursor_position 73
+  global_font_scale {{"0.5*\[value parent.scale]"}}
+  center {1024 778}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{0 1556}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 1024 778 0 0 1 1 0 0 0 0}
+    }
+  enable_background true
+  background_opacity 0.8
+  background_border_x 5
+  background_border_y 2
+  name Text1
+  xpos -170
+  ypos -133
  }
  Write {
   file "\[value path]/\[file rootname \[file tail \[value root.name]]]/\[file rootname \[file tail \[value root.name]]].####.jpg"
@@ -73,13 +107,21 @@ Gizmo {
   checkHashOnRead false
   version 2
   name Write1
-  selected true
   xpos -170
-  ypos -138
+  ypos -84
  }
+set N2af17800 [stack 0]
  Output {
   name Output1
   xpos -170
-  ypos -54
+  ypos -16
+ }
+push $N2af17800
+ Viewer {
+  frame_range 0-563
+  viewerProcess "ACES 1.0 - SDR-video (Rec709)"
+  name Viewer1
+  xpos -320
+  ypos -179
  }
 end_group
