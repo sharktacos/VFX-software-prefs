@@ -1,6 +1,6 @@
 # VFX Software tools
 
-You can download the config files in the [Releases page](https://github.com/sharktacos/VFX-software-prefs/releases) of this repo.
+Click the green CODE button to download a zip of the latest stuff.
 
 Check out the [DOCUMENTATION](https://sharktacos.github.io/VFX-software-prefs/) for details on the tools and how to use them.
 

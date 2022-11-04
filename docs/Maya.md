@@ -33,7 +33,7 @@ A Maya shelf containing the above scripts and some other goodies. This goes in y
 
 Shelf items shown above are oranized into the following sections:
 
- ## Lights
+## Lights
  
  ![img](img/maya_shelf_lights.jpg)
  
@@ -43,7 +43,7 @@ Shelf items shown above are oranized into the following sections:
    - *custom directional light*
    - *custom dome light (Arnold)*
  
- ## Scripts
+## Scripts
  
   ![img](img/maya_shelf_scripts.jpg)
   
