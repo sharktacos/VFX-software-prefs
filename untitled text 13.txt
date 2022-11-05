@@ -1,0 +1,13 @@
+Maya shelf 
+MAYA_SHELF_PATH = F:\shared_assets\VFX-software-prefs-main\Maya\2022\prefs\shelves\
+MAYA_SCRIPT_PATH = F:\shared_assets\VFX-software-prefs-main\Maya\scripts\
+XBMLANGPATH = F:\shared_assets\VFX-software-prefs-main\Maya\2022\prefs\icons\
+PYTHONPATH = F:\shared_assets\VFX-software-prefs-main\Maya\scripts\
+MAYA_PRESET_PATH=F:\shared_assets\VFX-software-prefs-main\Maya\Presets
+
+Nuke tools:
+NUKE_PATH = F:\shared_assets\VFX-software-prefs-main\Nuke\
+NUKE_OCIO_ROLES=2
+
+Global:
+OCIO=F:\shared_assets\configs\StdX-ACES-VFX\StdX_global_config.ocio

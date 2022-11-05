@@ -1,5 +1,5 @@
 #! /Applications/Nuke13.1v1/Nuke13.1v1.app/Contents/MacOS/libnuke-13.1.1.dylib -nx
-#write_info Write1 file:"[value path]/[file rootname [file tail [value root.name]]]/[file rootname [file tail [value root.name]]].%04d.jpg" format:"1920 1080 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"0 563" fps:"24" colorspace:"ACES 1.0 SDR-video (Rec709)" datatype:"8 bit" transfer:"unknown" views:"main" timecode:"00:00:00:00" colorManagement:"OCIO"
+#write_info Write1 file:"[value path]/[file rootname [file tail [value root.name]]]/[file rootname [file tail [value root.name]]].%04d.jpg" format:"2048 1556 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"1 100" fps:"0" colorspace:"ACES 1.0 SDR-video (Rec.1886 Rec.709 - Display)" datatype:"8 bit" transfer:"unknown" views:"main" colorManagement:"OCIO"
 version 13.1 v1
 Gizmo {
  label "\n\[basename \[value this.file ]]\n"
@@ -72,9 +72,9 @@ Gizmo {
   font_width_toolbar 100
   font_height_toolbar 100
   message "\[file rootname \[file tail \[value root.name]]]\n\[value parent.colorspace]\n\n\n"
-  old_message {{84 101 115 116 67 111 109 112 10 65 67 69 83 32 49 46 48 32 83 68 82 45 118 105 100 101 111 32 40 82 101 99 55 48 57 41 10 10 10}
+  old_message {{10 65 67 69 83 32 49 46 48 32 83 68 82 45 118 105 100 101 111 32 40 82 101 99 46 49 56 56 54 32 82 101 99 46 55 48 57 32 45 32 68 105 115 112 108 97 121 41 10 10 10}
     }
-  old_expression_markers {{0 7 9 35}
+  old_expression_markers {{0 -1 1 47}
     }
   box {0 0 {"\[value root.width]*\[value parent.scale]-200"} 0}
   xjustify right
@@ -101,7 +101,7 @@ Gizmo {
  }
  Write {
   file "\[value path]/\[file rootname \[file tail \[value root.name]]]/\[file rootname \[file tail \[value root.name]]].####.jpg"
-  colorspace "ACES 1.0 SDR-video (Rec709)"
+  colorspace "ACES 1.0 SDR-video (Rec.1886 Rec.709 - Display)"
   file_type jpeg
   create_directories true
   checkHashOnRead false
@@ -110,16 +110,16 @@ Gizmo {
   xpos -170
   ypos -84
  }
-set N2af17800 [stack 0]
+set N2b4bd400 [stack 0]
  Output {
   name Output1
   xpos -170
   ypos -16
  }
-push $N2af17800
+push $N2b4bd400
  Viewer {
   frame_range 0-563
-  viewerProcess "ACES 1.0 - SDR-video (Rec709)"
+  viewerProcess "ACES 1.0 - SDR-video (Rec.1886 Rec.709 - Display)"
   name Viewer1
   xpos -320
   ypos -179
