@@ -13,42 +13,9 @@ toolbar.addCommand( "Studio/mm Color Target", "nuke.createNode('mmColorTarget')"
 #toolbar.addCommand( "Gizmos/OpticalZDefocus", "nuke.createNode('OpticalZDefocus')")
 toolbar.addCommand( "Studio/bokeh blur", "nuke.createNode('BokehBlur.gizmo')")
 toolbar.addCommand( "Studio/ACES Ref Gamut Compress", "nuke.createNode('ACES_ref_gamut_compress')")
-toolbar.addCommand( "Studio/Write Dailies", "nuke.createNode('df_WriteDailiesSeq')")
+toolbar.addCommand( "Studio/Write Dailies", "nuke.createNode('df_WriteDailiesMov')")
+toolbar.addCommand( "Studio/FlareFactory", "nuke.createNode('FlareFactory')")
 
-
-# obsolete
-'''
-#toolbar.addCommand( "Gizmos/bokeh_blur_jb_v03_1", "nuke.createNode('bokeh_blur_jb_v03_1')")
-#toolbar.addCommand( "Gizmos/CalibrateMacbeth", "nuke.createNode('CalibrateMacbeth')")
-#toolbar.addCommand( "Gizmos/Offset", "nuke.createNode('Offset')")
-#toolbar.addCommand( "Gizmos/exr_extract", "nuke.createNode('exr_extract')")
-
-def writeDir():
- import os
- file = nuke.filename(nuke.thisNode())
- dir = os.path.dirname(file)
- osdir = nuke.callbacks.filenameFilter(dir)
- try:
-  os.makedirs(osdir)
- except OSError:
-  pass
-
-  # OCIO Shot Look custom defaults: 
-
-def _setOCIODisplayContext():
-    node = nuke.thisNode()
-    node.knob('key1').setValue("SHOW")
-    node.knob('key2').setValue("SHOT")
-    node.knob('key3').setValue("VER")
-    node.knob('key4').setValue("SHAPER")
-    
-    node.knob('value1').setValue("DSOM")
-    node.knob('value2').setValue("022") 
-    node.knob('value3').setValue("v02")
-    node.knob('value4').setValue("ACEScct")
-    
-nuke.addOnCreate(_setOCIODisplayContext, nodeClass="OCIODisplay")
-'''
 
 
   # Shuffle custom defaults: 

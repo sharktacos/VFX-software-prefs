@@ -1,0 +1,141 @@
+#! /Applications/Nuke13.1v1/Nuke13.1v1.app/Contents/MacOS/libnuke-13.1.1.dylib -nx
+#write_info Write1 file:"[value path]/[file rootname [file tail [value root.name]]]/[file rootname [file tail [value root.name]]].mov" format:"1920 1080 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"0 563" fps:"24" colorspace:"ACES 1.0 SDR-video (Rec.709 - Display)" datatype:"unknown" transfer:"unknown" views:"main" timecode:"00:00:00:00" colorManagement:"OCIO"
+version 13.1 v1
+Gizmo {
+ label "\n\[basename \[value this.file ]]\n\[value colorspace]"
+ addUserKnob {20 User l "Write Dailies with Burn-in"}
+ addUserKnob {41 scale l "Resize Scale" T Reformat1.scale}
+ addUserKnob {41 red l "Exposure Adjustment" T Exposure1.red}
+ addUserKnob {26 ""}
+ addUserKnob {2 path l "File Path"}
+ path ../04_dailies_temp
+ addUserKnob {26 note l Note: T "File name is set automatically from Nuke script name."}
+ addUserKnob {41 file +INVISIBLE T Write1.file}
+ addUserKnob {41 colorspace l "output transform" T Write1.colorspace}
+ addUserKnob {26 ""}
+ addUserKnob {41 Render l "Render Movie" T Write1.Render}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -170
+  ypos -366
+ }
+ Reformat {
+  type scale
+  name Reformat1
+  xpos -170
+  ypos -328
+ }
+ EXPTool {
+  mode Stops
+  name Exposure1
+  xpos -170
+  ypos -262
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  message "Exposure Stops: \[value Exposure1.red]\n\n"
+  old_message {{69 120 112 111 115 117 114 101 32 83 116 111 112 115 58 32 48 46 54 56 10 10}
+    }
+  old_expression_markers {{16 19}
+    }
+  box {0 0 {"\[value root.width]*\[value parent.scale]-200"} 0}
+  xjustify right
+  yjustify bottom
+  transforms {{0 2}
+    }
+  cursor_position 39
+  global_font_scale {{"0.5*\[value parent.scale]"}}
+  center {1024 778}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{0 1556}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 1024 778 0 0 1 1 0 0 0 0}
+    }
+  color {1 0 0 1}
+  enable_background true
+  background_opacity 0.8
+  background_border_x 5
+  background_border_y 2
+  name TextExp
+  xpos -170
+  ypos -185
+  disable {{"Exposure1.red == 0 ? 1 : 0"}}
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  message "\[file rootname \[file tail \[value root.name]]]\n\[value parent.colorspace]\n\n\n"
+  old_message {{83 72 79 87 95 115 104 111 116 48 50 95 100 102 108 111 111 100 95 118 50 10 65 67 69 83 32 49 46 48 32 83 68 82 45 118 105 100 101 111 32 40 82 101 99 46 55 48 57 32 45 32 68 105 115 112 108 97 121 41 10 10 10}
+    }
+  old_expression_markers {{0 20 22 59}
+    }
+  box {0 0 {"\[value root.width]*\[value parent.scale]-200"} 0}
+  xjustify right
+  yjustify bottom
+  transforms {{0 2}
+    }
+  cursor_position 73
+  global_font_scale {{"0.5*\[value parent.scale]"}}
+  center {1024 778}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{0 1556}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 1024 778 0 0 1 1 0 0 0 0}
+    }
+  enable_background true
+  background_opacity 0.8
+  background_border_x 5
+  background_border_y 2
+  name Text1
+  xpos -170
+  ypos -133
+ }
+ Write {
+  file "\[value path]/\[file rootname \[file tail \[value root.name]]]/\[file rootname \[file tail \[value root.name]]].mov"
+  colorspace "ACES 1.0 SDR-video (Rec.709 - Display)"
+  file_type mov
+  mov64_format "mov (QuickTime / MOV)"
+  mov64_codec appr
+  mov_prores_codec_profile "ProRes 4:2:2 Proxy 10-bit"
+  mov_h264_codec_profile "High 4:2:0 8-bit"
+  mov64_pixel_format {{0} "yuv420p\tYCbCr 4:2:0 8-bit"}
+  mov64_quality High
+  mov64_fast_start true
+  mov64_write_timecode true
+  mov64_gop_size 12
+  mov64_b_frames 0
+  mov64_bitrate 20000
+  mov64_bitrate_tolerance 4000000
+  mov64_quality_min 1
+  mov64_quality_max 3
+  create_directories true
+  checkHashOnRead false
+  version 3
+  name Write1
+  xpos -170
+  ypos -84
+ }
+set N2418d400 [stack 0]
+ Output {
+  name Output1
+  xpos -170
+  ypos -16
+ }
+push $N2418d400
+ Viewer {
+  frame_range 0-563
+  viewerProcess "ACES 1.0 - SDR-video (Rec.1886 Rec.709 - Display)"
+  name Viewer1
+  xpos -320
+  ypos -179
+ }
+end_group
