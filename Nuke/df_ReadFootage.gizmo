@@ -41,7 +41,6 @@ Gizmo {
  Read {
   inputs 0
   file_type exr
-  file "/Users/Derek/OneDrive - Academy of Art University/D/Z/UNIVERSAL/ACES_TESTS/IMAGES/aces_sequence/aces_1920x1080_graded.#####.exr"
   origset true
   colorspace ACES2065-1
   name Read1
