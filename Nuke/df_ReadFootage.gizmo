@@ -27,9 +27,9 @@ Gizmo {
  addUserKnob {20 outputs_tab l Outputs}
  addUserKnob {1 neut l "CG Plate"}
  neut "../08_CG_elements/01_CG_plate/\$script/\$footage.\$pad.exr"
- addUserKnob {1 dailies l "Dailies Mov"}
+ addUserKnob {1 dailies l "Dailies Mov" +INVISIBLE}
  dailies "../04_dailies_temp/\$script.mov"
- addUserKnob {1 client l "Client Proxy Mov"}
+ addUserKnob {1 client l "Client Proxy Mov" +INVISIBLE}
  client "../10_final_movie/\$script/\$footage.mov"
  addUserKnob {1 final l "Final Output"}
  final "../09_final_sequence/\$script/\$footage.\$pad.exr"
@@ -40,6 +40,8 @@ Gizmo {
 }
  Read {
   inputs 0
+  file_type exr
+  file "/Users/Derek/OneDrive - Academy of Art University/D/Z/UNIVERSAL/ACES_TESTS/IMAGES/aces_sequence/aces_1920x1080_graded.#####.exr"
   origset true
   colorspace ACES2065-1
   name Read1
