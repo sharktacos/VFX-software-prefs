@@ -1,0 +1,63 @@
+#! /Applications/Nuke13.1v1/Nuke13.1v1.app/Contents/MacOS/libnuke-13.1.1.dylib -nx
+version 13.1 v1
+Gizmo {
+ inputs 0
+ label "\[set footage \[lindex \[split \[lindex \[split \[knob this.file] .] 0] /] end]]\n\[set pad \[lindex \[split \[lindex \[split \[knob this.file] .] 1] /] end]]\n\[set script \[file rootname \[file tail \[value root.name]]]]"
+ addUserKnob {20 User l Footage}
+ addUserKnob {41 file l File T Read1.file}
+ addUserKnob {41 localizationPolicy l "Localization Policy" T Read1.localizationPolicy}
+ addUserKnob {41 updateLocalization l Update -STARTLINE T Read1.updateLocalization}
+ addUserKnob {41 format l Format T Read1.format}
+ addUserKnob {41 proxy l Proxy T Read1.proxy}
+ addUserKnob {41 proxy_format l "Proxy Format" T Read1.proxy_format}
+ addUserKnob {41 first l "Frame Range" T Read1.first}
+ addUserKnob {41 before l "" -STARTLINE T Read1.before}
+ addUserKnob {41 last l "" -STARTLINE T Read1.last}
+ addUserKnob {41 after l "" -STARTLINE T Read1.after}
+ addUserKnob {41 frame_mode l Frame T Read1.frame_mode}
+ addUserKnob {41 frame l "" -STARTLINE T Read1.frame}
+ addUserKnob {41 origfirst l "Original Range" T Read1.origfirst}
+ addUserKnob {41 origlast l "" -STARTLINE T Read1.origlast}
+ addUserKnob {41 on_error l "Missing Frames" T Read1.on_error}
+ addUserKnob {41 reload -STARTLINE T Read1.reload}
+ addUserKnob {41 colorspace l "Input Transform" T Read1.colorspace}
+ addUserKnob {41 premultiplied l Premultiplied -STARTLINE T Read1.premultiplied}
+ addUserKnob {41 raw l "Raw Data" -STARTLINE T Read1.raw}
+ addUserKnob {41 auto_alpha l "Auto Alpha" -STARTLINE T Read1.auto_alpha}
+ addUserKnob {20 outputs_tab l Outputs}
+ addUserKnob {1 neut l "CG Plate"}
+ neut "../08_CG_elements/01_CG_plate/\$script/\$footage.\$pad.exr"
+ addUserKnob {1 dailies l "Dailies Mov"}
+ dailies "../04_dailies_temp/\$script.mov"
+ addUserKnob {1 client l "Client Proxy Mov"}
+ client "../10_final_movie/\$script/\$footage.mov"
+ addUserKnob {1 final l "Final Output"}
+ final "../09_final_sequence/\$script/\$footage.\$pad.exr"
+ addUserKnob {20 meta l Metadata}
+ addUserKnob {41 shownmetadata l "" -STARTLINE T Read1.shownmetadata}
+ addUserKnob {41 metadatafilter l "search metadata for" T Read1.metadatafilter}
+ addUserKnob {41 metadatafiltermode l within T Read1.metadatafiltermode}
+}
+ Read {
+  inputs 0
+  origset true
+  colorspace ACES2065-1
+  name Read1
+  selected true
+  xpos 260
+  ypos -237
+  addUserKnob {20 User}
+  addUserKnob {22 selLayer l "Select your Layers" -STARTLINE T "\{mylayerPanel()\}"}
+  addUserKnob {26 names l "Create shuffle nodes from all layers"}
+  addUserKnob {22 setShuffle l "Create Shuffle nodes" -STARTLINE T "\{newNode()\}"}
+  addUserKnob {26 name l "Select the layers needed to create shuffle nodes"}
+  addUserKnob {22 selLayer l "Select your Layers" -STARTLINE T "\{mylayerPanel()\}"}
+  addUserKnob {26 names l "Create shuffle nodes from all layers"}
+  addUserKnob {22 setShuffle l "Create Shuffle nodes" -STARTLINE T "\{newNode()\}"}
+ }
+ Output {
+  name Output1
+  xpos 260
+  ypos -95
+ }
+end_group

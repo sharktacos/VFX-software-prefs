@@ -1,0 +1,44 @@
+#! /Applications/Nuke13.1v1/Nuke13.1v1.app/Contents/MacOS/libnuke-13.1.1.dylib -nx
+version 13.1 v1
+Gizmo {
+ label "Script: \[set script \[file rootname \[file tail \[value root.name]]]]\nFootage: \[set footage \[lindex \[split \[lindex \[split \[knob \[topnode].file] .] 0] /] end]]\n\[set pad \[lindex \[split \[lindex \[split \[knob \[topnode].file] .] 1] /] end]]\n\n\n\n\n\n"
+ addUserKnob {20 User l "Naming Variables"}
+ addUserKnob {26 info l Usage: T "Connect under Read for footage"}
+ addUserKnob {26 ""}
+ addUserKnob {26 output_label l Outputs: T "Copy paste into Write nodes"}
+ addUserKnob {1 cg l "CG Plate"}
+ cg "08_CG_elements/01_CG_plate/\$script/\$footage.\$pad.exr"
+ addUserKnob {1 dailies l Dailies}
+ dailies "04_dailies_temp/\$script.mov"
+ addUserKnob {1 proxy l "Client Proxy"}
+ proxy "10_final_movie/\$script/\$footage.mov"
+ addUserKnob {1 final l "Final Output"}
+ final "09_final_sequence/\$script/\$footage.\$pad.exr"
+}
+ BackdropNode {
+  inputs 0
+  name BackdropNode11
+  label "\[set cg_var 101]\n\[value this.cg]\n\[value this.path]"
+  selected true
+  xpos -378
+  ypos 42
+  bdwidth 123
+  bdheight 68
+ }
+ Input {
+  inputs 0
+  name Input1
+  xpos -347
+  ypos 189
+ }
+ NoOp {
+  name NoOp1
+  xpos -347
+  ypos 256
+ }
+ Output {
+  name Output1
+  xpos -347
+  ypos 329
+ }
+end_group
