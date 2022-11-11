@@ -20,7 +20,7 @@ toolbar.addCommand( "Studio/ACES Ref Gamut Compress", "nuke.createNode('ACES_ref
 
 #toolbar.addCommand( "Studio/Burn-In", "nuke.createNode('df_burn_in')")
 #toolbar.addCommand( "Studio/Naming Variables", "nuke.createNode('df_nameVars')")
-toolbar.addCommand( "Studio/Read Footage", "nuke.createNode('df_ReadFootage')", 'shift+r' )
+#toolbar.addCommand( "Studio/Read Footage", "nuke.createNode('df_ReadFootage')", 'shift+r' )
 toolbar.addCommand( "Studio/Write Dailies", "nuke.createNode('df_WriteDailiesMov')", 'shift+w' )
 
 

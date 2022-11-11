@@ -1,19 +1,27 @@
 #! /Applications/Nuke13.1v1/Nuke13.1v1.app/Contents/MacOS/libnuke-13.1.1.dylib -nx
-#write_info Write1 file:"[value path]/[file rootname [file tail [value root.name]]]/[file rootname [file tail [value root.name]]].mov" format:"1920 1080 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"0 563" fps:"24" colorspace:"ACES 1.0 SDR-video (Rec.709 - Display)" datatype:"unknown" transfer:"unknown" views:"main" timecode:"00:00:00:00" colorManagement:"OCIO"
+#write_info Write1 file:"[value path]/[file rootname [file tail [value root.name]]]/[file rootname [file tail [value root.name]]].mov" format:"1920 1080 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"0 563" fps:"0" colorspace:"ACES 1.0 SDR-video (Rec.709 - Display)" datatype:"unknown" transfer:"unknown" views:"main" colorManagement:"OCIO"
 version 13.1 v1
 Gizmo {
- label "\n\[basename \[value this.file ]]\n\[value colorspace]"
- addUserKnob {20 User l "Write Dailies with Burn-in"}
+ label "\n\[file rootname \[file tail \[value root.name]]]/\n\[basename \[file rootname \[value \[topnode].file]]].mov\n\n\[value colorspace]"
+ addUserKnob {20 User l "Write Dailies with exposure Burn-in"}
  addUserKnob {41 scale l "Resize Scale" +INVISIBLE T Reformat1.scale}
  addUserKnob {41 red l "Exposure Adjustment" T Exposure1.red}
  addUserKnob {26 ""}
  addUserKnob {2 path l "File Path"}
- path "../04_dailies_temp/\$script/\$footage.mov"
- addUserKnob {26 note l Note: +INVISIBLE T "File name is set automatically from Nuke script name."}
- addUserKnob {41 file +INVISIBLE T Write1.file}
+ path "../04_dailies_temp/\[file rootname \[file tail \[value root.name]]]/\[basename \[file rootname \[value \[topnode].file]]].mov"
  addUserKnob {41 colorspace l "output transform" T Write1.colorspace}
  addUserKnob {26 ""}
  addUserKnob {41 Render l "Render Movie" T Write1.Render}
+ addUserKnob {20 tab l Usage}
+ addUserKnob {26 usage l "" +STARTLINE T "<p>Writes a Prores Proxy movie using the following auto-naming syntax:</p> \n<p>\n<b>path/script_name/footage_name.mov</b>\n</p>\n\n<p>Any exposure adjustment is burned into the image in red. <br>Just check the output transform and click \"render movie\"</p>\n\n"}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 exr l "EXR Output:" T "<br><br>\nCopy-paste this TCL code into the file field of a Write node:"}
+ addUserKnob {1 cg l "CG Plate"}
+ cg "../08_CG_elements/01_CG_plate/\[file rootname \[file tail \[value root.name]]]/\[basename \[file rootname \[value \[topnode].file]]].exr"
+ addUserKnob {1 out l "Final Output"}
+ out "../09_final_sequence/\[file rootname \[file tail \[value root.name]]]/\[basename \[file rootname \[value \[topnode].file]]].exr"
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 credit l "" +STARTLINE T "<style> a:link \{ color: #ccc \}</style>\n<font color=#ccc>\n<b>Created by Derek Flood</b><br>\n<a href=https://sharktacos.github.iol>https://sharktacos.github.io</a>"}
 }
  Input {
   inputs 0
