@@ -6,6 +6,8 @@ PYTHONPATH = F:\shared_assets\VFX-software-prefs-main\Maya\scripts\
              F:\shared_assets\VFX-software-prefs-main\Maya\scripts\SubstancePainterToMaya\
 MAYA_PRESET_PATH=F:\shared_assets\VFX-software-prefs-main\Maya\Presets
 
+IMAGEIO_FREEIMAGE_LIB = F:\shared_assets\VFX-software-prefs-main\Maya\2022\scripts\SubstancePainterToMaya\imageio\freeimage-3.15.1-win64.dll
+
 Nuke tools:
 NUKE_PATH = F:\shared_assets\VFX-software-prefs-main\Nuke\
 NUKE_OCIO_ROLES=2
