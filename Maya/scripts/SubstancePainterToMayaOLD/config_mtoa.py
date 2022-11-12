@@ -3,7 +3,7 @@ class config:
 
     def __init__(self):
         self.MAP_LIST = [
-            '---- Choose', 'baseColor', 'bump', 'metalness', 'normal', 'specularRoughness',
+            '---- Choose', 'baseColor', 'height', 'metalness', 'normal', 'specularRoughness',
             '---- Base', 'baseWeight', 'baseColor', 'diffuseRoughness', 'metalness',
             '---- Specular', 'specWeight', 'specColor', 'specularRoughness', 'specIoR', 'specAnisotropy', 'rotation',
             '---- Transmission', 'transWeight', 'transColor', 'depth', 'scatter', 'transAnisotropy', 'dispertionAbbe',
@@ -13,7 +13,7 @@ class config:
             '---- Sheen', 'sheenWeight', 'color', 'roughness',
             '---- Emission', 'emissionWeight', 'emissionColor',
             '---- Thin film', 'thickness', 'thinIoR',
-            '---- Geometry', 'opacity', 'bump', 'normal', 'anisotropyTangent',
+            '---- Geometry', 'opacity', 'height', 'normal', 'anisotropyTangent',
             '---- Matte', 'matteColor', 'matteOpacity', 'LayerShader Mix2', 'displacement',
             '---- Don\'t use'
         ]
@@ -40,7 +40,7 @@ class config:
                 ['baseColor', 'BaseColor', 'basecolor', 'color', 'Color','albedo', 'Albedo', 'diffuse', 'Diffuse', 'diff', 'Diff', 'dif'],
                 1
             ],
-            'bump': [
+            'height': [
                 ['height', 'Height','bump', 'Bump', 'BumpMap', 'bumpMap', 'bmp', ],
                 2
             ],
