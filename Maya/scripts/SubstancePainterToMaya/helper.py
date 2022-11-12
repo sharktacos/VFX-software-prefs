@@ -529,6 +529,7 @@ def is_black_EXR(path):
     try:
         import imageio.v3 as iio
         import numpy as np
+        import imageio_freeimage
 
     except ImportError:
         print ('Required imageio module not found. See docs for installation. Cannot parse EXR: ' + path)
