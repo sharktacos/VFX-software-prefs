@@ -335,11 +335,6 @@ def checkCreateMaterial(ui, texture, renderer):
                 # Create the material
                 createMaterialAndShadingGroup(materialName, materialType)
 
-                # Set default shader values
-#                if mc.objectType(materialName) == materialType:
-#                    render_helper.materialSettings(texture.textureSet)
-
-
             materialName += '_shd'
 
     # If option: "create new ones"
@@ -361,7 +356,7 @@ def checkCreateMaterial(ui, texture, renderer):
             # Specify that the material was not found
             materialNotFound = True
 
-    mc.select(materialName)
+    #mc.select(materialName)
 
     return materialName, materialNotFound
 

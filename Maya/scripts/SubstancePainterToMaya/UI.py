@@ -175,13 +175,14 @@ class PainterToMayaUI:
         self.materialsRadio1 = QtWidgets.QRadioButton(
             'Use existing materials, if they don\'t exist, create new ones')
         self.grpRadioMaterials.addButton(self.materialsRadio1)
-        self.materialsRadio1.setChecked(True)
+
 
         self.materialsRadio2 = QtWidgets.QRadioButton('Create new materials')
         self.grpRadioMaterials.addButton(self.materialsRadio2)
 
         self.materialsRadio3 = QtWidgets.QRadioButton('Use existing materials')
         self.grpRadioMaterials.addButton(self.materialsRadio3)
+        self.materialsRadio3.setChecked(True)
 
         self.materialsLayout.addWidget(self.materialsRadio1)
         self.materialsLayout.addWidget(self.materialsRadio2)

@@ -50,6 +50,7 @@ main.SPtoM()
 import os
 import maya.cmds as mc
 import maya.OpenMaya as om
+import maya.mel as mel
 from SubstancePainterToMaya import UI as ui
 from SubstancePainterToMaya import helper
 from importlib import reload
@@ -236,11 +237,15 @@ def proceed(ui, foundTextures, renderer, uiElements):
 
     for texture in texturesToUse:
         if useLyr and texture.materialAttribute == mixNode:
-            
+
             # create the layer file node
             fileNode = helper.createFileNode(texture, UDIMs)
             # assemble the layer network
             render_helper.createLayerNetwork(texture, renderer, fileNode)
+
+    #for texture in texturesToUse:
+    if ui.grpRadioMaterials.checkedId() == -4:
+        mel.eval('hyperShadePanelMenuCommand("hyperShadePanel1", "deleteUnusedNodes");')
 
 
     print('\n FINISHED \n')

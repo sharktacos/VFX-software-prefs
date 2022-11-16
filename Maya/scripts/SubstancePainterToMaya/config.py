@@ -1,5 +1,5 @@
 PLUGIN_NAME = 'Substance to Maya'
-PLUGIN_VERSION = '0.2'
+PLUGIN_VERSION = '0.3'
 TEXTURE_FOLDER = 'textures'
 INFOS = 'Original script by Tristan Legranche \ngithub.com/Strangenoise/SubstancePainterToMaya/\n\nUpdated workflow for Python3 by Derek Flood \nsharktacos.github.io/VFX-software-prefs '
 

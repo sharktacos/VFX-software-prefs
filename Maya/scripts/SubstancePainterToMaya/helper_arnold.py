@@ -221,6 +221,7 @@ def createLayerNetwork(texture, renderer, fileNode):
 
     # Get shader group connection
     SG = mc.listConnections (materialName + '.outColor', d=True, s=False)[0] or []
+    shaderGroups = mc.listConnections (materialName + '.outColor', d=True, s=False)
 
     # check if layer network already exists
     if mc.objectType(SG) == 'shadingEngine':
@@ -238,7 +239,10 @@ def createLayerNetwork(texture, renderer, fileNode):
         mc.connectAttr (materialName_top + '.outColor', layer_material + '.input2')
 
         # Connect the lyr material to the original shading group
-        mc.connectAttr(layer_material + '.outColor', SG + '.surfaceShader', force=True)
+        #mc.connectAttr(layer_material + '.outColor', SG + '.surfaceShader', force=True)
+        
+        for shaderGroup in shaderGroups:
+            mc.connectAttr(layer_material + '.outColor', shaderGroup + '.surfaceShader', force=True)
 
         # Connect displacement map
         if attributeName == 'displacementShader':
@@ -337,6 +341,5 @@ def connect(ui, texture, renderer, fileNode):
     # If it's another type of map
     else:
         helper.connectTexture(fileNode, texture.output, texture.textureSet, attributeName, colorCorrect)
-        
 
 
