@@ -18,7 +18,9 @@ There are two parts of this file name we need to identify. The shader name and t
 
 **Shader Name**
 
-This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet" (called with the $textureSet variable in Output presets). That is, the names of the shaders assigned to a model in Maya become the "texture sets" when the FBX is imported into Substance Painter. The script will find texture maps containing this name and assign these to the shader with the same name in Maya. 
+This needs to match the name of the shader assigned in Maya. In Substance this is referred to as a "textureSet" (called with the $textureSet variable in Output presets). That is, the names of the *shaders* assigned to a model in Maya become the "texture sets" when the FBX is imported into Substance Painter. The script will find texture maps containing this name and assign these to the shader with the same name in Maya. 
+
+Because the program parses the texture name to identify patterns, best practice is to name your shaders as one word without underscores. For example "shoeLace" rather than "shoe_lace."
 
 **Map Type Name**
 
@@ -57,13 +59,34 @@ Click the shelf button to launch the GUI.
  
  ![img](img/sp2m_gui1.jpg)
  
-There are three fields we need to look at
+Here's a description of what the above fields and options are for
 
-1. **Texture file location** This will default to the texture directory defined in your Maya project settings. If your textures are in a sub folder, you can navigate there. 
+*Textures Folder*
 
-2. **texture set/shader name** Enter the name of one of the textureSets (i.e. the shader name) included in your texture's file name. You only need to enter one texture set and the script will find all the others.  
+This will default to the texture directory defined in your Maya project settings. If your textures are in a sub folder, you can navigate there. 
 
-3. **map type** In the third field put one of the texture map types you have. Here the "dif" map is selected referring to a diffuse map (base color). Assuming you are using the naming convention of "dif" for your diffuse map you can just leave this as is.
+*texture set/shader name*
+
+Enter the name of one of the textureSets (i.e. the shader name) included in your texture's file name corresponding to the name of the shader. An easy way to do this is to copy-paste the shader name from the attribute editor into this field in the GUI. You only need to enter one texture set and the script will find all the others.  
+
+*map type*
+
+In the third field put one of the texture map types you have. By default the "dif" map is selected referring to a diffuse map (base color). Assuming you are using this naming convention of "dif" for your diffuse map you can just leave this as is.
+
+*Options*
+
+ - *Use all found texture sets*
+ - *Use only specified texture set* 
+ 
+ These will either apply just the shader you entered in the "texture set/shader name" field above, or apply all the shaders it finds.
+
+   - *Use existing materials, if they don't exist, create new ones*
+   - *Create new materials*
+   - *Use existing materials* 
+
+This last option is the default behavior. It conects textures to the existing materials, and then runs the "delete unused nodes" mel command from the Hypershade to clean up any orphaned nodes.
+
+*Launch button*
 
 Click  the "Launch" button and the script will search your textures for matches. This will open the second panel, shown below, where all the texure matches are listed. 
 
