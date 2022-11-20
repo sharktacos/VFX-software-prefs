@@ -11,6 +11,8 @@ toolbar = nuke.toolbar("Nodes")
 
 toolbar.addCommand( "Studio/Optical Glow", "nuke.createNode('bm_OpticalGlow2')")
 toolbar.addCommand( "Studio/Optical Lightwrap", "nuke.createNode('bm_OpticalLightwrap')")
+toolbar.addCommand( "Studio/Grade AOV", "nuke.createNode('GradeAOV')", 'shift+g' )
+
 #toolbar.addCommand( "Studio/Night Shift", "nuke.createNode('df_nightShift2')")
 toolbar.addCommand( "Studio/mm Color Target", "nuke.createNode('mmColorTarget')")
 #toolbar.addCommand( "Gizmos/OpticalZDefocus", "nuke.createNode('OpticalZDefocus')")
