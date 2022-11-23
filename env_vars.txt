@@ -5,6 +5,7 @@ XBMLANGPATH = F:\shared_assets\VFX-software-prefs-main\Maya\2022\prefs\icons\
 PYTHONPATH = F:\shared_assets\VFX-software-prefs-main\Maya\scripts\
              F:\shared_assets\VFX-software-prefs-main\Maya\scripts\SubstancePainterToMaya\
 MAYA_PRESET_PATH=F:\shared_assets\VFX-software-prefs-main\Maya\Presets
+MAYA_RENDER_SETUP_GLOBAL_PRESETS_PATH=F:\shared_assets\VFX-software-prefs-main\Maya\Presets
 
 IMAGEIO_FREEIMAGE_LIB = F:\shared_assets\VFX-software-prefs-main\Maya\2022\scripts\SubstancePainterToMaya\imageio\freeimage-3.15.1-win64.dll
 
