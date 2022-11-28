@@ -135,7 +135,7 @@ global proc shelf_DF_docs () {
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "import mtoa.utils as mutils\nimport maya.cmds as mc\n\ndomeLight = mutils.createLocator(\"aiSkyDomeLight\", asLight=True)\nmc.setAttr ( domeLight[1]+'.aiNormalize', 0)\nmc.setAttr ( domeLight[1]+'.aiAovIndirect', 1)\nmc.setAttr ( domeLight[1]+'.aiUseColorTemperature', 1)\nmc.setAttr ( domeLight[1]+'.aiColorTemperature', 15000)\nmc.setAttr ( domeLight[1]+'.aiAov', \"sky\", type=\"string\")" 
+        -command "import mtoa.utils as mutils\nimport maya.cmds as mc\n\ndomeLight = mutils.createLocator(\"aiSkyDomeLight\", asLight=True)\nmc.setAttr ( domeLight[1]+'.aiNormalize', 0)\nmc.setAttr ( domeLight[1]+'.aiAovIndirect', 0)\nmc.setAttr ( domeLight[1]+'.aiUseColorTemperature', 1)\nmc.setAttr ( domeLight[1]+'.aiColorTemperature', 15000)\nmc.setAttr ( domeLight[1]+'.aiAov', \"sky\", type=\"string\")" 
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1
