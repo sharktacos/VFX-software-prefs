@@ -1,5 +1,5 @@
 PLUGIN_NAME = 'Substance to Maya'
-PLUGIN_VERSION = '0.3'
+PLUGIN_VERSION = '0.4'
 TEXTURE_FOLDER = 'textures'
 INFOS = 'Original script by Tristan Legranche \ngithub.com/Strangenoise/SubstancePainterToMaya/\n\nUpdated workflow for Python3 by Derek Flood \nsharktacos.github.io/VFX-software-prefs '
 
@@ -22,7 +22,7 @@ NORMAL = [
     'normal', 'Normal', 'normalMap', 'NormalMap', 'nor'
 ]
 ROUGHNESS = [
-    'roughness', 'Roughness', 'specularRoughness', 'SpecularRoughness', 'specular', 'Specular', 'spc', 'ruf'
+    'roughness', 'Roughness', 'specularRoughness', 'SpecularRoughness', 'specular', 'Specular', 'spc', 'ruf', 'orm', 'ORM'
 ]
 MATTE = [
     'Matte', 'matte', 'msk'

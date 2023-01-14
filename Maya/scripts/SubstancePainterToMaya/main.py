@@ -86,36 +86,13 @@ class rendererObject:
             from SubstancePainterToMaya import config_mtoa as config
             reload(config)
             self.name = 'Arnold'
-#            print ('Arnold')
+            print ('Arnold')
 
         elif self.ui.grpRadioRenderer.checkedId() == -3:
-            from SubstancePainterToMaya import config_vray as config
+            from SubstancePainterToMaya import config_ue as config
             reload(config)
-            self.name = 'Vray'
-            print (Vray)
-
-        elif self.ui.grpRadioRenderer.checkedId() == -4:
-            from SubstancePainterToMaya import config_renderman_pxrdisney as config
-            reload(config)
-            self.name = 'PxrDisney'
-            print (Renderman - PxrDisney)
-
-        elif self.ui.grpRadioRenderer.checkedId() == -5:
-            from SubstancePainterToMaya import config_renderman_pxrsurface as config
-            reload(config)
-            self.name = 'PxrSurface'
-            print (Renderman - PxrSurface)
-
-        elif self.ui.grpRadioRenderer.checkedId() == -6:
-            from SubstancePainterToMaya import config_redshift as config
-            reload(config)
-            self.name = 'Redshift'
-            print (Redshift)
-        elif self.ui.grpRadioRenderer.checkedId() == -7:
-            from SubstancePainterToMaya import config_stingray as config
-            reload(config)
-            self.name = 'Stingray'
-            print (Stingray)
+            self.name = 'Unreal'
+            print ('Unreal')
 
         self.renderParameters = config.config()
 
@@ -172,30 +149,12 @@ def proceed(ui, foundTextures, renderer, uiElements):
     if renderer.name == 'Arnold':
         from SubstancePainterToMaya import helper_arnold as render_helper
         reload(render_helper)
-        subdivisions = ui.checkbox5.isChecked()
+#        subdivisions = ui.checkbox5.isChecked()
+        subdivisions = False
 
-    elif renderer.name == 'Vray':
-        import helper_vray as render_helper
-        reload(render_helper)
-        subdivisions = ui.checkbox6.isChecked()
 
-    elif renderer.name == 'PxrDisney':
-        import helper_renderman as render_helper
-        reload(render_helper)
-        subdivisions = ui.checkbox7.isChecked()
-
-    elif renderer.name == 'PxrSurface':
-        import helper_renderman as render_helper
-        reload(render_helper)
-        subdivisions = ui.checkbox7.isChecked()
-
-    elif renderer.name == 'Redshift':
-        import helper_redshift as render_helper
-        reload(render_helper)
-        subdivisions = ui.checkbox8.isChecked()
-
-    elif renderer.name == 'Stingray':
-        import helper_stingray as render_helper
+    elif renderer.name == 'Unreal':
+        from SubstancePainterToMaya import helper_unreal as render_helper
         reload(render_helper)
         subdivisions = False
 

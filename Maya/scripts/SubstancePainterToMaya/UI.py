@@ -128,39 +128,25 @@ class PainterToMayaUI:
         self.namingConventionLayout.addWidget(self.textureSetRadio2)
 
         # Renderer
-#        self.grpRenderer = QtWidgets.QGroupBox('Renderer')
-#        self.layVMainWindow01.addWidget(self.grpRenderer)
+        self.grpRenderer = QtWidgets.QGroupBox('Renderer')
+        self.layVMainWindow01.addWidget(self.grpRenderer)
 
         self.rendererLayout = QtWidgets.QVBoxLayout()
-#        self.grpRenderer.setLayout(self.rendererLayout)
+        self.grpRenderer.setLayout(self.rendererLayout)
 
         # Add Renderer widgets
         self.grpRadioRenderer = QtWidgets.QButtonGroup()
+
         self.rendererRadio1 = QtWidgets.QRadioButton('Arnold (aiStandardSurface)')
         self.rendererRadio1.setChecked(True)
-        self.rendererRadio1.setVisible(False)
-
         self.grpRadioRenderer.addButton(self.rendererRadio1)
 
-#        self.rendererRadio2 = QtWidgets.QRadioButton('VRay (VrayMtl)')
-#        self.grpRadioRenderer.addButton(self.rendererRadio2)
-#        self.rendererRadio3 = QtWidgets.QRadioButton('Renderman (PxrDisney)')
-#        self.grpRadioRenderer.addButton(self.rendererRadio3)
-#        self.rendererRadio4 = QtWidgets.QRadioButton('Renderman (PxrSurface)')
-#        self.grpRadioRenderer.addButton(self.rendererRadio4)
-#        self.rendererRadio5 = QtWidgets.QRadioButton('Redshift (RedshiftMaterial)')
-#        self.grpRadioRenderer.addButton(self.rendererRadio5)
-#        self.rendererRadio6 = QtWidgets.QRadioButton('StingrayPBS')
-#        self.rendererRadio6.toggled.connect(lambda: self.stingraySwitch())
-#        self.grpRadioRenderer.addButton(self.rendererRadio6)
+        self.rendererRadio2 = QtWidgets.QRadioButton('Unreal Engine (Blinn)')
+        self.grpRadioRenderer.addButton(self.rendererRadio2)
 
         self.rendererLayout.addWidget(self.rendererRadio1)
+        self.rendererLayout.addWidget(self.rendererRadio2)
 
-#        self.rendererLayout.addWidget(self.rendererRadio2)
-#        self.rendererLayout.addWidget(self.rendererRadio3)
-#        self.rendererLayout.addWidget(self.rendererRadio4)
-#        self.rendererLayout.addWidget(self.rendererRadio5)
-#        self.rendererLayout.addWidget(self.rendererRadio6)
 
         # Materials
         self.grpMaterials = QtWidgets.QGroupBox('Materials')
@@ -173,14 +159,14 @@ class PainterToMayaUI:
         self.grpRadioMaterials = QtWidgets.QButtonGroup()
 
         self.materialsRadio1 = QtWidgets.QRadioButton(
-            'Use existing materials, if they don\'t exist, create new ones')
+            'Use existing materials, if they don\'t exist, create new ones (not assigned)')
         self.grpRadioMaterials.addButton(self.materialsRadio1)
 
 
-        self.materialsRadio2 = QtWidgets.QRadioButton('Create new materials')
+        self.materialsRadio2 = QtWidgets.QRadioButton('Create new materials (not assigned)')
         self.grpRadioMaterials.addButton(self.materialsRadio2)
 
-        self.materialsRadio3 = QtWidgets.QRadioButton('Use existing materials')
+        self.materialsRadio3 = QtWidgets.QRadioButton('Use existing materials. Convert if wrong material type.')
         self.grpRadioMaterials.addButton(self.materialsRadio3)
         self.materialsRadio3.setChecked(True)
 
@@ -235,7 +221,7 @@ class PainterToMayaUI:
         self.checkbox1 = QtWidgets.QCheckBox('Use height as bump')
         self.checkbox1.setChecked(True)
         self.checkbox1.setVisible(False)
-        self.optionsSubLayout1.addWidget(self.checkbox1)
+#        self.optionsSubLayout1.addWidget(self.checkbox1)
 
         self.checkbox2 = QtWidgets.QCheckBox('Use height as displacement')
         self.checkbox2.setVisible(False)
@@ -253,8 +239,14 @@ class PainterToMayaUI:
         self.optionsSubLayout1.addWidget(self.checkboxRem)
 
         self.checkbox4 = QtWidgets.QCheckBox('Create layer shader networks (When \"layer\"" texture map found)')
-        self.checkbox4.setChecked(True)
         self.optionsSubLayout1.addWidget(self.checkbox4)
+        # If UE render hide layer option
+        if self.grpRadioRenderer.checkedId() == -3:
+            print ('it is true')
+            self.checkbox4.setChecked(False)
+            self.checkbox4.setVisible(False)
+        else:
+            self.checkbox4.setChecked(True)
 
         # Proceed
         self.grpProceed = QtWidgets.QGroupBox('Proceed')

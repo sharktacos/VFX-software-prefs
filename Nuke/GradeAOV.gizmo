@@ -3,23 +3,23 @@ version 13.1 v1
 Gizmo {
  inputs 2
  tile_color 0x8800ff
- label "\[value pass]\n"
+ label "\[value pass2]\n"
  note_font "DejaVu Sans"
  note_font_size 12
  addUserKnob {20 User}
  addUserKnob {26 GradeAOV_more l "" +STARTLINE T GradeAOV}
  addUserKnob {26 ""}
- addUserKnob {41 pass T Shuffle_main.in}
+ addUserKnob {41 pass2 l AOV T Shuffle_main2.in1}
  addUserKnob {6 pass_isolate l "Isolate Pass" +STARTLINE}
- addUserKnob {6 disableCC l "Disable color corrections" +STARTLINE}
+ addUserKnob {6 ccDisable l "Disable Color Corrections" +STARTLINE}
  addUserKnob {26 _2 l "" +STARTLINE}
  addUserKnob {26 Saturation_label l Saturation}
  addUserKnob {4 gamut t "If using weighted m, select gamut for appropriate luminance weights." M {ACEScg Rec.2020 P3D65 Rec.709 "" ""}}
- addUserKnob {4 m l method -STARTLINE M {weighted maximum average ""}}
  addUserKnob {7 s l saturation R 0 2}
  s 1
+ addUserKnob {4 m l method -STARTLINE M {weighted maximum average ""}}
  addUserKnob {26 ""}
- addUserKnob {26 grade_label l Grade}
+ addUserKnob {26 grade l Grade}
  addUserKnob {41 blackpoint T Grade16.blackpoint}
  addUserKnob {41 whitepoint T Grade16.whitepoint}
  addUserKnob {41 black l lift T Grade16.black}
@@ -30,22 +30,22 @@ Gizmo {
  addUserKnob {41 reverse T Grade16.reverse}
  addUserKnob {41 mix T Grade16.mix}
  addUserKnob {26 _1 l "" +STARTLINE}
- addUserKnob {26 "" l mask}
+ addUserKnob {26 _3 l Mask}
  addUserKnob {41 invert_mask l invert T Grade16.invert_mask}
  addUserKnob {41 maskChannelMask l "" -STARTLINE T Grade16.maskChannelMask}
  addUserKnob {26 ""}
  addUserKnob {6 layercontactsheet l LayerContactSheet t "layer contact sheet" +INVISIBLE +STARTLINE}
- addUserKnob {26 GradeAOV l "" +STARTLINE T "* Will Replace Original Pass with Modified Pass.\n* Saturation precedes Grade.\n* Saturation in luminance weights of working color space (e.g. ACEScg) \n\n-KBrennan"}
+ addUserKnob {26 GradeAOV l "" +STARTLINE T "* Will Replace Original Pass with Modified Pass.\n* Saturation Preceeds grade.\n* Saturation in luminance weights of working color space (e.g. ACEScg) \n* Retains all AOV channels\n\n-KBrennan, DFlood"}
 }
  Input {
   inputs 0
   name mask
-  xpos -457
-  ypos 574
+  xpos -209
+  ypos 570
   number 1
  }
-set N9d607c00 [stack 0]
-push $N9d607c00
+set N44215000 [stack 0]
+push $N44215000
  Input {
   inputs 0
   name cg_input
@@ -58,29 +58,24 @@ push $N9d607c00
   xpos -477
   ypos 381
  }
-set N9d607400 [stack 0]
+set N44214800 [stack 0]
  Dot {
   name Dot65
   tile_color 0xcccccc00
   xpos -310
   ypos 381
  }
- Shuffle {
-  in none
-  name Shuffle_main
-  label "Pass to Modify\n \[value in]"
-  note_font "DejaVu Sans Bold Italic"
+ Shuffle2 {
+  fromInput1 {{0} B}
+  in1 rgb
+  fromInput2 {{0} B}
+  mappings "4 rgba.red 0 0 rgba.red 0 0 rgba.green 0 1 rgba.green 0 1 rgba.blue 0 2 rgba.blue 0 2 black -1 -1 rgba.alpha 0 3"
+  name Shuffle_main2
+  label "\[value in1]"
   xpos -344
-  ypos 450
+  ypos 444
  }
- Remove {
-  operation keep
-  channels rgba
-  name Remove3
-  xpos -344
-  ypos 507
- }
-set N9d606800 [stack 0]
+set N449a3c00 [stack 0]
  Expression {
   inputs 1+1
   temp_name3 L
@@ -91,9 +86,9 @@ set N9d606800 [stack 0]
   expr3 L
   invert_mask {{parent.Grade16.invert_mask}}
   name Expression
-  xpos -344
-  ypos 574
-  disable {{disableCC}}
+  xpos -347
+  ypos 570
+  disable {{ccDisable}}
   addUserKnob {20 Params}
   addUserKnob {78 w l weights t "luminance weights for selected gamut" -STARTLINE n 3}
   w {{curve(gamut) 0.272229 0.2627 0.228975 0.212639} {curve(gamut) 0.674082 0.677998 0.691739 0.715169} {curve(gamut) 0.0536895 0.0593017 0.0792869 0.0721923}}
@@ -102,11 +97,11 @@ set N9d606800 [stack 0]
   inputs 1+1
   black_clamp false
   name Grade16
-  xpos -344
+  xpos -349
   ypos 640
-  disable {{disableCC}}
+  disable {{ccDisable}}
  }
-set N9d606400 [stack 0]
+set N449a3400 [stack 0]
  Dot {
   name Dot5
   tile_color 0xcccccc00
@@ -117,45 +112,17 @@ set N9d606400 [stack 0]
   name Dot6
   tile_color 0xcccccc00
   xpos -201
-  ypos 953
+  ypos 771
  }
-push $N9d607400
- Dot {
-  name Dot3
-  tile_color 0xcccccc00
-  xpos -660
-  ypos 381
- }
- LayerContactSheet {
-  showLayerNames true
-  name LayerContactSheet1
-  xpos -692
-  ypos 594
- }
- Dot {
-  name Dot2
-  tile_color 0xcccccc00
-  xpos -658
-  ypos 893
- }
-push $N9d606400
+push $N449a3400
  Dot {
   name Dot1
   tile_color 0x7aa9ff00
-  xpos -310
+  xpos -315
   ypos 701
  }
-set N9d604800 [stack 0]
- Dot {
-  name Dot4
-  tile_color 0x7aa9ff00
-  selected true
-  xpos -310
-  ypos 783
- }
-push $N9d604800
-push $N9d606800
-push $N9d607400
+push $N449a3c00
+push $N44214800
  Merge2 {
   inputs 2
   operation from
@@ -163,7 +130,7 @@ push $N9d607400
   Achannels rgb
   name Merge22
   xpos -509
-  ypos 507
+  ypos 451
  }
  Merge2 {
   inputs 2
@@ -174,40 +141,20 @@ push $N9d607400
   xpos -509
   ypos 698
  }
- ShuffleCopy {
-  inputs 2
-  red red
-  green green
-  blue blue
-  alpha blue
-  out {{{parent.Shuffle7.in}}}
-  out2 rgba
-  name ShuffleCopy2
-  label "in1 \[value in]-->out \[value out]"
-  xpos -509
-  ypos 776
- }
- Switch {
-  inputs 2
-  which {{layercontactsheet}}
-  name Switch1
-  xpos -509
-  ypos 890
- }
  Switch {
   inputs 2
   which {{pass_isolate}}
   name Switch2
-  xpos -506
-  ypos 950
+  xpos -509
+  ypos 768
  }
-set N8335eb00 [stack 0]
+set N44997200 [stack 0]
  Output {
   name Output1
   xpos -509
-  ypos 981
+  ypos 799
  }
-push $N8335eb00
+push $N44997200
  Viewer {
   frame_range 100-100
   viewerProcess "ACES 1.0 - SDR-video (Gamma 2.2 - Display)"

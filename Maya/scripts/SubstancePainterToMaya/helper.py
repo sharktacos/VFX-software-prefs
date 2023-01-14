@@ -211,8 +211,10 @@ def displaySecondPartOfUI(ui, renderer):
     ui.grpOptions.setVisible(True)
     ui.scroll.setVisible(True)
 
+    '''
     if renderer.name == 'Arnold':
         # Arnold subdivisions
+
         ui.checkbox5 = QtWidgets.QCheckBox('Add subdivisions')
         ui.optionsSubLayout2.addWidget(ui.checkbox5)
         ui.checkbox5.stateChanged.connect(lambda: ui.addArnoldSubdivisionsCheckbox())
@@ -232,11 +234,12 @@ def displaySecondPartOfUI(ui, renderer):
         ui.subdivIter.setEnabled(False)
         ui.optionsSubLayout2.addWidget(ui.subdivIter)
 
+
     else:
-        ui.checkbox1.setVisible(True)
+#        ui.checkbox1.setVisible(True)
 #        ui.checkbox2.setVisible(True)
 #        ui.checkbox4.setVisible(False)
-
+    '''
 
     ui.grpProceed.setVisible(True)
     ui.launchButton.setText('Re-launch')
@@ -314,10 +317,10 @@ def connectPlace2dTexture(place2d, fileNode):
 
 def checkCreateMaterial(ui, texture, renderer):
     """
-        Based on the interface options, create or use existing materials
-        :param material: The material's name
-        :return: The material's name, if the material was found
-        """
+    Based on the interface options, create or use existing materials
+    :param material: The material's name
+    :return: The material's name, if the material was found
+    """
 
     materialNotFound = False
     materialName = texture.textureSet
@@ -348,17 +351,36 @@ def checkCreateMaterial(ui, texture, renderer):
 
         materialName += '_shd'
 
-    # If option: "use existing ones"
+    # If option: "use existing Materials. Convert if wrong material type."
     elif ui.grpRadioMaterials.checkedId() == -4:
 
-        # If the material doesn't exist or if it's not of the right type
-        if not mc.objExists(materialName) or not mc.objectType(materialName) == materialType:
+        # If the material doesn't exist
+        if not mc.objExists(materialName):
+
             # Specify that the material was not found
             materialNotFound = True
 
-    #mc.select(materialName)
+        # If the material is not of the right type
+        elif not mc.objectType(materialName) == materialType:
+
+            SG = mc.listConnections (materialName + '.outColor', d=True, s=False)[0] or []
+            shaderGroups = mc.listConnections (materialName + '.outColor', d=True, s=False)
+
+            # check if material already exists
+            if mc.objectType(SG) == 'shadingEngine':
+
+                # Delete the material and replace with material of correct type
+                mc.delete(materialName) 
+                material = mc.shadingNode(materialType, asShader=True, name=materialName)
+
+                # Connect the material to the original shading group        
+                for shaderGroup in shaderGroups:
+                    mc.connectAttr(material + '.outColor', shaderGroup + '.surfaceShader', force=True)
+
+
 
     return materialName, materialNotFound
+
 
 def createMaterialAndShadingGroup(materialName, materialType):
     """
@@ -421,6 +443,8 @@ def getTexturesToUse(renderer, foundTextures, uiElements):
             texturesToUse.append(foundTexture)
 
     return texturesToUse
+
+# helper.connectTexture(fileNode, 'outColor', normalNode, 'input', colorCorrect)
 
 def connectTexture(textureNode, textureOutput, targetNode, targetInput, colorCorrect=False, forceTexture=True):
     """
