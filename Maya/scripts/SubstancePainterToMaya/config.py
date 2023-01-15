@@ -40,7 +40,7 @@ SUBSURFACE = [
     'subsurfaceColor', 'SubsurfaceColor', 'SSS', 'SSSColor', 'SSScolor', 'sss', 'sssColor', 'ssscolor'
 ]
 EMISSION = [
-    'emission', 'Emission', 'emissive', 'Emissive', 'light', 'Light'
+    'emission', 'Emission', 'emissive', 'Emissive', 'light', 'Light', 'emi', 'Emi'
 ]
 
 DELIMITERS = '-|_|@|\+| |\.'

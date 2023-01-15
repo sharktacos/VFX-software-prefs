@@ -3,7 +3,7 @@ class config:
         
     def __init__(self):
         self.MAP_LIST = [
-            '---- Choose', 'color', 'normal', 'specularColor',
+            '---- Choose', 'color', 'normal', 'specularColor', 'emissive',
             '---- Common Material Attributes', 'color', 'transparency', 
             'ambientColor', 'incandescence', 'bumpMapping', 
             'diffuse', 'translucence', 'translucenceDepth', 
@@ -15,7 +15,7 @@ class config:
 
 
         self.MAP_LIST_REAL_ATTRIBUTES = [
-            '---- Choose', 'color', 'normalCamera', 'specularColor',
+            '---- Choose', 'color', 'normalCamera', 'specularColor', 'incandescence',
             '---- Common Material Attributes', 'color', 'transparency', 
             'ambientColor', 'incandescence', 'normalCamera', 
             'diffuse', 'translucence', 'translucenceDepth', 
@@ -37,11 +37,15 @@ class config:
             'roughness': [
                 ['OcclusionRoughnessMetallic', 'OcclusionRoughnessMetal', 'OcclusionRoughnessMetalness', 'orm', 'ORM', 'roughness', 'Roughness', 'specularRoughness', 'SpecularRoughness', 'specular', 'Specular', 'spc', 'ruf', 'specularColor'],
                 3
+            ],
+            'emissive': [
+                ['Emissive', 'emissive', 'incandescence', 'Incandescence', 'emissiveColor', 'EmissiveColor', 'emi', 'Emi', 'emission', 'Emission', 'light', 'Light'],
+                4
             ]
         }
 
-        self.MAP_LIST_COLOR_ATTRIBUTES_INDICES = [1, 2, 3]
-        self.DONT_USE_IDS = [0, 4, 14, 20]
+        self.MAP_LIST_COLOR_ATTRIBUTES_INDICES = [1, 2, 3, 4]
+        self.DONT_USE_IDS = [0, 5, 15, 21]
         self.SHADER = 'blinn'
         self.NORMAL_NODE = 'bump2d'
         self.MIX_NODE = 'mix2'

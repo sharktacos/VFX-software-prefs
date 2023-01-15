@@ -81,7 +81,7 @@ class PainterToMayaUI:
         self.grpNamingConvention.setLayout(self.namingConventionLayout)
 
         self.nomenclatureInfo = QtWidgets.QLabel(
-            'Enter the name of one of your shaders, and an example map type\n (dif, bmp, etc.) used in the texture file\'s naming convention.'
+            'Enter the name of one of your shaders, and an example map type\n (BaseColor, Normal, etc.) used in the texture file\'s naming convention.'
         )
         self.nomenclatureInfo.setToolTip(
             'The script uses the defined textureSet and map\'s names to understand your naming convention. \nI.e: myProject_character_left_arm_metalness.png will have character_left_arm as textureSet and metalness as map\nThen the script will find all your textureSets and maps, looking for the different parts of your files names'
@@ -111,7 +111,7 @@ class PainterToMayaUI:
         self.namingConventionSubLayoutLabel.addWidget(self.mapLabel)
         self.mapLabel.resize(200,200)
 
-        self.map = QtWidgets.QLineEdit('dif')
+        self.map = QtWidgets.QLineEdit('BaseColor')
         self.map.setToolTip(
             'Example of the part of the texture file name defining the map type.'
         )
