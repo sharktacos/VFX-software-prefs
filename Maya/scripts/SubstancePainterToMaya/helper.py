@@ -444,7 +444,6 @@ def getTexturesToUse(renderer, foundTextures, uiElements):
 
     return texturesToUse
 
-# helper.connectTexture(fileNode, 'outColor', normalNode, 'input', colorCorrect)
 
 def connectTexture(textureNode, textureOutput, targetNode, targetInput, colorCorrect=False, forceTexture=True):
     """

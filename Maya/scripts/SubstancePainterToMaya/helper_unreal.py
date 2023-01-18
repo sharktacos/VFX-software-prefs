@@ -34,10 +34,11 @@ def createNormalMap(texture, renderer, fileNode, clean, colorCorrect, forceTextu
     if not flat:
         # Create the normal utility
         normalNode = mc.shadingNode(normalNode, asUtility=True)
+        mc.setAttr(normalNode + '.bumpInterp', 1)
 
         # Connect the file node to the normal utility node
-        # helper.connectTexture(fileNode, 'outColor', normalNode, 'input', colorCorrect)
-        mc.connectAttr(normalNode + '.outNormal', material + '.' + attributeName, force=forceTexture)
+        helper.connectTexture(fileNode, 'outAlpha', normalNode, 'bumpValue', colorCorrect)
+                
         # List the connections in the material input attribute
         connectedNodes = mc.listConnections(material + '.' + attributeName)
 
