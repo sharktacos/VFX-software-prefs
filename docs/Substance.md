@@ -34,11 +34,11 @@ If you have other masks, such as a layer mask, you can output these manually by 
 
 ![img](img/Substance_maskMenu.jpg)
 
-Watch a <a href="https://vimeo.com/469364354">video walkthrough</a> of the tools and how they are used to optimze your workflow.<br>
+Watch a video walkthrough below of the tools and how they are used to optimze your workflow.<br>
 
-<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/469364354?h=089d22b5cd&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Substance Template (3 of 3)"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/lxKzsIRyML0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-To import the textures into Maya see my [substancePaintertoMaya.md](Substance to Maya Bridge).
+To import the textures into Maya see my [Substance to Maya Bridge](substancePaintertoMaya.md).
 
 ## Useful Hotkeys
 
