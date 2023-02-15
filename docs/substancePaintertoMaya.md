@@ -4,7 +4,8 @@ Tool to automatically connect Substance 3D Painter textures to Maya shaders. Bas
 
 Here's a demo of the script in action. Below are details about principles and functionality.
 
-<div style="padding:56.15% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/742025520?h=e1e9c0ce0a&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="SP2M Substance 3D Painter to Maya Bridge"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/TTqh3m3bwCY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
 
 ## Naming Convention
 
@@ -149,7 +150,8 @@ While color, bump, and metalness texture maps are connected directly to the shad
 
 Note that this workflow is also included in the roughness section of my "UberShader" Smart Material included in the [Substance tools](Substance.md). The technique is also demonstrated here:
 
-<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/326948120?h=da9e609785&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Substance Painter: A better way to export roughness maps for artistic control"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script><br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/aN8nAVqEYSo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
 
 
 ## Layer Shader network option
