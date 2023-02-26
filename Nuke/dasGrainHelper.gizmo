@@ -1,0 +1,61 @@
+#! /Applications/Nuke14.0v2/Nuke14.0v2.app/Contents/MacOS/libnuke-14.0.2.dylib -nx
+version 14.0 v2
+Gizmo {
+ inputs 2
+ help "The degrained plate has to be completely degrained.\n\nThe slider controls how much luminance grain will be present in the output."
+ tile_color 0x7f7f7fff
+ addUserKnob {20 User}
+ addUserKnob {7 luma_mix l "luminance degrain amount"}
+ luma_mix 0.8
+}
+ Input {
+  inputs 0
+  name PLATE
+  xpos -590
+  ypos -250
+  number 1
+ }
+ Colorspace {
+  colorspace_out YCbCr
+  name Colorspace2
+  xpos -590
+  ypos -178
+ }
+ Dot {
+  name Dot25
+  xpos -556
+  ypos -126
+ }
+ Input {
+  inputs 0
+  name DEGRAINED_PLATE
+  xpos -700
+  ypos -250
+ }
+ Colorspace {
+  colorspace_out YCbCr
+  name Colorspace1
+  xpos -700
+  ypos -178
+ }
+ Copy {
+  inputs 2
+  from0 rgba.red
+  to0 rgba.red
+  mix {{1-parent.luma_mix}}
+  name Copy1
+  xpos -700
+  ypos -136
+ }
+ Colorspace {
+  colorspace_in YCbCr
+  name Colorspace3
+  xpos -700
+  ypos -82
+ }
+ Output {
+  name Output1
+  xpos -700
+  ypos -10
+ }
+end_group
