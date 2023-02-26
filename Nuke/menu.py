@@ -16,7 +16,7 @@ toolbar.addCommand( "Studio/Grade AOV", "nuke.createNode('GradeAOV')", 'shift+g'
 #toolbar.addCommand( "Studio/Night Shift", "nuke.createNode('df_nightShift2')")
 toolbar.addCommand( "Studio/mm Color Target", "nuke.createNode('mmColorTarget')")
 #toolbar.addCommand( "Gizmos/OpticalZDefocus", "nuke.createNode('OpticalZDefocus')")
-toolbar.addCommand( "Studio/bokeh blur", "nuke.createNode('BokehBlur.gizmo')")
+#toolbar.addCommand( "Studio/bokeh blur", "nuke.createNode('BokehBlur.gizmo')")
 toolbar.addCommand( "Studio/FlareFactory", "nuke.createNode('FlareFactory')")
 toolbar.addCommand( "Studio/ACES Ref Gamut Compress", "nuke.createNode('ACES_ref_gamut_compress')")
 toolbar.addCommand( "Studio/Das Grain", "nuke.createNode('dasGrain')")
