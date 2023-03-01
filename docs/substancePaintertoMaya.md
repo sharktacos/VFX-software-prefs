@@ -12,10 +12,10 @@ Here's a demo of the script in action. Below are details about principles and fu
 The script works by parsing the texture maps in a folder based on a defined naming convention, and then assigning these found maps to their corresponding shaders. For example say we have the following naming for a texture map:
 
 ```
-[assetName]_[shaderName]_[mapType]_[version]_[artist].[ext]
+[shaderName]_[mapType]_[assetName]_[artist]_[version].[ext]
 ```
 
-There are two parts of this file name we need to identify. The shader name and the map type. For example, the bump map for the hubcap shader would be *car_**hubcap_bmp**_v01_dflood.exr*
+There are two parts of this file name we need to identify. The shader name and the map type. For example, the bump map for the hubcap shader would be **hubcap_bmp**_car_dflood_v01.exr*
 
 **Shader Name**
 
@@ -38,9 +38,16 @@ The texture map type name. In the case of our school's naming convention, we use
 | displacement | '**dsp**', 'displace', 'Displace', 'Displacement', 'displacement', 'displacementMap', 'DisplacementMap', 'disp'
 
 
+
 ## Exporting Texture Maps 
 
 The exported texture files must contain the *shader name* and *map type* in the texture file name. In Substance Painter this is included in most Output templates through the $textureSet variable (for the shader name). For our recomended workflow the provided output template will create maps for color, bump, metalness, and specular roughness masks. Layer masks being less common are output manually. See the [Substance tools](Substance.md) help for details of this workflow. 
+
+Given all of the above, what works well with Substance Painter, especially as a way to get versioning on the texture maps, is to name the Painter file itself with asset_artist_version, and use the following variables in the Output Template (here for the bump map):
+
+```$textureSet_bmp_$project(.$udim)```
+
+So if the Painter file was named "car_dflood_v01.spp" the bump map texture would be "hubcap_bmp_car_dflood_v01.exr" 
 
 ## Exporting Textures from Other Programs - Mari, Zbrush, Photoshop 
 
