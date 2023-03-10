@@ -9,6 +9,7 @@ nuke.knobDefault("Root.colorManagement", "OCIO")
 #nuke.knobDefault("Root.floatLut", "reference")
 
 # default color spaces for Writes for img and mov
+nuke.knobDefault('Write.exr.colorspace', 'ACEScg')
 nuke.knobDefault('Write.png.colorspace', 'ACES 1.0 SDR-video (Gamma 2.2 - Display)')
 nuke.knobDefault('Write.jpeg.colorspace', 'ACES 1.0 SDR-video (Gamma 2.2 - Display)')
 nuke.knobDefault('Write.mov.colorspace', 'ACES 1.0 SDR-video (Rec.709 - Display)')
