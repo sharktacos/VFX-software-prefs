@@ -1,5 +1,5 @@
-#! /Applications/Nuke13.1v1/Nuke13.1v1.app/Contents/MacOS/libnuke-13.1.1.dylib -nx
-version 13.1 v1
+#! /Applications/Nuke14.0v2/Nuke14.0v2.app/Contents/MacOS/libnuke-14.0.2.dylib -nx
+version 14.0 v2
 Gizmo {
  inputs 2
  tile_color 0x8800ff
@@ -12,6 +12,8 @@ Gizmo {
  addUserKnob {41 pass2 l AOV T Shuffle_main2.in1}
  addUserKnob {6 pass_isolate l "Isolate Pass" +STARTLINE}
  addUserKnob {6 ccDisable l "Disable Color Corrections" +STARTLINE}
+ addUserKnob {41 in1 l "AOV 2" T Shuffle1.in1}
+ addUserKnob {6 aov2_toggle l "Use Second AOV" t "Use to pair two corresponding AOVs, for example the direct diffuse and direct specular of a light." +STARTLINE}
  addUserKnob {26 _2 l "" +STARTLINE}
  addUserKnob {26 Saturation_label l Saturation}
  addUserKnob {4 gamut t "If using weighted m, select gamut for appropriate luminance weights." M {ACEScg Rec.2020 P3D65 Rec.709 "" ""}}
@@ -35,17 +37,17 @@ Gizmo {
  addUserKnob {41 maskChannelMask l "" -STARTLINE T Grade16.maskChannelMask}
  addUserKnob {26 ""}
  addUserKnob {6 layercontactsheet l LayerContactSheet t "layer contact sheet" +INVISIBLE +STARTLINE}
- addUserKnob {26 GradeAOV l "" +STARTLINE T "* Will Replace Original Pass with Modified Pass.\n* Saturation Preceeds grade.\n* Saturation in luminance weights of working color space (e.g. ACEScg) \n* Retains all AOV channels\n\n-KBrennan, DFlood"}
+ addUserKnob {26 GradeAOV l "" +STARTLINE T "* Will Replace Original Pass with Modified Pass.\n* Use Second AOV to pair two corresponding AOVs, \nfor example the direct diffuse and direct specular of a light.\n* Saturation Preceeds grade.\n* Saturation in luminance weights of working color space (e.g. ACEScg) \n* Retains all AOV channels\n\n-KBrennan, DFlood"}
 }
  Input {
   inputs 0
   name mask
-  xpos -209
-  ypos 570
+  xpos -556
+  ypos 587
   number 1
  }
-set N44215000 [stack 0]
-push $N44215000
+set N57050a00 [stack 0]
+push $N57050a00
  Input {
   inputs 0
   name cg_input
@@ -58,7 +60,59 @@ push $N44215000
   xpos -477
   ypos 381
  }
-set N44214800 [stack 0]
+set N57229000 [stack 0]
+ Dot {
+  name Dot2
+  tile_color 0xcccccc00
+  xpos -770
+  ypos 381
+ }
+ Shuffle2 {
+  fromInput1 {{0} B}
+  in1 rgb
+  fromInput2 {{0} B}
+  mappings "4 rgba.red 0 0 rgba.red 0 0 rgba.green 0 1 rgba.green 0 1 rgba.blue 0 2 rgba.blue 0 2 black -1 -1 rgba.alpha 0 3"
+  name Shuffle1
+  selected true
+  xpos -804
+  ypos 487
+ }
+set Nc3650e00 [stack 0]
+ Expression {
+  inputs 1+1
+  temp_name3 L
+  temp_expr3 m==0?w.0*r+w.1*g+w.2*b:m==1?max(r,g,b):m==2?(r+g+b)/3:0
+  expr0 L*(1-s)+r*s
+  expr1 L*(1-s)+g*s
+  expr2 L*(1-s)+b*s
+  expr3 L
+  invert_mask {{parent.Grade16.invert_mask}}
+  name Expression
+  xpos -804
+  ypos 548
+  disable {{ccDisable}}
+  addUserKnob {20 Params}
+  addUserKnob {78 w l weights t "luminance weights for selected gamut" -STARTLINE n 3}
+  w {{curve(gamut) 0.272229 0.2627 0.228975 0.212639} {curve(gamut) 0.674082 0.677998 0.691739 0.715169} {curve(gamut) 0.0536895 0.0593017 0.0792869 0.0721923}}
+ }
+ set C50020000 [stack 0]
+ Grade {
+  inputs 1+1
+  black_clamp false
+  name Grade16
+  xpos -804
+  ypos 621
+  disable {{ccDisable}}
+ }
+ set C50020400 [stack 0]
+ Dot {
+  name Dot3
+  xpos -770
+  ypos 738
+ }
+push $N57050a00
+push $N57050a00
+push $N57229000
  Dot {
   name Dot65
   tile_color 0xcccccc00
@@ -75,33 +129,69 @@ set N44214800 [stack 0]
   xpos -344
   ypos 444
  }
-set N449a3c00 [stack 0]
- Expression {
+set N73312e00 [stack 0]
+clone $C50020000 {
   inputs 1+1
-  temp_name3 L
-  temp_expr3 m==0?w.0*r+w.1*g+w.2*b:m==1?max(r,g,b):m==2?(r+g+b)/3:0
-  expr0 L*(1-s)+r*s
-  expr1 L*(1-s)+g*s
-  expr2 L*(1-s)+b*s
-  expr3 L
-  invert_mask {{parent.Grade16.invert_mask}}
-  name Expression
   xpos -347
   ypos 570
-  disable {{ccDisable}}
-  addUserKnob {20 Params}
-  addUserKnob {78 w l weights t "luminance weights for selected gamut" -STARTLINE n 3}
-  w {{curve(gamut) 0.272229 0.2627 0.228975 0.212639} {curve(gamut) 0.674082 0.677998 0.691739 0.715169} {curve(gamut) 0.0536895 0.0593017 0.0792869 0.0721923}}
+  selected false
  }
- Grade {
+clone $C50020400 {
   inputs 1+1
-  black_clamp false
-  name Grade16
   xpos -349
   ypos 640
-  disable {{ccDisable}}
+  selected false
  }
-set N449a3400 [stack 0]
+set N50020400 [stack 0]
+ Dot {
+  name Dot1
+  tile_color 0x7aa9ff00
+  xpos -315
+  ypos 701
+ }
+push $Nc3650e00
+push $N73312e00
+push $N57229000
+ Merge2 {
+  inputs 2
+  operation from
+  bbox B
+  Achannels rgb
+  name Merge22
+  xpos -509
+  ypos 448
+ }
+ Merge2 {
+  inputs 2
+  operation from
+  bbox B
+  Achannels rgb
+  name Merge1
+  xpos -509
+  ypos 487
+  disable {{!aov2_toggle}}
+ }
+ Merge2 {
+  inputs 2
+  operation plus
+  bbox B
+  Achannels rgb
+  name Merge23
+  xpos -509
+  ypos 698
+ }
+ Merge2 {
+  inputs 2
+  operation plus
+  bbox B
+  Achannels rgb
+  name Merge2
+  xpos -511
+  ypos 735
+  disable {{!aov2_toggle}}
+ }
+set N57050e00 [stack 0]
+push $N50020400
  Dot {
   name Dot5
   tile_color 0xcccccc00
@@ -114,33 +204,7 @@ set N449a3400 [stack 0]
   xpos -201
   ypos 771
  }
-push $N449a3400
- Dot {
-  name Dot1
-  tile_color 0x7aa9ff00
-  xpos -315
-  ypos 701
- }
-push $N449a3c00
-push $N44214800
- Merge2 {
-  inputs 2
-  operation from
-  bbox B
-  Achannels rgb
-  name Merge22
-  xpos -509
-  ypos 451
- }
- Merge2 {
-  inputs 2
-  operation plus
-  bbox B
-  Achannels rgb
-  name Merge23
-  xpos -509
-  ypos 698
- }
+push $N57050e00
  Switch {
   inputs 2
   which {{pass_isolate}}
@@ -148,14 +212,13 @@ push $N44214800
   xpos -509
   ypos 768
  }
-set N44997200 [stack 0]
  Output {
   name Output1
   xpos -509
   ypos 799
  }
-push $N44997200
  Viewer {
+  inputs 2
   frame_range 100-100
   viewerProcess "ACES 1.0 - SDR-video (Gamma 2.2 - Display)"
   name Viewer1
