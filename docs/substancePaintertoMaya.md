@@ -43,9 +43,11 @@ The texture map type name. In the case of our school's naming convention, we use
 
 The exported texture files must contain the *shader name* and *map type* in the texture file name. In Substance Painter this is included in most Output templates through the $textureSet variable (for the shader name). For our recomended workflow the provided output template will create maps for color, bump, metalness, and specular roughness masks. Layer masks being less common are output manually. See the [Substance tools](Substance.md) help for details of this workflow. 
 
-Given all of the above, what works well with Substance Painter, especially as a way to get versioning on the texture maps, is to name the Painter file itself with asset_artist_version, and use the following variables in the Output Template (here for the bump map):
+Given all of the above, what works well with Substance Painter, especially as a way to get versioning on the texture maps, is to name the Painter file itself with asset_artist_version, and use the following variables in the Output Template (here for the bump map)
 
-```$textureSet_bmp_$project(.$udim)```
+```
+$textureSet_bmp_$project(.$udim)
+```
 
 So if the Painter file was named "car_dflood_v01.spp" the bump map texture would be "hubcap_bmp_car_dflood_v01.exr" 
 
