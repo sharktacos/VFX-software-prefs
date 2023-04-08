@@ -1,0 +1,21 @@
+{
+	"Version": 1,
+	"Name":
+	[
+		{
+			"Language": "en",
+			"Text": "MyContentPack"
+		}
+	],
+	"Description":
+	[
+		{
+			"Language": "en",
+			"Text": "Content for Tutorial"
+
+		}
+	],
+	"AssetTypes": [],
+	"SearchTags":
+	[
+		{
