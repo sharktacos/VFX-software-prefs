@@ -40,7 +40,6 @@ else:
         # too old or wrong cython, skip the test
         cython = None
 
-
 @pytest.mark.skipif(cython is None, reason="requires cython")
 @pytest.mark.slow
 def test_cython(tmp_path):

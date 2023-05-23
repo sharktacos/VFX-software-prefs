@@ -244,11 +244,6 @@ class _fromnxfunction:
         the new masked array version of the function. A note on application
         of the function to the mask is appended.
 
-        .. warning::
-          If the function docstring already contained a Notes section, the
-          new docstring will have two Notes sections instead of appending a note
-          to the existing section.
-
         Parameters
         ----------
         None
@@ -258,9 +253,9 @@ class _fromnxfunction:
         doc = getattr(npfunc, '__doc__', None)
         if doc:
             sig = self.__name__ + ma.get_object_signature(npfunc)
-            locdoc = "Notes\n-----\nThe function is applied to both the _data"\
-                     " and the _mask, if any."
-            return '\n'.join((sig, doc, locdoc))
+            doc = ma.doc_note(doc, "The function is applied to both the _data "
+                                   "and the _mask, if any.")
+            return '\n\n'.join((sig, doc))
         return
 
     def __call__(self, *args, **params):
@@ -906,11 +901,11 @@ def compress_rows(a):
     Suppress whole rows of a 2-D array that contain masked values.
 
     This is equivalent to ``np.ma.compress_rowcols(a, 0)``, see
-    `extras.compress_rowcols` for details.
+    `compress_rowcols` for details.
 
     See Also
     --------
-    extras.compress_rowcols
+    compress_rowcols
 
     """
     a = asarray(a)
@@ -923,11 +918,11 @@ def compress_cols(a):
     Suppress whole columns of a 2-D array that contain masked values.
 
     This is equivalent to ``np.ma.compress_rowcols(a, 1)``, see
-    `extras.compress_rowcols` for details.
+    `compress_rowcols` for details.
 
     See Also
     --------
-    extras.compress_rowcols
+    compress_rowcols
 
     """
     a = asarray(a)
@@ -1646,7 +1641,7 @@ def flatnotmasked_contiguous(a):
     slice_list : list
         A sorted sequence of `slice` objects (start index, end index).
 
-        ..versionchanged:: 1.15.0
+        .. versionchanged:: 1.15.0
             Now returns an empty list instead of None for a fully masked array
 
     See Also

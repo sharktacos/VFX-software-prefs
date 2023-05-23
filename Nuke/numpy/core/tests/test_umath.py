@@ -3,6 +3,7 @@ import warnings
 import fnmatch
 import itertools
 import pytest
+import sys
 from fractions import Fraction
 
 import numpy.core.umath as ncu
@@ -12,7 +13,7 @@ from numpy.testing import (
     assert_, assert_equal, assert_raises, assert_raises_regex,
     assert_array_equal, assert_almost_equal, assert_array_almost_equal,
     assert_array_max_ulp, assert_allclose, assert_no_warnings, suppress_warnings,
-    _gen_alignment_data, assert_array_almost_equal_nulp
+    _gen_alignment_data, assert_array_almost_equal_nulp, assert_warns
     )
 
 def on_powerpc():
@@ -22,7 +23,7 @@ def on_powerpc():
 
 
 def bad_arcsinh():
-    """The blacklisted trig functions are not accurate on aarch64 for
+    """The blocklisted trig functions are not accurate on aarch64 for
     complex256. Rather than dig through the actual problem skip the
     test. This should be fixed when we can move past glibc2.17
     which is the version in manylinux2014
@@ -292,6 +293,42 @@ class TestDivision:
         assert_equal(np.signbit(x//1), 0)
         assert_equal(np.signbit((-x)//1), 1)
 
+    @pytest.mark.parametrize('dtype', np.typecodes['Float'])
+    def test_floor_division_errors(self, dtype):
+        fnan = np.array(np.nan, dtype=dtype)
+        fone = np.array(1.0, dtype=dtype)
+        fzer = np.array(0.0, dtype=dtype)
+        finf = np.array(np.inf, dtype=dtype)
+        # divide by zero error check
+        with np.errstate(divide='raise', invalid='ignore'):
+            assert_raises(FloatingPointError, np.floor_divide, fone, fzer)
+        with np.errstate(invalid='raise'):
+            assert_raises(FloatingPointError, np.floor_divide, fnan, fone)
+            assert_raises(FloatingPointError, np.floor_divide, fone, fnan)
+            assert_raises(FloatingPointError, np.floor_divide, fnan, fzer)
+
+    @pytest.mark.parametrize('dtype', np.typecodes['Float'])
+    def test_floor_division_corner_cases(self, dtype):
+        # test corner cases like 1.0//0.0 for errors and return vals
+        x = np.zeros(10, dtype=dtype)
+        y = np.ones(10, dtype=dtype)
+        fnan = np.array(np.nan, dtype=dtype)
+        fone = np.array(1.0, dtype=dtype)
+        fzer = np.array(0.0, dtype=dtype)
+        finf = np.array(np.inf, dtype=dtype)
+        with suppress_warnings() as sup:
+            sup.filter(RuntimeWarning, "invalid value encountered in floor_divide")
+            div = np.floor_divide(fnan, fone)
+            assert(np.isnan(div)), "dt: %s, div: %s" % (dt, div)
+            div = np.floor_divide(fone, fnan)
+            assert(np.isnan(div)), "dt: %s, div: %s" % (dt, div)
+            div = np.floor_divide(fnan, fzer)
+            assert(np.isnan(div)), "dt: %s, div: %s" % (dt, div)
+        # verify 1.0//0.0 computations return inf
+        with np.errstate(divide='ignore'):
+            z = np.floor_divide(y, x)
+            assert_(np.isinf(z).all())
+
 def floor_divide_and_remainder(x, y):
     return (np.floor_divide(x, y), np.remainder(x, y))
 
@@ -365,9 +402,90 @@ class TestRemainder:
                     else:
                         assert_(b > rem >= 0, msg)
 
+    @pytest.mark.parametrize('dtype', np.typecodes['Float'])
+    def test_float_divmod_errors(self, dtype):
+        # Check valid errors raised for divmod and remainder
+        fzero = np.array(0.0, dtype=dtype)
+        fone = np.array(1.0, dtype=dtype)
+        finf = np.array(np.inf, dtype=dtype)
+        fnan = np.array(np.nan, dtype=dtype)
+        # since divmod is combination of both remainder and divide
+        # ops it will set both dividebyzero and invalid flags
+        with np.errstate(divide='raise', invalid='ignore'):
+            assert_raises(FloatingPointError, np.divmod, fone, fzero)
+        with np.errstate(divide='ignore', invalid='raise'):
+            assert_raises(FloatingPointError, np.divmod, fone, fzero)
+        with np.errstate(invalid='raise'):
+            assert_raises(FloatingPointError, np.divmod, fzero, fzero)
+        with np.errstate(invalid='raise'):
+            assert_raises(FloatingPointError, np.divmod, finf, finf)
+        with np.errstate(divide='ignore', invalid='raise'):
+            assert_raises(FloatingPointError, np.divmod, finf, fzero)
+        with np.errstate(divide='raise', invalid='ignore'):
+            assert_raises(FloatingPointError, np.divmod, finf, fzero)
+
+    @pytest.mark.parametrize('dtype', np.typecodes['Float'])
+    @pytest.mark.parametrize('fn', [np.fmod, np.remainder])
+    def test_float_remainder_errors(self, dtype, fn):
+        fzero = np.array(0.0, dtype=dtype)
+        fone = np.array(1.0, dtype=dtype)
+        finf = np.array(np.inf, dtype=dtype)
+        fnan = np.array(np.nan, dtype=dtype)
+        with np.errstate(invalid='raise'):
+            assert_raises(FloatingPointError, fn, fone, fzero)
+            assert_raises(FloatingPointError, fn, fnan, fzero)
+            assert_raises(FloatingPointError, fn, fone, fnan)
+            assert_raises(FloatingPointError, fn, fnan, fone)
+
+    def test_float_remainder_overflow(self):
+        a = np.finfo(np.float64).tiny
+        with np.errstate(over='ignore', invalid='ignore'):
+            div, mod = np.divmod(4, a)
+            np.isinf(div)
+            assert_(mod == 0)
+        with np.errstate(over='raise', invalid='ignore'):
+            assert_raises(FloatingPointError, np.divmod, 4, a)
+        with np.errstate(invalid='raise', over='ignore'):
+            assert_raises(FloatingPointError, np.divmod, 4, a)
+
+    def test_float_divmod_corner_cases(self):
+        # check nan cases
+        for dt in np.typecodes['Float']:
+            fnan = np.array(np.nan, dtype=dt)
+            fone = np.array(1.0, dtype=dt)
+            fzer = np.array(0.0, dtype=dt)
+            finf = np.array(np.inf, dtype=dt)
+            with suppress_warnings() as sup:
+                sup.filter(RuntimeWarning, "invalid value encountered in divmod")
+                sup.filter(RuntimeWarning, "divide by zero encountered in divmod")
+                div, rem = np.divmod(fone, fzer)
+                assert(np.isinf(div)), 'dt: %s, div: %s' % (dt, rem)
+                assert(np.isnan(rem)), 'dt: %s, rem: %s' % (dt, rem)
+                div, rem = np.divmod(fzer, fzer)
+                assert(np.isnan(rem)), 'dt: %s, rem: %s' % (dt, rem)
+                assert_(np.isnan(div)), 'dt: %s, rem: %s' % (dt, rem)
+                div, rem = np.divmod(finf, finf)
+                assert(np.isnan(div)), 'dt: %s, rem: %s' % (dt, rem)
+                assert(np.isnan(rem)), 'dt: %s, rem: %s' % (dt, rem)
+                div, rem = np.divmod(finf, fzer)
+                assert(np.isinf(div)), 'dt: %s, rem: %s' % (dt, rem)
+                assert(np.isnan(rem)), 'dt: %s, rem: %s' % (dt, rem)
+                div, rem = np.divmod(fnan, fone)
+                assert(np.isnan(rem)), "dt: %s, rem: %s" % (dt, rem)
+                assert(np.isnan(div)), "dt: %s, rem: %s" % (dt, rem)
+                div, rem = np.divmod(fone, fnan)
+                assert(np.isnan(rem)), "dt: %s, rem: %s" % (dt, rem)
+                assert(np.isnan(div)), "dt: %s, rem: %s" % (dt, rem)
+                div, rem = np.divmod(fnan, fzer)
+                assert(np.isnan(rem)), "dt: %s, rem: %s" % (dt, rem)
+                assert(np.isnan(div)), "dt: %s, rem: %s" % (dt, rem)
+
     def test_float_remainder_corner_cases(self):
         # Check remainder magnitude.
         for dt in np.typecodes['Float']:
+            fone = np.array(1.0, dtype=dt)
+            fzer = np.array(0.0, dtype=dt)
+            fnan = np.array(np.nan, dtype=dt)
             b = np.array(1.0, dtype=dt)
             a = np.nextafter(np.array(0.0, dtype=dt), -b)
             rem = np.remainder(a, b)
@@ -378,6 +496,7 @@ class TestRemainder:
         # Check nans, inf
         with suppress_warnings() as sup:
             sup.filter(RuntimeWarning, "invalid value encountered in remainder")
+            sup.filter(RuntimeWarning, "invalid value encountered in fmod")
             for dt in np.typecodes['Float']:
                 fone = np.array(1.0, dtype=dt)
                 fzer = np.array(0.0, dtype=dt)
@@ -388,10 +507,30 @@ class TestRemainder:
                 # MSVC 2008 returns NaN here, so disable the check.
                 #rem = np.remainder(fone, finf)
                 #assert_(rem == fone, 'dt: %s, rem: %s' % (dt, rem))
-                rem = np.remainder(fone, fnan)
-                assert_(np.isnan(rem), 'dt: %s, rem: %s' % (dt, rem))
                 rem = np.remainder(finf, fone)
+                fmod = np.fmod(finf, fone)
+                assert_(np.isnan(fmod), 'dt: %s, fmod: %s' % (dt, fmod))
                 assert_(np.isnan(rem), 'dt: %s, rem: %s' % (dt, rem))
+                rem = np.remainder(finf, finf)
+                fmod = np.fmod(finf, fone)
+                assert_(np.isnan(rem), 'dt: %s, rem: %s' % (dt, rem))
+                assert_(np.isnan(fmod), 'dt: %s, fmod: %s' % (dt, fmod))
+                rem = np.remainder(finf, fzer)
+                fmod = np.fmod(finf, fzer)
+                assert_(np.isnan(rem), 'dt: %s, rem: %s' % (dt, rem))
+                assert_(np.isnan(fmod), 'dt: %s, fmod: %s' % (dt, fmod))
+                rem = np.remainder(fone, fnan)
+                fmod = np.fmod(fone, fnan)
+                assert_(np.isnan(rem), 'dt: %s, rem: %s' % (dt, rem))
+                assert_(np.isnan(fmod), 'dt: %s, fmod: %s' % (dt, fmod))
+                rem = np.remainder(fnan, fzer)
+                fmod = np.fmod(fnan, fzer)
+                assert_(np.isnan(rem), 'dt: %s, rem: %s' % (dt, rem))
+                assert_(np.isnan(fmod), 'dt: %s, fmod: %s' % (dt, rem))
+                rem = np.remainder(fnan, fone)
+                fmod = np.fmod(fnan, fone)
+                assert_(np.isnan(rem), 'dt: %s, rem: %s' % (dt, rem))
+                assert_(np.isnan(fmod), 'dt: %s, fmod: %s' % (dt, rem))
 
 
 class TestCbrt:
@@ -656,6 +795,24 @@ class TestLog:
             yf = np.array(y, dtype=dt)*log2_
             assert_almost_equal(np.log(xf), yf)
 
+        # test aliasing(issue #17761)
+        x = np.array([2, 0.937500, 3, 0.947500, 1.054697])
+        xf = np.log(x)
+        assert_almost_equal(np.log(x, out=x), xf)
+
+    def test_log_strides(self):
+        np.random.seed(42)
+        strides = np.array([-4,-3,-2,-1,1,2,3,4])
+        sizes = np.arange(2,100)
+        for ii in sizes:
+            x_f64 = np.float64(np.random.uniform(low=0.01, high=100.0,size=ii))
+            x_special = x_f64.copy()
+            x_special[3:-1:4] = 1.0
+            y_true = np.log(x_f64)
+            y_special = np.log(x_special)
+            for jj in strides:
+                assert_array_almost_equal_nulp(np.log(x_f64[::jj]), y_true[::jj], nulp=2)
+                assert_array_almost_equal_nulp(np.log(x_special[::jj]), y_special[::jj], nulp=2)
 
 class TestExp:
     def test_exp_values(self):
@@ -776,6 +933,51 @@ class TestSpecialFloats:
             for dt in ['f', 'd', 'g']:
                 assert_raises(FloatingPointError, np.reciprocal, np.array(-0.0, dtype=dt))
 
+class TestFPClass:
+    @pytest.mark.parametrize("stride", [-4,-2,-1,1,2,4])
+    def test_fpclass(self, stride):
+        arr_f64 = np.array([np.nan, -np.nan, np.inf, -np.inf, -1.0, 1.0, -0.0, 0.0, 2.2251e-308, -2.2251e-308], dtype='d')
+        arr_f32 = np.array([np.nan, -np.nan, np.inf, -np.inf, -1.0, 1.0, -0.0, 0.0, 1.4013e-045, -1.4013e-045], dtype='f')
+        nan     = np.array([True, True, False, False, False, False, False, False, False, False])
+        inf     = np.array([False, False, True, True, False, False, False, False, False, False])
+        sign    = np.array([False, True, False, True, True, False, True, False, False, True])
+        finite  = np.array([False, False, False, False, True, True, True, True, True, True])
+        assert_equal(np.isnan(arr_f32[::stride]), nan[::stride])
+        assert_equal(np.isnan(arr_f64[::stride]), nan[::stride])
+        assert_equal(np.isinf(arr_f32[::stride]), inf[::stride])
+        assert_equal(np.isinf(arr_f64[::stride]), inf[::stride])
+        assert_equal(np.signbit(arr_f32[::stride]), sign[::stride])
+        assert_equal(np.signbit(arr_f64[::stride]), sign[::stride])
+        assert_equal(np.isfinite(arr_f32[::stride]), finite[::stride])
+        assert_equal(np.isfinite(arr_f64[::stride]), finite[::stride])
+
+class TestLDExp:
+    @pytest.mark.parametrize("stride", [-4,-2,-1,1,2,4])
+    @pytest.mark.parametrize("dtype", ['f', 'd'])
+    def test_ldexp(self, dtype, stride):
+        mant = np.array([0.125, 0.25, 0.5, 1., 1., 2., 4., 8.], dtype=dtype)
+        exp  = np.array([3, 2, 1, 0, 0, -1, -2, -3], dtype='i')
+        out  = np.zeros(8, dtype=dtype)
+        assert_equal(np.ldexp(mant[::stride], exp[::stride], out=out[::stride]), np.ones(8, dtype=dtype)[::stride])
+        assert_equal(out[::stride], np.ones(8, dtype=dtype)[::stride])
+
+class TestFRExp:
+    @pytest.mark.parametrize("stride", [-4,-2,-1,1,2,4])
+    @pytest.mark.parametrize("dtype", ['f', 'd'])
+    @pytest.mark.skipif(not sys.platform.startswith('linux'),
+                        reason="np.frexp gives different answers for NAN/INF on windows and linux")
+    def test_frexp(self, dtype, stride):
+        arr = np.array([np.nan, np.nan, np.inf, -np.inf, 0.0, -0.0, 1.0, -1.0], dtype=dtype)
+        mant_true = np.array([np.nan, np.nan, np.inf, -np.inf, 0.0, -0.0, 0.5, -0.5], dtype=dtype)
+        exp_true  = np.array([0, 0, 0, 0, 0, 0, 1, 1], dtype='i')
+        out_mant  = np.ones(8, dtype=dtype)
+        out_exp   = 2*np.ones(8, dtype='i')
+        mant, exp = np.frexp(arr[::stride], out=(out_mant[::stride], out_exp[::stride]))
+        assert_equal(mant_true[::stride], mant)
+        assert_equal(exp_true[::stride], exp)
+        assert_equal(out_mant[::stride], mant_true[::stride])
+        assert_equal(out_exp[::stride], exp_true[::stride])
+
 # func : [maxulperror, low, high]
 avx_ufuncs = {'sqrt'        :[1,  0.,   100.],
               'absolute'    :[0, -100., 100.],
@@ -842,6 +1044,10 @@ class TestAVXFloat32Transcendental:
         x_f64 = np.float64(x_f32)
         assert_array_max_ulp(np.sin(x_f32), np.float32(np.sin(x_f64)), maxulp=2)
         assert_array_max_ulp(np.cos(x_f32), np.float32(np.cos(x_f64)), maxulp=2)
+        # test aliasing(issue #17761)
+        tx_f32 = x_f32.copy()
+        assert_array_max_ulp(np.sin(x_f32, out=x_f32), np.float32(np.sin(x_f64)), maxulp=2)
+        assert_array_max_ulp(np.cos(tx_f32, out=tx_f32), np.float32(np.cos(x_f64)), maxulp=2)
 
     def test_strided_float32(self):
         np.random.seed(42)
@@ -2403,7 +2609,7 @@ class TestSpecialMethods:
         assert_raises(ValueError, inner1d, a, a, out=())
 
     def test_ufunc_override_with_super(self):
-        # NOTE: this class is given as an example in doc/subclassing.py;
+        # NOTE: this class is used in doc/source/user/basics.subclassing.rst
         # if you make any changes here, do update it there too.
         class A(np.ndarray):
             def __array_ufunc__(self, ufunc, method, *inputs, out=None, **kwargs):
@@ -3229,3 +3435,39 @@ def test_outer_subclass_preserve(arr):
     class foo(np.ndarray): pass
     actual = np.multiply.outer(arr.view(foo), arr.view(foo))
     assert actual.__class__.__name__ == 'foo'
+
+def test_outer_bad_subclass():
+    class BadArr1(np.ndarray):
+        def __array_finalize__(self, obj):
+            # The outer call reshapes to 3 dims, try to do a bad reshape.
+            if self.ndim == 3:
+                self.shape = self.shape + (1,)
+
+        def __array_prepare__(self, obj, context=None):
+            return obj
+
+    class BadArr2(np.ndarray):
+        def __array_finalize__(self, obj):
+            if isinstance(obj, BadArr2):
+                # outer inserts 1-sized dims. In that case disturb them.
+                if self.shape[-1] == 1:
+                    self.shape = self.shape[::-1]
+
+        def __array_prepare__(self, obj, context=None):
+            return obj
+
+    for cls in [BadArr1, BadArr2]:
+        arr = np.ones((2, 3)).view(cls)
+        with assert_raises(TypeError) as a:
+            # The first array gets reshaped (not the second one)
+            np.add.outer(arr, [1, 2])
+
+        # This actually works, since we only see the reshaping error:
+        arr = np.ones((2, 3)).view(cls)
+        assert type(np.add.outer([1, 2], arr)) is cls
+
+def test_outer_exceeds_maxdims():
+    deep = np.ones((1,) * 17)
+    with assert_raises(ValueError):
+        np.add.outer(deep, deep)
+

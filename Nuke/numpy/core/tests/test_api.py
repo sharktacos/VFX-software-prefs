@@ -281,6 +281,19 @@ def test_array_astype():
     a = np.array(1000, dtype='i4')
     assert_raises(TypeError, a.astype, 'U1', casting='safe')
 
+
+@pytest.mark.parametrize("dt", ["d", "f", "S13", "U32"])
+def test_array_astype_to_void(dt):
+    dt = np.dtype(dt)
+    arr = np.array([], dtype=dt)
+    assert arr.astype("V").dtype.itemsize == dt.itemsize
+
+def test_object_array_astype_to_void():
+    # This is different to `test_array_astype_to_void` as object arrays
+    # are inspected.  The default void is "V8" (8 is the length of double)
+    arr = np.array([], dtype="O").astype("V")
+    assert arr.dtype == "V8"
+
 @pytest.mark.parametrize("t",
     np.sctypes['uint'] + np.sctypes['int'] + np.sctypes['float']
 )
@@ -291,7 +304,7 @@ def test_array_astype_warning(t):
 
 @pytest.mark.parametrize(["dtype", "out_dtype"],
         [(np.bytes_, np.bool_),
-         (np.unicode, np.bool_),
+         (np.unicode_, np.bool_),
          (np.dtype("S10,S9"), np.dtype("?,?"))])
 def test_string_to_boolean_cast(dtype, out_dtype):
     """
@@ -305,7 +318,7 @@ def test_string_to_boolean_cast(dtype, out_dtype):
 
 @pytest.mark.parametrize(["dtype", "out_dtype"],
         [(np.bytes_, np.bool_),
-         (np.unicode, np.bool_),
+         (np.unicode_, np.bool_),
          (np.dtype("S10,S9"), np.dtype("?,?"))])
 def test_string_to_boolean_cast_errors(dtype, out_dtype):
     """
@@ -565,3 +578,10 @@ def test_broadcast_arrays():
     result = np.broadcast_arrays(a, b)
     assert_equal(result[0], np.array([(1, 2, 3), (1, 2, 3), (1, 2, 3)], dtype='u4,u4,u4'))
     assert_equal(result[1], np.array([(1, 2, 3), (4, 5, 6), (7, 8, 9)], dtype='u4,u4,u4'))
+
+@pytest.mark.parametrize(["shape", "fill_value", "expected_output"],
+        [((2, 2), [5.0,  6.0], np.array([[5.0, 6.0], [5.0, 6.0]])),
+         ((3, 2), [1.0,  2.0], np.array([[1.0, 2.0], [1.0, 2.0], [1.0,  2.0]]))])
+def test_full_from_list(shape, fill_value, expected_output):
+    output = np.full(shape, fill_value)
+    assert_equal(output, expected_output)

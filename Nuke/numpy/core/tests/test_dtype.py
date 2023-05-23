@@ -6,6 +6,7 @@ import gc
 
 import numpy as np
 from numpy.core._rational_tests import rational
+from numpy.core._multiarray_tests import create_custom_field_dtype
 from numpy.testing import (
     assert_, assert_equal, assert_array_equal, assert_raises, HAS_REFCOUNT)
 from numpy.compat import pickle
@@ -86,6 +87,15 @@ class TestBuiltin:
             assert_raises(TypeError, np.dtype, 'q8')
             assert_raises(TypeError, np.dtype, 'Q8')
 
+    @pytest.mark.parametrize("dtype",
+             ['Bool', 'Complex32', 'Complex64', 'Float16', 'Float32', 'Float64',
+              'Int8', 'Int16', 'Int32', 'Int64', 'Object0', 'Timedelta64',
+              'UInt8', 'UInt16', 'UInt32', 'UInt64', 'Void0',
+              "Float128", "Complex128"])
+    def test_numeric_style_types_are_invalid(self, dtype):
+        with assert_raises(TypeError):
+            np.dtype(dtype)
+
     @pytest.mark.parametrize(
         'value',
         ['m8', 'M8', 'datetime64', 'timedelta64',
@@ -143,6 +153,9 @@ class TestBuiltin:
                       'formats': ['f4', 'i4'],
                       'offsets': [4, 0]})
         assert_equal(x == y, False)
+        # But it is currently an equivalent cast:
+        assert np.can_cast(x, y, casting="equiv")
+
 
 class TestRecord:
     def test_equivalent_record(self):
@@ -303,6 +316,24 @@ class TestRecord:
         dt = np.dtype({'names':['f0', 'f1'],
                        'formats':['i1', 'O'],
                        'offsets':[np.dtype('intp').itemsize, 0]})
+
+    @pytest.mark.parametrize(["obj", "dtype", "expected"],
+        [([], ("(2)f4,"), np.empty((0, 2), dtype="f4")),
+         (3, "(3)f4,", [3, 3, 3]),
+         (np.float64(2), "(2)f4,", [2, 2]),
+         ([((0, 1), (1, 2)), ((2,),)], '(2,2)f4', None),
+         (["1", "2"], "(2)i,", None)])
+    def test_subarray_list(self, obj, dtype, expected):
+        dtype = np.dtype(dtype)
+        res = np.array(obj, dtype=dtype)
+
+        if expected is None:
+            # iterate the 1-d list to fill the array
+            expected = np.empty(len(obj), dtype=dtype)
+            for i in range(len(expected)):
+                expected[i] = obj[i]
+
+        assert_array_equal(res, expected)
 
     def test_comma_datetime(self):
         dt = np.dtype('M8[D],datetime64[Y],i8')
@@ -757,6 +788,26 @@ class TestMonsterType:
             ('yi', np.dtype((a, (3, 2))))])
         assert_dtype_equal(c, d)
 
+    def test_list_recursion(self):
+        l = list()
+        l.append(('f', l))
+        with pytest.raises(RecursionError):
+            np.dtype(l)
+
+    def test_tuple_recursion(self):
+        d = np.int32
+        for i in range(100000):
+            d = (d, (1,))
+        with pytest.raises(RecursionError):
+            np.dtype(d)
+
+    def test_dict_recursion(self):
+        d = dict(names=['self'], formats=[None], offsets=[0])
+        d['formats'][0] = d
+        with pytest.raises(RecursionError):
+            np.dtype(d)
+
+
 class TestMetadata:
     def test_no_metadata(self):
         d = np.dtype(int)
@@ -967,7 +1018,12 @@ class TestPickling:
 
     def check_pickling(self, dtype):
         for proto in range(pickle.HIGHEST_PROTOCOL + 1):
-            pickled = pickle.loads(pickle.dumps(dtype, proto))
+            buf = pickle.dumps(dtype, proto)
+            # The dtype pickling itself pickles `np.dtype` if it is pickled
+            # as a singleton `dtype` should be stored in the buffer:
+            assert b"_DType_reconstruct" not in buf
+            assert b"dtype" in buf
+            pickled = pickle.loads(buf)
             assert_equal(pickled, dtype)
             assert_equal(pickled.descr, dtype.descr)
             if dtype.metadata is not None:
@@ -1023,6 +1079,15 @@ class TestPickling:
         dt = np.dtype(int, metadata={'datum': 1})
         self.check_pickling(dt)
 
+    @pytest.mark.parametrize("DType",
+        [type(np.dtype(t)) for t in np.typecodes['All']] +
+        [np.dtype(rational), np.dtype])
+    def test_pickle_types(self, DType):
+        # Check that DTypes (the classes/types) roundtrip when pickling
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            roundtrip_DType = pickle.loads(pickle.dumps(DType, proto))
+            assert roundtrip_DType is DType
+
 
 def test_rational_dtype():
     # test for bug gh-5719
@@ -1045,6 +1110,11 @@ def test_invalid_dtype_string():
     # test for gh-10440
     assert_raises(TypeError, np.dtype, 'f8,i8,[f8,i8]')
     assert_raises(TypeError, np.dtype, u'Fl\xfcgel')
+
+
+def test_keyword_argument():
+    # test for https://github.com/numpy/numpy/pull/16574#issuecomment-642660971
+    assert np.dtype(dtype=np.float64) == np.dtype(np.float64)
 
 
 class TestFromDTypeAttribute:
@@ -1090,6 +1160,40 @@ class TestFromDTypeAttribute:
 
         with pytest.raises(RecursionError):
             np.dtype(dt(1))
+
+
+class TestDTypeClasses:
+    @pytest.mark.parametrize("dtype", list(np.typecodes['All']) + [rational])
+    def test_basic_dtypes_subclass_properties(self, dtype):
+        # Note: Except for the isinstance and type checks, these attributes
+        #       are considered currently private and may change.
+        dtype = np.dtype(dtype)
+        assert isinstance(dtype, np.dtype)
+        assert type(dtype) is not np.dtype
+        assert type(dtype).__name__ == f"dtype[{dtype.type.__name__}]"
+        assert type(dtype).__module__ == "numpy"
+        assert not type(dtype)._abstract
+
+        # the flexible dtypes and datetime/timedelta have additional parameters
+        # which are more than just storage information, these would need to be
+        # given when creating a dtype:
+        parametric = (np.void, np.str_, np.bytes_, np.datetime64, np.timedelta64)
+        if dtype.type not in parametric:
+            assert not type(dtype)._parametric
+            assert type(dtype)() is dtype
+        else:
+            assert type(dtype)._parametric
+            with assert_raises(TypeError):
+                type(dtype)()
+
+    def test_dtype_superclass(self):
+        assert type(np.dtype) is not type
+        assert isinstance(np.dtype, type)
+
+        assert type(np.dtype).__name__ == "_DTypeMeta"
+        assert type(np.dtype).__module__ == "numpy"
+        assert np.dtype._abstract
+
 
 class TestFromCTypes:
 
@@ -1291,3 +1395,34 @@ class TestFromCTypes:
         expected = np.dtype([('f0', pair[0]), ('f1', pair[1])])
         assert_equal(pair_type, expected)
 
+
+class TestUserDType:
+    @pytest.mark.leaks_references(reason="dynamically creates custom dtype.")
+    def test_custom_structured_dtype(self):
+        class mytype:
+            pass
+
+        blueprint = np.dtype([("field", object)])
+        dt = create_custom_field_dtype(blueprint, mytype, 0)
+        assert dt.type == mytype
+        # We cannot (currently) *create* this dtype with `np.dtype` because
+        # mytype does not inherit from `np.generic`.  This seems like an
+        # unnecessary restriction, but one that has been around forever:
+        assert np.dtype(mytype) == np.dtype("O")
+
+    def test_custom_structured_dtype_errors(self):
+        class mytype:
+            pass
+
+        blueprint = np.dtype([("field", object)])
+
+        with pytest.raises(ValueError):
+            # Tests what happens if fields are unset during creation
+            # which is currently rejected due to the containing object
+            # (see PyArray_RegisterDataType).
+            create_custom_field_dtype(blueprint, mytype, 1)
+
+        with pytest.raises(RuntimeError):
+            # Tests that a dtype must have its type field set up to np.dtype
+            # or in this case a builtin instance.
+            create_custom_field_dtype(blueprint, mytype, 2)

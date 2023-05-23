@@ -42,13 +42,6 @@ class TestRegression:
                 b = pickle.load(f)
             assert_array_equal(a, b)
 
-    def test_typeNA(self):
-        # Issue gh-515
-        with suppress_warnings() as sup:
-            sup.filter(np.VisibleDeprecationWarning)
-            assert_equal(np.typeNA[np.int64], 'Int64')
-            assert_equal(np.typeNA[np.uint64], 'UInt64')
-
     def test_dtype_names(self):
         # Ticket #35
         # Should succeed
@@ -1513,10 +1506,10 @@ class TestRegression:
                 test_type(t)
 
     def test_buffer_hashlib(self):
-        from hashlib import md5
+        from hashlib import sha256
 
         x = np.array([1, 2, 3], dtype=np.dtype('<i4'))
-        assert_equal(md5(x).hexdigest(), '2a1dd1e1e59d0a384c26951e316cd7e6')
+        assert_equal(sha256(x).hexdigest(), '4636993d3e1da4e9d6b8f87b79e8f7c6d018580d52661950eabc3845c5897a4d')
 
     def test_0d_string_scalar(self):
         # Bug #1436; the following should succeed
@@ -2332,6 +2325,10 @@ class TestRegression:
         # allowed as a special case due to existing use, see gh-2798
         a = np.ones(1, dtype=('O', [('name', 'O')]))
         assert_equal(a[0], 1)
+        # In particular, the above union dtype (and union dtypes in general)
+        # should mainly behave like the main (object) dtype:
+        assert a[0] is a.item()
+        assert type(a[0]) is int
 
     def test_correct_hash_dict(self):
         # gh-8887 - __hash__ would be None despite tp_hash being set
@@ -2458,7 +2455,8 @@ class TestRegression:
         class T:
             __array_interface__ = {}
 
-        np.array([T()])
+        with assert_raises(ValueError):
+            np.array([T()])
 
     def test_2d__array__shape(self):
         class T(object):
@@ -2491,6 +2489,19 @@ class TestRegression:
         c_arr = np.ctypeslib.as_ctypes(arr)
         assert_equal(c_arr._length_, arr.size)
 
+    def test_complex_conversion_error(self):
+        # gh-17068
+        with pytest.raises(TypeError, match=r"Unable to convert dtype.*"):
+            complex(np.array("now", np.datetime64))
+
+    def test__array_interface__descr(self):
+        # gh-17068
+        dt = np.dtype(dict(names=['a', 'b'],
+                           offsets=[0, 0],
+                           formats=[np.int64, np.int64]))
+        descr = np.array((1, 1), dtype=dt).__array_interface__['descr']
+        assert descr == [('', '|V8')]  # instead of [(b'', '|V8')]
+
     @pytest.mark.skipif(sys.maxsize < 2 ** 31 + 1, reason='overflows 32-bit python')
     @requires_memory(free_bytes=9e9)
     def test_dot_big_stride(self):
@@ -2503,3 +2514,13 @@ class TestRegression:
         b[...] = 1
         assert b.strides[0] > int32_max * b.dtype.itemsize
         assert np.dot(b, b) == 2.0
+
+    def test_frompyfunc_name(self):
+        # name conversion was failing for python 3 strings
+        # resulting in the default '?' name. Also test utf-8
+        # encoding using non-ascii name.
+        def cassé(x):
+            return x
+
+        f = np.frompyfunc(cassé, 1, 1)
+        assert str(f) == "<ufunc 'cassé (vectorized)'>"

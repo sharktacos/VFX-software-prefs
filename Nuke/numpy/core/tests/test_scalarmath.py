@@ -1,9 +1,12 @@
+import contextlib
 import sys
 import warnings
 import itertools
 import operator
 import platform
 import pytest
+from hypothesis import given, settings, Verbosity, assume
+from hypothesis.strategies import sampled_from
 
 import numpy as np
 from numpy.testing import (
@@ -276,6 +279,10 @@ class TestModulus:
         # Check nans, inf
         with suppress_warnings() as sup:
             sup.filter(RuntimeWarning, "invalid value encountered in remainder")
+            sup.filter(RuntimeWarning, "divide by zero encountered in remainder")
+            sup.filter(RuntimeWarning, "divide by zero encountered in floor_divide")
+            sup.filter(RuntimeWarning, "divide by zero encountered in divmod")
+            sup.filter(RuntimeWarning, "invalid value encountered in divmod")
             for dt in np.typecodes['Float']:
                 fone = np.array(1.0, dtype=dt)
                 fzer = np.array(0.0, dtype=dt)
@@ -290,6 +297,9 @@ class TestModulus:
                 assert_(np.isnan(rem), 'dt: %s' % dt)
                 rem = operator.mod(finf, fone)
                 assert_(np.isnan(rem), 'dt: %s' % dt)
+                for op in [floordiv_and_mod, divmod]:
+                    div, mod = op(fone, fzer)
+                    assert_(np.isinf(div)) and assert_(np.isnan(mod))
 
     def test_inplace_floordiv_handling(self):
         # issue gh-12927
@@ -700,3 +710,81 @@ class TestBitShifts:
                 shift_arr = np.array([shift]*32, dtype=dt)
                 res_arr = op(val_arr, shift_arr)
                 assert_equal(res_arr, res_scl)
+
+
+@contextlib.contextmanager
+def recursionlimit(n):
+    o = sys.getrecursionlimit()
+    try:
+        sys.setrecursionlimit(n)
+        yield
+    finally:
+        sys.setrecursionlimit(o)
+
+
+objecty_things = [object(), None]
+reasonable_operators_for_scalars = [
+    operator.lt, operator.le, operator.eq, operator.ne, operator.ge,
+    operator.gt, operator.add, operator.floordiv, operator.mod,
+    operator.mul, operator.matmul, operator.pow, operator.sub,
+    operator.truediv,
+]
+
+
+@given(sampled_from(objecty_things),
+       sampled_from(reasonable_operators_for_scalars),
+       sampled_from(types))
+@settings(verbosity=Verbosity.verbose)
+def test_operator_object_left(o, op, type_):
+    try:
+        with recursionlimit(200):
+            op(o, type_(1))
+    except TypeError:
+        pass
+
+
+@given(sampled_from(objecty_things),
+       sampled_from(reasonable_operators_for_scalars),
+       sampled_from(types))
+def test_operator_object_right(o, op, type_):
+    try:
+        with recursionlimit(200):
+            op(type_(1), o)
+    except TypeError:
+        pass
+
+
+@given(sampled_from(reasonable_operators_for_scalars),
+       sampled_from(types),
+       sampled_from(types))
+def test_operator_scalars(op, type1, type2):
+    try:
+        op(type1(1), type2(1))
+    except TypeError:
+        pass
+
+
+@pytest.mark.parametrize("op", reasonable_operators_for_scalars)
+def test_longdouble_inf_loop(op):
+    try:
+        op(np.longdouble(3), None)
+    except TypeError:
+        pass
+    try:
+        op(None, np.longdouble(3))
+    except TypeError:
+        pass
+
+
+@pytest.mark.parametrize("op", reasonable_operators_for_scalars)
+def test_clongdouble_inf_loop(op):
+    if op in {operator.mod} and False:
+        pytest.xfail("The modulo operator is known to be broken")
+    try:
+        op(np.clongdouble(3), None)
+    except TypeError:
+        pass
+    try:
+        op(None, np.longdouble(3))
+    except TypeError:
+        pass

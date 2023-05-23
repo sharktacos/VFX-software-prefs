@@ -14,6 +14,7 @@ from numpy.testing import (
     assert_array_equal, assert_almost_equal, assert_array_almost_equal,
     assert_warns, assert_array_max_ulp, HAS_REFCOUNT
     )
+from numpy.core._rational_tests import rational
 
 from hypothesis import assume, given, strategies as st
 from hypothesis.extra import numpy as hynp
@@ -29,6 +30,17 @@ class TestResize:
         assert_equal(np.resize(A, (4, 2)), Ar2)
 
         Ar3 = np.array([[1, 2, 3], [4, 1, 2], [3, 4, 1], [2, 3, 4]])
+        assert_equal(np.resize(A, (4, 3)), Ar3)
+
+    def test_repeats(self):
+        A = np.array([1, 2, 3])
+        Ar1 = np.array([[1, 2, 3, 1], [2, 3, 1, 2]])
+        assert_equal(np.resize(A, (2, 4)), Ar1)
+
+        Ar2 = np.array([[1, 2], [3, 1], [2, 3], [1, 2]])
+        assert_equal(np.resize(A, (4, 2)), Ar2)
+
+        Ar3 = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
         assert_equal(np.resize(A, (4, 3)), Ar3)
 
     def test_zeroresize(self):
@@ -49,6 +61,23 @@ class TestResize:
         Ar = np.resize(A, (2, 1))
         assert_array_equal(Ar, np.zeros((2, 1), Ar.dtype))
         assert_equal(A.dtype, Ar.dtype)
+
+    def test_negative_resize(self):
+        A = np.arange(0, 10, dtype=np.float32)
+        new_shape = (-10, -1)
+        with pytest.raises(ValueError, match=r"negative"):
+            np.resize(A, new_shape=new_shape)
+
+    def test_subclass(self):
+        class MyArray(np.ndarray):
+            __array_priority__ = 1.
+
+        my_arr = np.array([1]).view(MyArray)
+        assert type(np.resize(my_arr, 5)) is MyArray
+        assert type(np.resize(my_arr, 0)) is MyArray
+
+        my_arr = np.array([]).view(MyArray)
+        assert type(np.resize(my_arr, 5)) is MyArray
 
 
 class TestNonarrayArgs:
@@ -835,39 +864,185 @@ class TestTypes:
         assert_equal(np.promote_types('<m8', '<m8'), np.dtype('m8'))
         assert_equal(np.promote_types('>m8', '>m8'), np.dtype('m8'))
 
-    def test_promote_types_strings(self):
-        assert_equal(np.promote_types('bool', 'S'), np.dtype('S5'))
-        assert_equal(np.promote_types('b', 'S'), np.dtype('S4'))
-        assert_equal(np.promote_types('u1', 'S'), np.dtype('S3'))
-        assert_equal(np.promote_types('u2', 'S'), np.dtype('S5'))
-        assert_equal(np.promote_types('u4', 'S'), np.dtype('S10'))
-        assert_equal(np.promote_types('u8', 'S'), np.dtype('S20'))
-        assert_equal(np.promote_types('i1', 'S'), np.dtype('S4'))
-        assert_equal(np.promote_types('i2', 'S'), np.dtype('S6'))
-        assert_equal(np.promote_types('i4', 'S'), np.dtype('S11'))
-        assert_equal(np.promote_types('i8', 'S'), np.dtype('S21'))
-        assert_equal(np.promote_types('bool', 'U'), np.dtype('U5'))
-        assert_equal(np.promote_types('b', 'U'), np.dtype('U4'))
-        assert_equal(np.promote_types('u1', 'U'), np.dtype('U3'))
-        assert_equal(np.promote_types('u2', 'U'), np.dtype('U5'))
-        assert_equal(np.promote_types('u4', 'U'), np.dtype('U10'))
-        assert_equal(np.promote_types('u8', 'U'), np.dtype('U20'))
-        assert_equal(np.promote_types('i1', 'U'), np.dtype('U4'))
-        assert_equal(np.promote_types('i2', 'U'), np.dtype('U6'))
-        assert_equal(np.promote_types('i4', 'U'), np.dtype('U11'))
-        assert_equal(np.promote_types('i8', 'U'), np.dtype('U21'))
-        assert_equal(np.promote_types('bool', 'S1'), np.dtype('S5'))
-        assert_equal(np.promote_types('bool', 'S30'), np.dtype('S30'))
-        assert_equal(np.promote_types('b', 'S1'), np.dtype('S4'))
-        assert_equal(np.promote_types('b', 'S30'), np.dtype('S30'))
-        assert_equal(np.promote_types('u1', 'S1'), np.dtype('S3'))
-        assert_equal(np.promote_types('u1', 'S30'), np.dtype('S30'))
-        assert_equal(np.promote_types('u2', 'S1'), np.dtype('S5'))
-        assert_equal(np.promote_types('u2', 'S30'), np.dtype('S30'))
-        assert_equal(np.promote_types('u4', 'S1'), np.dtype('S10'))
-        assert_equal(np.promote_types('u4', 'S30'), np.dtype('S30'))
-        assert_equal(np.promote_types('u8', 'S1'), np.dtype('S20'))
-        assert_equal(np.promote_types('u8', 'S30'), np.dtype('S30'))
+    def test_can_cast_and_promote_usertypes(self):
+        # The rational type defines safe casting for signed integers,
+        # boolean. Rational itself *does* cast safely to double.
+        # (rational does not actually cast to all signed integers, e.g.
+        # int64 can be both long and longlong and it registers only the first)
+        valid_types = ["int8", "int16", "int32", "int64", "bool"]
+        invalid_types = "BHILQP" + "FDG" + "mM" + "f" + "V"
+
+        rational_dt = np.dtype(rational)
+        for numpy_dtype in valid_types:
+            numpy_dtype = np.dtype(numpy_dtype)
+            assert np.can_cast(numpy_dtype, rational_dt)
+            assert np.promote_types(numpy_dtype, rational_dt) is rational_dt
+
+        for numpy_dtype in invalid_types:
+            numpy_dtype = np.dtype(numpy_dtype)
+            assert not np.can_cast(numpy_dtype, rational_dt)
+            with pytest.raises(TypeError):
+                np.promote_types(numpy_dtype, rational_dt)
+
+        double_dt = np.dtype("double")
+        assert np.can_cast(rational_dt, double_dt)
+        assert np.promote_types(double_dt, rational_dt) is double_dt
+
+    @pytest.mark.parametrize("swap", ["", "swap"])
+    @pytest.mark.parametrize("string_dtype", ["U", "S"])
+    def test_promote_types_strings(self, swap, string_dtype):
+        if swap == "swap":
+            promote_types = lambda a, b: np.promote_types(b, a)
+        else:
+            promote_types = np.promote_types
+
+        S = string_dtype
+        # Promote numeric with unsized string:
+        assert_equal(promote_types('bool', S), np.dtype(S+'5'))
+        assert_equal(promote_types('b', S), np.dtype(S+'4'))
+        assert_equal(promote_types('u1', S), np.dtype(S+'3'))
+        assert_equal(promote_types('u2', S), np.dtype(S+'5'))
+        assert_equal(promote_types('u4', S), np.dtype(S+'10'))
+        assert_equal(promote_types('u8', S), np.dtype(S+'20'))
+        assert_equal(promote_types('i1', S), np.dtype(S+'4'))
+        assert_equal(promote_types('i2', S), np.dtype(S+'6'))
+        assert_equal(promote_types('i4', S), np.dtype(S+'11'))
+        assert_equal(promote_types('i8', S), np.dtype(S+'21'))
+        # Promote numeric with sized string:
+        assert_equal(promote_types('bool', S+'1'), np.dtype(S+'5'))
+        assert_equal(promote_types('bool', S+'30'), np.dtype(S+'30'))
+        assert_equal(promote_types('b', S+'1'), np.dtype(S+'4'))
+        assert_equal(promote_types('b', S+'30'), np.dtype(S+'30'))
+        assert_equal(promote_types('u1', S+'1'), np.dtype(S+'3'))
+        assert_equal(promote_types('u1', S+'30'), np.dtype(S+'30'))
+        assert_equal(promote_types('u2', S+'1'), np.dtype(S+'5'))
+        assert_equal(promote_types('u2', S+'30'), np.dtype(S+'30'))
+        assert_equal(promote_types('u4', S+'1'), np.dtype(S+'10'))
+        assert_equal(promote_types('u4', S+'30'), np.dtype(S+'30'))
+        assert_equal(promote_types('u8', S+'1'), np.dtype(S+'20'))
+        assert_equal(promote_types('u8', S+'30'), np.dtype(S+'30'))
+        # Promote with object:
+        assert_equal(promote_types('O', S+'30'), np.dtype('O'))
+
+    @pytest.mark.parametrize(["dtype1", "dtype2"],
+            [[np.dtype("V6"), np.dtype("V10")],
+             [np.dtype([("name1", "i8")]), np.dtype([("name2", "i8")])],
+             [np.dtype("i8,i8"), np.dtype("i4,i4")],
+            ])
+    def test_invalid_void_promotion(self, dtype1, dtype2):
+        # Mainly test structured void promotion, which currently allows
+        # byte-swapping, but nothing else:
+        with pytest.raises(TypeError):
+            np.promote_types(dtype1, dtype2)
+
+    @pytest.mark.parametrize(["dtype1", "dtype2"],
+            [[np.dtype("V10"), np.dtype("V10")],
+             [np.dtype([("name1", "<i8")]), np.dtype([("name1", ">i8")])],
+             [np.dtype("i8,i8"), np.dtype("i8,>i8")],
+            ])
+    def test_valid_void_promotion(self, dtype1, dtype2):
+        assert np.promote_types(dtype1, dtype2) is dtype1
+
+    @pytest.mark.parametrize("dtype",
+           list(np.typecodes["All"]) +
+           ["i,i", "S3", "S100", "U3", "U100", rational])
+    def test_promote_identical_types_metadata(self, dtype):
+        # The same type passed in twice to promote types always
+        # preserves metadata
+        metadata = {1: 1}
+        dtype = np.dtype(dtype, metadata=metadata)
+
+        res = np.promote_types(dtype, dtype)
+        assert res.metadata == dtype.metadata
+
+        # byte-swapping preserves and makes the dtype native:
+        dtype = dtype.newbyteorder()
+        if dtype.isnative:
+            # The type does not have byte swapping
+            return
+
+        res = np.promote_types(dtype, dtype)
+        if res.char in "?bhilqpBHILQPefdgFDGOmM" or dtype.type is rational:
+            # Metadata is lost for simple promotions (they create a new dtype)
+            assert res.metadata is None
+        else:
+            assert res.metadata == metadata
+        if dtype.kind != "V":
+            # the result is native (except for structured void)
+            assert res.isnative
+
+    @pytest.mark.slow
+    @pytest.mark.parametrize(["dtype1", "dtype2"],
+            itertools.product(
+                list(np.typecodes["All"]) +
+                ["i,i", "S3", "S100", "U3", "U100", rational],
+                repeat=2))
+    def test_promote_types_metadata(self, dtype1, dtype2):
+        """Metadata handling in promotion does not appear formalized
+        right now in NumPy. This test should thus be considered to
+        document behaviour, rather than test the correct definition of it.
+
+        This test is very ugly, it was useful for rewriting part of the
+        promotion, but probably should eventually be replaced/deleted
+        (i.e. when metadata handling in promotion is better defined).
+        """
+        metadata1 = {1: 1}
+        metadata2 = {2: 2}
+        dtype1 = np.dtype(dtype1, metadata=metadata1)
+        dtype2 = np.dtype(dtype2, metadata=metadata2)
+
+        try:
+            res = np.promote_types(dtype1, dtype2)
+        except TypeError:
+            # Promotion failed, this test only checks metadata
+            return
+
+        if res.char in "?bhilqpBHILQPefdgFDGOmM" or res.type is rational:
+            # All simple types lose metadata (due to using promotion table):
+            assert res.metadata is None
+        elif res == dtype1:
+            # If one result is the result, it is usually returned unchanged:
+            assert res is dtype1
+        elif res == dtype2:
+            # dtype1 may have been cast to the same type/kind as dtype2.
+            # If the resulting dtype is identical we currently pick the cast
+            # version of dtype1, which lost the metadata:
+            if np.promote_types(dtype1, dtype2.kind) == dtype2:
+                res.metadata is None
+            else:
+                res.metadata == metadata2
+        else:
+            assert res.metadata is None
+
+        # Try again for byteswapped version
+        dtype1 = dtype1.newbyteorder()
+        assert dtype1.metadata == metadata1
+        res_bs = np.promote_types(dtype1, dtype2)
+        if res_bs.names is not None:
+            # Structured promotion doesn't remove byteswap:
+            assert res_bs.newbyteorder() == res
+        else:
+            assert res_bs == res
+        assert res_bs.metadata == res.metadata
+
+    @pytest.mark.parametrize(["dtype1", "dtype2"],
+            [[np.dtype("V6"), np.dtype("V10")],
+             [np.dtype([("name1", "i8")]), np.dtype([("name2", "i8")])],
+             [np.dtype("i8,i8"), np.dtype("i4,i4")],
+            ])
+    def test_invalid_void_promotion(self, dtype1, dtype2):
+        # Mainly test structured void promotion, which currently allows
+        # byte-swapping, but nothing else:
+        with pytest.raises(TypeError):
+            np.promote_types(dtype1, dtype2)
+
+    @pytest.mark.parametrize(["dtype1", "dtype2"],
+            [[np.dtype("V10"), np.dtype("V10")],
+             [np.dtype([("name1", "<i8")]), np.dtype([("name1", ">i8")])],
+             [np.dtype("i8,i8"), np.dtype("i8,>i8")],
+            ])
+    def test_valid_void_promotion(self, dtype1, dtype2):
+        assert np.promote_types(dtype1, dtype2) is dtype1
 
     def test_can_cast(self):
         assert_(np.can_cast(np.int32, np.int64))
@@ -1341,6 +1516,27 @@ class TestNonzero:
         # raise exception in second pass for n-dimensional loop
         a = np.array([[ThrowsAfter(15)]]*10)
         assert_raises(ValueError, np.nonzero, a)
+
+    def test_structured_threadsafety(self):
+        # Nonzero (and some other functions) should be threadsafe for
+        # structured datatypes, see gh-15387. This test can behave randomly.
+        from concurrent.futures import ThreadPoolExecutor
+
+        # Create a deeply nested dtype to make a failure more likely:
+        dt = np.dtype([("", "f8")])
+        dt = np.dtype([("", dt)])
+        dt = np.dtype([("", dt)] * 2)
+        # The array should be large enough to likely run into threading issues
+        arr = np.random.uniform(size=(5000, 4)).view(dt)[:, 0]
+        def func(arr):
+            arr.nonzero()
+
+        tpe = ThreadPoolExecutor(max_workers=8)
+        futures = [tpe.submit(func, arr) for _ in range(10)]
+        for f in futures:
+            f.result()
+
+        assert arr.dtype is dt
 
 
 class TestIndex:
@@ -2394,6 +2590,15 @@ class TestIsclose:
         assert_(np.isclose(0, np.inf) is np.False_)
         assert_(type(np.isclose(0, np.inf)) is np.bool_)
 
+    def test_timedelta(self):
+        # Allclose currently works for timedelta64 as long as `atol` is
+        # an integer or also a timedelta64
+        a = np.array([[1, 2, 3, "NaT"]], dtype="m8[ns]")
+        assert np.isclose(a, a, atol=0, equal_nan=True).all()
+        assert np.isclose(a, a, atol=np.timedelta64(1, "ns"), equal_nan=True).all()
+        assert np.allclose(a, a, atol=0, equal_nan=True)
+        assert np.allclose(a, a, atol=np.timedelta64(1, "ns"), equal_nan=True)
+
 
 class TestStdVar:
     def setup(self):
@@ -2493,7 +2698,7 @@ class TestCreationFuncs:
         self.check_function(np.zeros)
 
     def test_ones(self):
-        self.check_function(np.zeros)
+        self.check_function(np.ones)
 
     def test_empty(self):
         self.check_function(np.empty)

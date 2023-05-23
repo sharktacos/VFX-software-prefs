@@ -1062,6 +1062,17 @@ def einsum(*operands, out=None, optimize=False, **kwargs):
     --------
     einsum_path, dot, inner, outer, tensordot, linalg.multi_dot
 
+    einops:
+        similar verbose interface is provided by
+        `einops <https://github.com/arogozhnikov/einops>`_ package to cover
+        additional operations: transpose, reshape/flatten, repeat/tile,
+        squeeze/unsqueeze and reductions.
+
+    opt_einsum:
+        `opt_einsum <https://optimized-einsum.readthedocs.io/en/stable/>`_
+        optimizes contraction order for einsum-like expressions
+        in backend-agnostic manner.
+
     Notes
     -----
     .. versionadded:: 1.6.0
@@ -1358,10 +1369,17 @@ def einsum(*operands, out=None, optimize=False, **kwargs):
         raise TypeError("Did not understand the following kwargs: %s"
                         % unknown_kwargs)
 
-
     # Build the contraction list and operand
     operands, contraction_list = einsum_path(*operands, optimize=optimize,
                                              einsum_call=True)
+
+    # Handle order kwarg for output array, c_einsum allows mixed case
+    output_order = kwargs.pop('order', 'K')
+    if output_order.upper() == 'A':
+        if all(arr.flags.f_contiguous for arr in operands):
+            output_order = 'F'
+        else:
+            output_order = 'C'
 
     # Start contraction loop
     for num, contraction in enumerate(contraction_list):
@@ -1412,4 +1430,4 @@ def einsum(*operands, out=None, optimize=False, **kwargs):
     if specified_out:
         return out
     else:
-        return operands[0]
+        return asanyarray(operands[0], order=output_order)

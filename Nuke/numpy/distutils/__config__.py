@@ -22,7 +22,6 @@ atlas_3_10_blas_threads_info={}
 atlas_3_10_blas_info={}
 atlas_blas_threads_info={}
 atlas_blas_info={}
-accelerate_info={}
 blas_info={}
 blas_src_info={}
 blas_opt_info={}
@@ -74,6 +73,7 @@ def show():
 
     Examples
     --------
+    >>> import numpy as np
     >>> np.show_config()
     blas_opt_info:
         language = c
