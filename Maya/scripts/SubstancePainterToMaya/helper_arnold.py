@@ -186,23 +186,27 @@ def createBumpMap(texture, renderer, fileNode, clean, colorCorrect, forceTexture
                 # If it's a normal utility node
                 if mc.objectType(node) == normalNode:
 
-                    # Connect the normal utility node to to bump utility
-                    mc.connectAttr(node + '.outValue', bumpNode + '.normal', force=forceTexture)
+                    # Connect the normal utility to the material attribute
+                    mc.connectAttr(node + '.outValue', material + '.' + attributeName, force=forceTexture)
+                    mc.connectAttr(node + '.outValue', material + '.coatNormal', force=forceTexture)
 
                     # Connect the bump node to the material attribute
-                    mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName, force=forceTexture)
+                    #mc.connectAttr(bumpNode + '.outValue', material + '.' + '.normalCamera', force=forceTexture)
+                    #mc.connectAttr(bumpNode + '.outValue', material + '.' + '.coatNormal', force=forceTexture)
 
                 # If it's not a normal utility node
                 else:
 
                     # Replace the connection by the bump node if the force texture is true
                     mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName, force=forceTexture)
+                    mc.connectAttr(bumpNode + '.outValue', material + '.coatNormal', force=forceTexture)
 
         # If there's not connections
         else:
 
             # Connect the bump utility to the material attribute
             mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName, force=forceTexture)
+            mc.connectAttr(bumpNode + '.outValue', material + '.coatNormal', force=forceTexture)
 
 
 def createLayerNetwork(texture, renderer, fileNode):

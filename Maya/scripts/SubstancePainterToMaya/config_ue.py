@@ -35,7 +35,7 @@ class config:
                 2
             ],
             'roughness': [
-                ['OcclusionRoughnessMetallic', 'OcclusionRoughnessMetal', 'OcclusionRoughnessMetalness', 'orm', 'ORM', 'roughness', 'Roughness', 'specularRoughness', 'SpecularRoughness', 'specular', 'Specular', 'spc', 'ruf', 'specularColor'],
+                ['OcclusionRoughnessMetallic', 'OcclusionRoughnessMetal', 'OcclusionRoughnessMetalness', 'orm', 'ORM', 'art', 'ART', 'roughness', 'Roughness', 'specularRoughness', 'SpecularRoughness', 'specular', 'Specular', 'spc', 'ruf', 'specularColor'],
                 3
             ],
             'emissive': [

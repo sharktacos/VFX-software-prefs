@@ -1,4 +1,5 @@
 import maya.cmds as mc
+import mtoa.core as core 
 import os
 from PySide2 import QtWidgets
 import PySide2
@@ -40,6 +41,7 @@ def splitNamingConvention(ui, textures):
 
             beforeTextureSet = re.split(ui.DELIMITERS, before(texture, textureSet))
             beforeMapSet = re.split(ui.DELIMITERS, before(texture, map))
+
             extension = texture.split('.')[-1]
 
             if extension in ui.PAINTER_IMAGE_EXTENSIONS:
@@ -211,36 +213,6 @@ def displaySecondPartOfUI(ui, renderer):
     ui.grpOptions.setVisible(True)
     ui.scroll.setVisible(True)
 
-    '''
-    if renderer.name == 'Arnold':
-        # Arnold subdivisions
-
-        ui.checkbox5 = QtWidgets.QCheckBox('Add subdivisions')
-        ui.optionsSubLayout2.addWidget(ui.checkbox5)
-        ui.checkbox5.stateChanged.connect(lambda: ui.addArnoldSubdivisionsCheckbox())
-
-        ui.subdivTypeTitle = QtWidgets.QLabel('Type')
-        ui.optionsSubLayout2.addWidget(ui.subdivTypeTitle)
-
-        ui.subdivType = QtWidgets.QComboBox()
-        ui.subdivType.addItems(['catclark', 'linear'])
-        ui.subdivType.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivType)
-
-        ui.subdivIterTitle = QtWidgets.QLabel('Iterations')
-        ui.optionsSubLayout2.addWidget(ui.subdivIterTitle)
-
-        ui.subdivIter = QtWidgets.QLineEdit('1')
-        ui.subdivIter.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivIter)
-
-
-    else:
-#        ui.checkbox1.setVisible(True)
-#        ui.checkbox2.setVisible(True)
-#        ui.checkbox4.setVisible(False)
-    '''
-
     ui.grpProceed.setVisible(True)
     ui.launchButton.setText('Re-launch')
 
@@ -273,27 +245,33 @@ def createFileNode(texture, UDIMS):
 
     material = texture.textureSet
     textureName = texture.mapName
-    itemPath = texture.filePath
-
+    #itemPath = texture.filePath
+    itemPath = re.sub(r"\d{4}\.", '<UDIM>.', texture.filePath)
+    
     # Create a file node
-    fileNode = mc.shadingNode('file', asTexture=True, isColorManaged=True, name=material + '_' + textureName + '_file')
+
+    #fileNode = mc.shadingNode('file', asTexture=True, isColorManaged=True, name=material + '_' + textureName + '_file')
+    fileNode = core.createArnoldNode("aiImage", name=material + '_' + textureName + '_file')
+    
     # Create a place2d node
-    place2d = mc.shadingNode('place2dTexture', asUtility=True, name=material + '_' + textureName + '_place2d')
+    #place2d = mc.shadingNode('place2dTexture', asUtility=True, name=material + '_' + textureName + '_place2d')
 
     # Set the file path of the file node
-    mc.setAttr(fileNode + '.fileTextureName', itemPath, type='string')
+    #mc.setAttr(fileNode + '.fileTextureName', itemPath, type='string')
+    mc.setAttr(fileNode + '.filename', itemPath, type='string')
 
     # Set alpha is luminance
-    mc.setAttr(fileNode + '.alphaIsLuminance', True)
+    #mc.setAttr(fileNode + '.alphaIsLuminance', True)
 
-    if UDIMS:
-        mc.setAttr(fileNode + '.uvTilingMode', 3)
+    #if UDIMS:
+    #    mc.setAttr(fileNode + '.uvTilingMode', 3)
 
     # Connect the file and the place2d nodes
-    connectPlace2dTexture(place2d, fileNode)
+    #connectPlace2dTexture(place2d, fileNode)
 
     return fileNode
 
+'''
 def connectPlace2dTexture(place2d, fileNode):
     """
     Connect the place2d to the file node
@@ -314,6 +292,7 @@ def connectPlace2dTexture(place2d, fileNode):
     # Other connections
     for attribute in connections:
         mc.connectAttr(place2d + '.' + attribute, fileNode + '.' + attribute)
+'''
 
 def checkCreateMaterial(ui, texture, renderer):
     """
@@ -377,9 +356,28 @@ def checkCreateMaterial(ui, texture, renderer):
                 for shaderGroup in shaderGroups:
                     mc.connectAttr(material + '.outColor', shaderGroup + '.surfaceShader', force=True)
 
-
-
     return materialName, materialNotFound
+
+def swapMaterialAndShadingGroupUE(texture, renderer):
+    """
+    Swap  material and it's shading group for Unreal Alembic
+    :param material: The material's name
+    :return: The material's name
+    """
+
+    materialName = texture.textureSet
+    materialType = renderer.renderParameters.SHADER
+    shaderGroups = mc.listConnections (texture.textureSet + '.outColor', d=True, s=False)
+
+    # Rename the material.
+    materialName_orig = materialName
+    mc.rename(materialName, materialName +'_shd')
+
+    # Rename shader group to original material name.
+    for shaderGroup in shaderGroups:
+        shaderGroup = mc.rename(shaderGroup, materialName_orig)
+
+    return materialName
 
 
 def createMaterialAndShadingGroup(materialName, materialType):
@@ -585,10 +583,10 @@ def is_flat_color(path):
 def cleanFiles(texture, fileNode):
 
     if os.path.exists(texture.filePath):
-        place2d = mc.listConnections(fileNode, t='place2dTexture')[0]
+        #place2d = mc.listConnections(fileNode, t='place2dTexture')[0]
         mc.delete(fileNode)
-        mc.delete(place2d)
-        #print('    Removing file: ' + fileNode)
+        #mc.delete(place2d)
+
         os.remove(texture.filePath)
         print('    Deleting file: ' + texture.textureName)
     else:
@@ -597,9 +595,9 @@ def cleanFiles(texture, fileNode):
 def cleanNodes(texture, fileNode):
 
     if os.path.exists(texture.filePath):
-        place2d = mc.listConnections(fileNode, t='place2dTexture')[0]
+        #place2d = mc.listConnections(fileNode, t='place2dTexture')[0]
         mc.delete(fileNode)
-        mc.delete(place2d)
+        #mc.delete(place2d)
     else:
         print('    '+ texture.filePath + " does not exist")
 
@@ -614,7 +612,7 @@ def createSpecMap(texture, fileNode, clean, colorCorrect=False, forceTexture=Tru
     :return: None
     """
 
-    blendNode = 'blendColors'
+    #blendNode = 'blendColors'
     material = texture.textureSet
     attributeName = texture.materialAttribute
     
@@ -636,13 +634,29 @@ def createSpecMap(texture, fileNode, clean, colorCorrect=False, forceTexture=Tru
 
     if not flat:
 
-        # Create the blendColor and luminance nodes and set attributes
-        blendNode = mc.shadingNode(blendNode, asUtility=True, name='blendRoughness')
-        mc.setAttr (blendNode + ".color1", 0.2, 0.2, 0.2, type='double3')
-        mc.setAttr (blendNode + ".color2", 0.5, 0.5, 0.5, type='double3')
+        # Create the range and two roughness sliders
+        
+        #blendNode = mc.shadingNode(blendNode, asUtility=True, name='blendRoughness')
+        #mc.setAttr (blendNode + ".color1", 0.2, 0.2, 0.2, type='double3')
+        #mc.setAttr (blendNode + ".color2", 0.5, 0.5, 0.5, type='double3')
+        blendNode = core.createArnoldNode("aiRange", name='lerp')
+        RufA = core.createArnoldNode("aiFlat", name='roughness_A')
+        RufB = core.createArnoldNode("aiFlat", name='roughness_B')
 
-        # Connect the file to blend, and blend to luma 
-        connectTexture(fileNode, 'outColorR', blendNode, 'blender', colorCorrect)
+        # connect roughness sliders to range
+        mc.connectAttr ( RufA + '.outColorR', blendNode + '.outputMin', force=True )
+        mc.connectAttr ( RufB + '.outColorR', blendNode + '.outputMax', force=True )
+
+        # delete unused SGs
+        RufA_sg = mc.listConnections(RufA,type='shadingEngine')
+        RufB_sg = mc.listConnections(RufB,type='shadingEngine')
+        mc.delete(RufA_sg)
+        mc.delete(RufB_sg)
+
+        # Connect the file to range
+        
+        #connectTexture(fileNode, 'outColorR', blendNode, 'blender', colorCorrect)
+        connectTexture(fileNode, 'outColor', blendNode, 'input', colorCorrect)
 
         # List all the connection in the material attribute
         connectedNodes = mc.listConnections(material + '.' + attributeName)
@@ -653,11 +667,13 @@ def createSpecMap(texture, fileNode, clean, colorCorrect=False, forceTexture=Tru
             for node in connectedNodes:
 
                 # Replace the connection by the spec node tree if the force texture is true
-                mc.connectAttr(blendNode + '.outputR', material + '.' + attributeName, force=forceTexture)
+                #mc.connectAttr(blendNode + '.outputR', material + '.' + attributeName, force=forceTexture)
+                mc.connectAttr(blendNode + '.outColorR', material + '.' + attributeName, force=forceTexture)
+                
 
         # If there's not connections
         else:
 
             # Connect the spec node tree to the material attribute
-            mc.connectAttr(blendNode + '.outputR', material + '.' + attributeName, force=forceTexture)
+            mc.connectAttr(blendNode + '.outColorR', material + '.' + attributeName, force=forceTexture)
 
