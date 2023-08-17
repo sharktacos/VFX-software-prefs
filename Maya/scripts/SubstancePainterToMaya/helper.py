@@ -252,6 +252,8 @@ def createFileNode(texture, UDIMS):
 
     #fileNode = mc.shadingNode('file', asTexture=True, isColorManaged=True, name=material + '_' + textureName + '_file')
     fileNode = core.createArnoldNode("aiImage", name=material + '_' + textureName + '_file')
+    mc.setAttr(fileNode + '.ignoreMissingTextures', 1)
+    mc.setAttr(fileNode + '.missingTextureColor', 0.5, 0.5, 0.5, type='double3') 
     
     # Create a place2d node
     #place2d = mc.shadingNode('place2dTexture', asUtility=True, name=material + '_' + textureName + '_place2d')
