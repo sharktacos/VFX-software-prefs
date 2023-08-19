@@ -5,6 +5,8 @@ from importlib import reload
 import PySide2
 reload(helper)
 
+
+
 def createNormalMap(texture, renderer, fileNode, clean, colorCorrect, forceTexture=True):
     """
     Connect the normal map with the right nodes, even if a bump already exists
@@ -27,9 +29,9 @@ def createNormalMap(texture, renderer, fileNode, clean, colorCorrect, forceTextu
 
         # if delete option is set, delete flat texture files, else delete unused nodes
         if clean:
-            helper.cleanFiles(texture, fileNode)
+            helper.cleanFiles2(texture, fileNode)
         else:
-            helper.cleanNodes(texture, fileNode)
+            helper.cleanNodes2(texture, fileNode)
 
     if not flat:
         # Create the normal utility

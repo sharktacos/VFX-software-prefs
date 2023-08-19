@@ -234,6 +234,31 @@ def clearLayout(layout):
             else:
                 clearLayout(item.layout())
 
+
+
+def createFileNode_Ai(texture, UDIMS):
+    """
+    Creates an Arnold file node, set the texture of the file node and connect both of them
+    :param material: The name of the material
+    :param mapFound: The name of the texture map
+    :param itemPath: The path of the texture map
+    :return: Name of the file node
+    """
+
+    material = texture.textureSet
+    textureName = texture.mapName
+    itemPath = re.sub(r"\d{4}\.", '<UDIM>.', texture.filePath)
+    
+    # Create a file node
+    fileNode = core.createArnoldNode("aiImage", name=material + '_' + textureName + '_file')
+    mc.setAttr(fileNode + '.ignoreMissingTextures', 1)
+    mc.setAttr(fileNode + '.missingTextureColor', 0.5, 0.5, 0.5, type='double3') 
+
+    # Set the file path of the file node
+    mc.setAttr(fileNode + '.filename', itemPath, type='string')
+
+    return fileNode
+
 def createFileNode(texture, UDIMS):
     """
     Creates a file node and a place2d node, set the texture of the file node and connect both of them
@@ -245,35 +270,29 @@ def createFileNode(texture, UDIMS):
 
     material = texture.textureSet
     textureName = texture.mapName
-    #itemPath = texture.filePath
-    itemPath = re.sub(r"\d{4}\.", '<UDIM>.', texture.filePath)
-    
-    # Create a file node
+    itemPath = texture.filePath
 
-    #fileNode = mc.shadingNode('file', asTexture=True, isColorManaged=True, name=material + '_' + textureName + '_file')
-    fileNode = core.createArnoldNode("aiImage", name=material + '_' + textureName + '_file')
-    mc.setAttr(fileNode + '.ignoreMissingTextures', 1)
-    mc.setAttr(fileNode + '.missingTextureColor', 0.5, 0.5, 0.5, type='double3') 
-    
+    # Create a file node
+    fileNode = mc.shadingNode('file', asTexture=True, isColorManaged=True, name=material + '_' + textureName + '_file')
+
     # Create a place2d node
-    #place2d = mc.shadingNode('place2dTexture', asUtility=True, name=material + '_' + textureName + '_place2d')
+    place2d = mc.shadingNode('place2dTexture', asUtility=True, name=material + '_' + textureName + '_place2d')
 
     # Set the file path of the file node
-    #mc.setAttr(fileNode + '.fileTextureName', itemPath, type='string')
-    mc.setAttr(fileNode + '.filename', itemPath, type='string')
+    mc.setAttr(fileNode + '.fileTextureName', itemPath, type='string')
 
     # Set alpha is luminance
-    #mc.setAttr(fileNode + '.alphaIsLuminance', True)
+    mc.setAttr(fileNode + '.alphaIsLuminance', True)
 
-    #if UDIMS:
-    #    mc.setAttr(fileNode + '.uvTilingMode', 3)
+    if UDIMS:
+        mc.setAttr(fileNode + '.uvTilingMode', 3)
 
     # Connect the file and the place2d nodes
-    #connectPlace2dTexture(place2d, fileNode)
+    connectPlace2dTexture(place2d, fileNode)
 
     return fileNode
 
-'''
+
 def connectPlace2dTexture(place2d, fileNode):
     """
     Connect the place2d to the file node
@@ -294,7 +313,7 @@ def connectPlace2dTexture(place2d, fileNode):
     # Other connections
     for attribute in connections:
         mc.connectAttr(place2d + '.' + attribute, fileNode + '.' + attribute)
-'''
+
 
 def checkCreateMaterial(ui, texture, renderer):
     """
@@ -585,24 +604,44 @@ def is_flat_color(path):
 def cleanFiles(texture, fileNode):
 
     if os.path.exists(texture.filePath):
-        #place2d = mc.listConnections(fileNode, t='place2dTexture')[0]
         mc.delete(fileNode)
-        #mc.delete(place2d)
 
         os.remove(texture.filePath)
         print('    Deleting file: ' + texture.textureName)
     else:
         print('    '+ texture.filePath + " does not exist")
 
+
 def cleanNodes(texture, fileNode):
 
     if os.path.exists(texture.filePath):
-        #place2d = mc.listConnections(fileNode, t='place2dTexture')[0]
         mc.delete(fileNode)
-        #mc.delete(place2d)
+ 
     else:
         print('    '+ texture.filePath + " does not exist")
 
+def cleanFiles2(texture, fileNode):
+
+    if os.path.exists(texture.filePath):
+        place2d = mc.listConnections(fileNode, t='place2dTexture')[0]
+        mc.delete(place2d)
+        mc.delete(fileNode)
+
+        os.remove(texture.filePath)
+        print('    Deleting file: ' + texture.textureName)
+    else:
+        print('    '+ texture.filePath + " does not exist")
+
+
+def cleanNodes2(texture, fileNode):
+
+    if os.path.exists(texture.filePath):
+        place2d = mc.listConnections(fileNode, t='place2dTexture')[0]
+        mc.delete(place2d)
+        mc.delete(fileNode)
+ 
+    else:
+        print('    '+ texture.filePath + " does not exist")
 
 def createSpecMap(texture, fileNode, clean, colorCorrect=False, forceTexture=True):
     """
@@ -656,9 +695,9 @@ def createSpecMap(texture, fileNode, clean, colorCorrect=False, forceTexture=Tru
         mc.delete(RufB_sg)
 
         # Connect the file to range
-        
-        #connectTexture(fileNode, 'outColorR', blendNode, 'blender', colorCorrect)
         connectTexture(fileNode, 'outColor', blendNode, 'input', colorCorrect)
+        # Old for blendColors
+        #connectTexture(fileNode, 'outColorR', blendNode, 'blender', colorCorrect)
 
         # List all the connection in the material attribute
         connectedNodes = mc.listConnections(material + '.' + attributeName)

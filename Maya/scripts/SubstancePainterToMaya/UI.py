@@ -102,6 +102,7 @@ class PainterToMayaUI:
         self.namingConventionSubLayoutLabel.addWidget(self.textureSetLabel)
 
         self.textureSet = QtWidgets.QLineEdit('enter_shader_name')
+        # enter_shader_name
         self.textureSet.setToolTip(
             'Example of the part of the texture file name containing the material\'s name (textureSet)'
         )
@@ -141,12 +142,16 @@ class PainterToMayaUI:
         self.rendererRadio1.setChecked(True)
         self.grpRadioRenderer.addButton(self.rendererRadio1)
 
-        self.rendererRadio2 = QtWidgets.QRadioButton('Unreal Engine (Blinn)')
+        self.rendererRadio2 = QtWidgets.QRadioButton('Unreal Engine (Blinn) for FBX')
         self.grpRadioRenderer.addButton(self.rendererRadio2)
+        
+        #self.rendererRadio3 = QtWidgets.QRadioButton('Unreal Engine (Blinn) for Alembic')
+        #self.rendererRadio3.setChecked(False)
+        #self.grpRadioRenderer.addButton(self.rendererRadio3)
 
         self.rendererLayout.addWidget(self.rendererRadio1)
         self.rendererLayout.addWidget(self.rendererRadio2)
-
+        #self.rendererLayout.addWidget(self.rendererRadio3)
 
         # Materials
         self.grpMaterials = QtWidgets.QGroupBox('Materials')

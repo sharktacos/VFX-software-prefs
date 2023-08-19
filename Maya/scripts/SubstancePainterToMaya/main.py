@@ -91,8 +91,14 @@ class rendererObject:
         elif self.ui.grpRadioRenderer.checkedId() == -3:
             from SubstancePainterToMaya import config_ue as config
             reload(config)
-            self.name = 'Unreal'
-            print ('Unreal')
+            self.name = 'Unreal_FBX'
+            print ('Unreal_FBX')
+
+        elif self.ui.grpRadioRenderer.checkedId() == -4:
+            from SubstancePainterToMaya import config_ue as config
+            reload(config)
+            self.name = 'Unreal_ABC'
+            print ('Unreal_ABC')
 
         self.renderParameters = config.config()
 
@@ -153,7 +159,7 @@ def proceed(ui, foundTextures, renderer, uiElements):
         subdivisions = False
 
 
-    elif renderer.name == 'Unreal':
+    elif renderer.name == 'Unreal_FBX' or 'Unreal_ABC':
         from SubstancePainterToMaya import helper_unreal as render_helper
         reload(render_helper)
         subdivisions = False
@@ -176,7 +182,10 @@ def proceed(ui, foundTextures, renderer, uiElements):
         if texture.materialAttribute != mixNode:
 
             # Create file node and 2dPlacer
-            fileNode = helper.createFileNode(texture, UDIMs)
+            if renderer.name == 'Unreal_FBX':
+                fileNode = helper.createFileNode(texture, UDIMs)
+            else:
+                fileNode = helper.createFileNode_Ai(texture, UDIMs)
 
             # Create material
             material, materialNotFound = helper.checkCreateMaterial(ui, texture, renderer)
@@ -191,6 +200,23 @@ def proceed(ui, foundTextures, renderer, uiElements):
         if subdivisions == True:
             render_helper.addSubdivisions(ui, texture)
 
+    #ABC option:
+    if renderer.name == 'Unreal_ABC':
+
+        shaderGroups = mc.listConnections (texture.textureSet + '.outColor', d=True, s=False)
+
+        for texture in texturesToUse:
+
+            if mc.objExists(texture.textureSet) and not mc.objExists(texture.textureSet + '_mtl'):
+
+                # Rename the material.
+                materialName_orig = texture.textureSet
+                materialName_new = mc.rename(texture.textureSet, texture.textureSet + '_mtl')
+
+                SG = mc.listConnections (materialName_new + '.outColor', d=True, s=False)
+                if SG != materialName_orig:
+                    SG_new = mc.rename(SG, materialName_orig)
+
     # Connect optional layer network
     useLyr = ui.checkbox4.isChecked()
 
@@ -202,9 +228,9 @@ def proceed(ui, foundTextures, renderer, uiElements):
             # assemble the layer network
             render_helper.createLayerNetwork(texture, renderer, fileNode)
 
-    #for texture in texturesToUse:
-    if ui.grpRadioMaterials.checkedId() == -4:
-        mel.eval('hyperShadePanelMenuCommand("hyperShadePanel1", "deleteUnusedNodes");')
+    #delete unused nodes
+#    if ui.grpRadioMaterials.checkedId() == -4:
+#        mel.eval('hyperShadePanelMenuCommand("hyperShadePanel1", "deleteUnusedNodes");')
 
 
     print('\n FINISHED \n')
