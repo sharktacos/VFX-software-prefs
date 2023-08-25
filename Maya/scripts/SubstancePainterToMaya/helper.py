@@ -683,6 +683,8 @@ def createSpecMap(texture, fileNode, clean, colorCorrect=False, forceTexture=Tru
         blendNode = core.createArnoldNode("aiRange", name='lerp')
         RufA = core.createArnoldNode("aiFlat", name='roughness_A')
         RufB = core.createArnoldNode("aiFlat", name='roughness_B')
+        mc.setAttr (RufA + ".color", 0.2, 0.2, 0.2, type='double3')
+        mc.setAttr (RufB + ".color", 0.5, 0.5, 0.5, type='double3')
 
         # connect roughness sliders to range
         mc.connectAttr ( RufA + '.outColorR', blendNode + '.outputMin', force=True )
