@@ -52,14 +52,20 @@ Shelf items shown above are oranized into the following sections:
    - *UV Transfer GUI*
    - *Create Light Group AOVs*<br>
     converts the custom LPEs (provided in the .json file described above) to Light Groups.
-   - *Remove Light Group AOVs* 
+   - *Remove Light Group AOVs*
+   - *Rename Shading Groups on selected objects* For selected objects, renames the shading group to the material name +SG. So if the material is called "wood" the Shading Group will be named "woodSG"
+   - *Delete Unused Shading Nodes*
+     
   
 ## Arnold
 
  ![img](img/maya_shelf_arnold.jpg)
  
    - *Arnold Render View*
-   - *Create Texture File Node*
+   - *Create Maya Texture File Node*
+   - *Create aiImage*
+   - *Create aiBump*
+   - *Create aiNormal*
    - *Create Arnold Standard Shader*
    
 ## Shader Networks
@@ -72,6 +78,14 @@ Shelf items shown above are oranized into the following sections:
       See [docs](https://docs.sharktacos.com/texture/FabricArnold.html) for more detail. Defaults to plain weave but pattern can be swapped out with maps provided in docs [download](https://docs.sharktacos.com/images/tutorials/Assets/Maya/fabricMaps.zip)
    - *Substance to Maya*<br>
       Automatic creation of shader networks and textures from Substance 3D Painter. See the [dedicated page](substancePaintertoMaya.md) for details.
+
+## USD
+
+ ![img](img/maya_shelf_usd.jpg)
+ 
+   - *Export Selected to USD Geometry*<br>
+     Creates a crate geo file payloaded into an asset file with proxy and render purposes. Purposes assume group names of GEO and GEO_PROXY. See [video](https://youtu.be/0yPsnPXGQWc) for details.
+   - *Export Selected to USD Material* Exports just the materials and bindings
 
    
    
