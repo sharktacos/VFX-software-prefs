@@ -135,6 +135,7 @@ def asset_stage(asset_file, root_asset, payfile_root):
     
     # save to file
     stage.GetRootLayer().Save()
+    
 
 
 
@@ -148,22 +149,25 @@ if sel:
     # variables
     fileName = filepath[0]
     stripExtension = os.path.splitext(fileName)[0]
-    geoName = stripExtension + '.geom'
+    geom_name = stripExtension + '.geom'
     payName = stripExtension + '_payload.usda'
     dag_root = sel[0].replace("|", "")
     root_asset = "/" + dag_root
     asset_file = stripExtension + '.usda'
     payload_file = stripExtension + '_payload.usda'
-    geom_root = "./" + os.path.basename(geoName + '.usd')
+    geom_root = "./" + os.path.basename(geom_name + '.usd')
     payfile_root = "./" + os.path.basename(payName)
+    #asset_root = os.path.basename(asset_file)
     maya_scene = mc.file (q=True, sn=True, shn=True)
-    
+
+
     # Export the geo file
-    mc.file(geoName, options=";exportDisplayColor=1;exportColorSets=0;mergeTransformAndShape=1;exportComponentTags=0;defaultUSDFormat=usdc;jobContext=[Arnold];materialsScopeName=mtl", typ="USD Export", pr=True, ch=True, chn=True, exportSelected=True, f=True)
+    mc.file(geom_name, options=";exportDisplayColor=1;exportColorSets=0;mergeTransformAndShape=1;exportComponentTags=0;defaultUSDFormat=usdc;jobContext=[Arnold];materialsScopeName=mtl", typ="USD Export", pr=True, ch=True, chn=True, exportSelected=True, f=True)
 
     # Export asset file with geo payload
     payload_stage(asset_file, payload_file, root_asset, geom_root)
     asset_stage(asset_file, root_asset, payfile_root)
+    
 
 
 
