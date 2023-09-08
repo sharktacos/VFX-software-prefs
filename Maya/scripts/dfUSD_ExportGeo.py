@@ -63,8 +63,8 @@ def payload_stage(asset_file, payload_file, root_asset, geom_root):
     
     # diagnositic
     print_payload = stage.GetRootLayer().ExportToString()
-    print("===============PAYLOAD FILE ======================================")
-    print(print_payload)
+    #print("===============PAYLOAD FILE ======================================")
+    #print(print_payload)
     
     # save to file
     stage.GetRootLayer().Save()
@@ -130,8 +130,8 @@ def asset_stage(asset_file, root_asset, payfile_root):
 
     # diagnositic
     print_asset = stage.GetRootLayer().ExportToString()
-    print("===============ASSET FILE ======================================")
-    print(print_asset)
+    #print("===============ASSET FILE ======================================")
+    #print(print_asset)
     
     # save to file
     stage.GetRootLayer().Save()
