@@ -135,7 +135,6 @@ def asset_stage(asset_file, root_asset, payfile_root):
     
     # save to file
     stage.GetRootLayer().Save()
-    
 
 
 
@@ -149,19 +148,14 @@ if sel:
     # variables
     fileName = filepath[0]
     stripExtension = os.path.splitext(fileName)[0]
-    geoName = stripExtension + '.geom.usdc'
+    geoName = stripExtension + '.geom'
     payName = stripExtension + '_payload.usda'
     dag_root = sel[0].replace("|", "")
     root_asset = "/" + dag_root
     asset_file = stripExtension + '.usda'
-    
-    #asset_baseName = os.path.basename(asset_file)
-    #asset_name = os.path.splitext(asset_baseName)[0]
-    
     payload_file = stripExtension + '_payload.usda'
-    geom_root = "./" + os.path.basename(geoName)
+    geom_root = "./" + os.path.basename(geoName + '.usd')
     payfile_root = "./" + os.path.basename(payName)
-    #asset_root = os.path.basename(asset_file)
     maya_scene = mc.file (q=True, sn=True, shn=True)
     
     # Export the geo file
@@ -170,7 +164,6 @@ if sel:
     # Export asset file with geo payload
     payload_stage(asset_file, payload_file, root_asset, geom_root)
     asset_stage(asset_file, root_asset, payfile_root)
-    
 
 
 
