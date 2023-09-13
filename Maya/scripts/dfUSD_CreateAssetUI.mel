@@ -1,7 +1,7 @@
 //---------------------------------------------------------
 /*
  Export geo to USD with support for:
- - Called from Mel with filedialog options for render/proxy purpse groups derrived from selected hierarchy
+ - Proxy/render display purpose scope names detected from selected heirarchy.
  - Reference geometry (.usdc) into payload file (.usda) which is payloaded into Asset file
  - Custom metadata with originating Maya file “exported_from”
  
@@ -20,7 +20,7 @@
 */
 //---------------------------------------------------------
 
-
+optionVar -remove optVar_root;
 optionVar -remove optVar_render;
 optionVar -remove optVar_proxy;
 
@@ -32,6 +32,10 @@ proc setOptionVars()
     $found_render = $find_groups[0];
     $found_proxy = $find_groups[1];
 
+    if (!`optionVar -exists optVar_root`) {
+        optionVar -stringValue optVar_root $sel[0];
+    }
+    
     if (!`optionVar -exists optVar_render`) {
         optionVar -stringValue optVar_render $found_render;
     }
@@ -48,11 +52,12 @@ global proc string df_UISetup(string $parent)
     string $layout = `scrollLayout -childResizable true`;
 
     setParent $layout;
-    $title = "Confirm Render and Proxy Purpose Group Names";
+    $title = "Render and Proxy Purpose Scope Names (Detected from Selected Heirarchy)";
     $frame = `frameLayout -label $title -collapsable false`;
 
-    textFieldGrp -label "Render Purpose Group" -ann "Initial values from children of selected root node."  render_field;
-    textFieldGrp -label "Proxy Purpose Group" -ann "Initial values from children of selected root node."  proxy_field;
+    textFieldGrp -ed 0 -label "Root Xform Name:" -ann "Derived from selected node."  root_field;
+    textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label "Render Purpose Scope:" -ann "Derived from children of selected root node."  render_field;
+    textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label "Proxy Purpose Scope:" -ann "Derived from children of selected root node."  proxy_field;
 
     return $layout;
 }
@@ -62,10 +67,12 @@ global proc df_UIInit(string $parent, string $filterType)
 {
     setOptionVars();
 
+    string $xpath = `optionVar -q optVar_root`;
     string $rpath = `optionVar -q optVar_render`;
     string $ppath = `optionVar -q optVar_proxy`;
 
     setParent $parent;
+    textFieldGrp -e -text $xpath root_field;
     textFieldGrp -e -text $rpath render_field;
     textFieldGrp -e -text $ppath proxy_field;
 
@@ -76,6 +83,8 @@ global proc df_UICommit(string $parent)
     setParent $parent;
 
     // fetch values
+    optionVar -stringValue optVar_root
+        (`textFieldGrp -q -text  root_field`);
     optionVar -stringValue optVar_render
         (`textFieldGrp -q -text  render_field`);
     optionVar -stringValue optVar_proxy

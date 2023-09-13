@@ -46,7 +46,7 @@ def add_ext_reference(prim: Usd.Prim, ref_asset_path: str, ref_target_path: Sdf.
         primPath=ref_target_path # OPTIONAL: Reference a specific target prim. Otherwise, uses the referenced layer's defaultPrim.
     )
 
-def geom_stage(fileName):
+def geom_stage(fileName, root_asset, render_value, proxy_value):
 
     stripExtension = os.path.splitext(fileName)[0]
     geom_name = stripExtension + '.geom'
@@ -54,7 +54,16 @@ def geom_stage(fileName):
     # Export the geo file
     mc.file(geom_name, options=";exportDisplayColor=1;exportColorSets=0;mergeTransformAndShape=1;exportComponentTags=0;defaultUSDFormat=usdc;jobContext=[Arnold];materialsScopeName=mtl", typ="USD Export", pr=True, ch=True, chn=True, exportSelected=True, f=True)
     
-    # TODO replace xforms with scopes for purpose groups
+    # Replace xforms with scopes for purpose groups
+    stage = Usd.Stage.Open(geom_name + '.usd')
+    prim_render = stage.GetPrimAtPath(root_asset + "/" + render_value)
+    prim_render.SetTypeName("Scope")
+    prim_proxy = stage.GetPrimAtPath(root_asset + "/" + proxy_value)
+    prim_proxy.SetTypeName("Scope")
+    #prim_spec.typeName = "Scope"
+    stage.Save()
+
+
     
 def payload_stage(fileName, root_asset):
 
@@ -158,7 +167,7 @@ def main(fileName, render_value, proxy_value):
     dag_root = sel[0].replace("|", "")
     root_asset = "/" + dag_root
 
-    geom_stage(fileName)
+    geom_stage(fileName, root_asset, render_value, proxy_value)
     payload_stage(fileName, root_asset)
     asset_stage(fileName, render_value, proxy_value, root_asset)
 
