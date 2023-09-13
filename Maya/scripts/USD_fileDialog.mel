@@ -1,0 +1,124 @@
+//---------------------------------------------------------
+/*
+ Export geo to USD with support for:
+ - Called from Mel with filedialog options for render/proxy purpse groups derrived from selected hierarchy
+ - Reference geometry (.usdc) into payload file (.usda) which is payloaded into Asset file
+ - Custom metadata with originating Maya file “exported_from”
+ 
+ v3 (c) Derek Flood, 2023
+ 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+//---------------------------------------------------------
+
+
+optionVar -remove optVar_render;
+optionVar -remove optVar_proxy;
+
+proc setOptionVars()
+{
+    //Get the child group names under selected to populate purpose fields
+    $sel = `ls -sl`;
+    $find_groups = `listRelatives`;
+    $found_render = $find_groups[0];
+    $found_proxy = $find_groups[1];
+
+    if (!`optionVar -exists optVar_render`) {
+        optionVar -stringValue optVar_render $found_render;
+    }
+
+    if (!`optionVar -exists optVar_proxy`) {
+        optionVar -stringValue optVar_proxy $found_proxy;
+    }
+}
+
+// creates the options of the File dialog
+global proc string df_UISetup(string $parent)
+{
+    setParent $parent;
+    string $layout = `scrollLayout -childResizable true`;
+
+    setParent $layout;
+    $title = "Confirm Render and Proxy Purpose Group Names";
+    $frame = `frameLayout -label $title -collapsable false`;
+
+    textFieldGrp -label "Render Purpose Group" -ann "Initial values from children of selected root node."  render_field;
+    textFieldGrp -label "Proxy Purpose Group" -ann "Initial values from children of selected root node."  proxy_field;
+
+    return $layout;
+}
+
+// UIInit
+global proc df_UIInit(string $parent, string $filterType)
+{
+    setOptionVars();
+
+    string $rpath = `optionVar -q optVar_render`;
+    string $ppath = `optionVar -q optVar_proxy`;
+
+    setParent $parent;
+    textFieldGrp -e -text $rpath render_field;
+    textFieldGrp -e -text $ppath proxy_field;
+
+}
+
+global proc df_UICommit(string $parent)
+{
+    setParent $parent;
+
+    // fetch values
+    optionVar -stringValue optVar_render
+        (`textFieldGrp -q -text  render_field`);
+    optionVar -stringValue optVar_proxy
+        (`textFieldGrp -q -text  proxy_field`);
+}
+
+global proc mayaUsd_exportGeo()
+{
+
+    $sel = `ls -sl`;
+    $isSel = `size($sel)`;
+    $workspace = `workspace -rootDirectory -query`;
+    $GroupCount = `listRelatives $sel`;
+    $justTwo = `size $GroupCount`;
+
+    if ($isSel){
+        
+        if ($justTwo != 2) {
+            confirmDialog -t "Just two child groups please. Render and Proxy" -icon "Warning: Wrong group count found" -button "Sorry";
+            return;
+        }
+
+        string $filepath[] = `fileDialog2 
+                      -dialogStyle 2
+                      -fileMode 0
+                      -caption "Export selected to USD with geometry payloaded into asset file" 
+                      -fileFilter "USD Export (*.usd *.usdc *.usda)" 
+                      -okCaption "Export" 
+                      -dir $workspace 
+                      -optionsUICreate "df_UISetup" 
+                      -optionsUIInit "df_UIInit" 
+                      -optionsUICommit "df_UICommit"`;
+
+        $render_value = `optionVar -q optVar_render`; //pass this value to python
+        $proxy_value = `optionVar -q optVar_proxy`; //pass this value to python
+        $fileName = $filepath[0];
+        
+        python("import dfUSD_CreateAsset; dfUSD_CreateAsset.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "')");
+
+    } else {
+        confirmDialog -t "Selected the root node of your asset." -icon "warning";
+    }
+}
+
+mayaUsd_exportGeo()
+
