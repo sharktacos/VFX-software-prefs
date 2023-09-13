@@ -5,6 +5,9 @@
  - Reference geometry (.usdc) into payload file (.usda) which is payloaded into Asset file
  - Custom metadata with originating Maya file “exported_from”
  
+ Usage: Select the root prim to export. Confirm proxy and render groups in file dialog. Enter path and filename for root asset. Export.
+ Will create a root asset file and corresponding geom and payload files.
+ 
  v3 (c) Derek Flood, 2023
  
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -28,7 +31,8 @@ proc setOptionVars()
 {
     //Get the child group names under selected to populate purpose fields
     $sel = `ls -sl`;
-    $find_groups = `listRelatives`;
+    $geoGrpPath = `listRelatives -path $sel`;
+    $find_groups = `listRelatives $geoGrpPath`;
     $found_render = $find_groups[0];
     $found_proxy = $find_groups[1];
 
@@ -55,9 +59,9 @@ global proc string df_UISetup(string $parent)
     $title = "Render and Proxy Purpose Scope Names (Detected from Selected Heirarchy)";
     $frame = `frameLayout -label $title -collapsable false`;
 
-    textFieldGrp -ed 0 -label "Root Xform Name:" -ann "Derived from selected node."  root_field;
-    textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label "Render Purpose Scope:" -ann "Derived from children of selected root node."  render_field;
-    textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label "Proxy Purpose Scope:" -ann "Derived from children of selected root node."  proxy_field;
+    textFieldGrp -ed 0 -label "Root Prim Name:" -ann "Derived from selected node."  root_field;
+    textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label "Render Purpose:" -ann "Derived from children of selected root node."  render_field;
+    textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label "Proxy Purpose:" -ann "Derived from children of selected root node."  proxy_field;
 
     return $layout;
 }
@@ -97,13 +101,20 @@ global proc mayaUsd_exportGeo()
     $sel = `ls -sl`;
     $isSel = `size($sel)`;
     $workspace = `workspace -rootDirectory -query`;
-    $GroupCount = `listRelatives $sel`;
+    $geoGrp = `listRelatives $sel`;
+    $geoGrpPath = `listRelatives -path $sel`;
+    $GroupCount = `listRelatives -path $geoGrpPath`;
     $justTwo = `size $GroupCount`;
 
     if ($isSel){
         
+        if ($geoGrp[0] != "geo"){
+            confirmDialog -t "Missing \"geo\" group. Structure must be \n\nroot/ (asset name)\n   geo/\n      render/ \n      proxy/\n\nNote that \"geo\" must be the exact name for the geometry scope. The render and proxy purpose scopes can be named as desired based on your studio naming conventions. The root prim is typically given the name of the asset. For example \"fruitBowl\" " -icon "Missing \"geo\" group." -button "Got it";
+            return;
+        }
+
         if ($justTwo != 2) {
-            confirmDialog -t "Just two child groups please. Render and Proxy" -icon "Warning: Wrong group count found" -button "Sorry";
+            confirmDialog -t "Just two child groups under \"geo\# please. Render and Proxy, in that order" -icon "Warning: Wrong group count found" -button "Sorry";
             return;
         }
 

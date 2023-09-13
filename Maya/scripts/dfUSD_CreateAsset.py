@@ -56,11 +56,14 @@ def geom_stage(fileName, root_asset, render_value, proxy_value):
     
     # Replace xforms with scopes for purpose groups
     stage = Usd.Stage.Open(geom_name + '.usd')
-    prim_render = stage.GetPrimAtPath(root_asset + "/" + render_value)
+    prim_geo = stage.GetPrimAtPath(root_asset + "/geo")
+    prim_geo.SetTypeName("Scope")
+    
+    prim_render = stage.GetPrimAtPath(root_asset + "/geo/" + render_value)
     prim_render.SetTypeName("Scope")
-    prim_proxy = stage.GetPrimAtPath(root_asset + "/" + proxy_value)
+    prim_proxy = stage.GetPrimAtPath(root_asset + "/geo/" + proxy_value)
     prim_proxy.SetTypeName("Scope")
-    #prim_spec.typeName = "Scope"
+
     stage.Save()
 
 
@@ -105,8 +108,6 @@ def payload_stage(fileName, root_asset):
 def asset_stage(fileName, render_value, proxy_value, root_asset):
 
     maya_scene = mc.file (q=True, sn=True, shn=True)
-    renderPurpose = "/" + render_value
-    proxyPurpose = "/" + proxy_value
     stripExtension = os.path.splitext(fileName)[0]
     asset_file = stripExtension + '.usda'
     asset_baseName = os.path.basename(asset_file)
@@ -139,13 +140,13 @@ def asset_stage(fileName, render_value, proxy_value, root_asset):
     model_API.SetKind(Kind.Tokens.component)
 
     # Overs with render and proxy purposes
-    render_path = Sdf.Path(root_asset + renderPurpose)
+    render_path = Sdf.Path(root_asset + "/geo/" + render_value)
     render_prim = stage.DefinePrim(render_path)
     render_prim.SetSpecifier(Sdf.SpecifierOver)
     render_purpose = UsdGeom.Imageable(render_prim).CreatePurposeAttr()
     render_purpose.Set(UsdGeom.Tokens.render)
     
-    proxy_path = Sdf.Path(root_asset + proxyPurpose)
+    proxy_path = Sdf.Path(root_asset + "/geo/" + proxy_value)
     proxy_prim = stage.DefinePrim(proxy_path)
     proxy_prim.SetSpecifier(Sdf.SpecifierOver)
     proxy_purpose = UsdGeom.Imageable(proxy_prim).CreatePurposeAttr()
