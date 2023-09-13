@@ -58,11 +58,13 @@ global proc string df_UISetup(string $parent)
     setParent $layout;
     $title = "Render and Proxy Purpose Scope Names (Detected from Selected Heirarchy)";
     $frame = `frameLayout -label $title -collapsable false`;
-
-    textFieldGrp -ed 0 -label "Root Prim Name:" -ann "Derived from selected node."  root_field;
+    text -align left -label "";
+    textFieldGrp -ed 0 -bgc 0.15 0.15 0.15 -label "Root Prim:" -ann "Derived from selected node."  root_field;
+    text -align left -label "           	geo/";
     textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label "Render Purpose:" -ann "Derived from children of selected root node."  render_field;
     textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label "Proxy Purpose:" -ann "Derived from children of selected root node."  proxy_field;
-
+    
+    
     return $layout;
 }
 
