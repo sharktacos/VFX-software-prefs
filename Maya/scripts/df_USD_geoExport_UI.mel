@@ -133,7 +133,7 @@ global proc mayaUsd_exportGeo()
         $proxy_value = `optionVar -q optVar_proxy`; //pass this value to python
         $fileName = $filepath[0];
         
-        python("import dfUSD_CreateAsset; dfUSD_CreateAsset.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "')");
+        python("import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "')");
 
     } else {
         confirmDialog -t "Selected the root node of your asset." -icon "warning";
