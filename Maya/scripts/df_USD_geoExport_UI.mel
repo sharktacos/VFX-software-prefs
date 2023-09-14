@@ -23,9 +23,7 @@
 */
 //---------------------------------------------------------
 
-optionVar -remove optVar_root;
-optionVar -remove optVar_render;
-optionVar -remove optVar_proxy;
+
 
 proc setOptionVars()
 {
@@ -100,6 +98,10 @@ global proc df_UICommit(string $parent)
 global proc mayaUsd_exportGeo()
 {
 
+    optionVar -remove optVar_root;
+    optionVar -remove optVar_render;
+    optionVar -remove optVar_proxy;
+
     $sel = `ls -sl`;
     $isSel = `size($sel)`;
     $workspace = `workspace -rootDirectory -query`;
@@ -111,13 +113,12 @@ global proc mayaUsd_exportGeo()
     if ($isSel){
         
         if ($geoGrp[0] != "geo"){
-            confirmDialog -message "Missing \"geo\" group. Structure must be \n\nroot/ (asset name)\n   geo/\n      render/ \n      proxy/\n\nNote that \"geo\" must be the exact name for the geometry scope. The render and proxy purpose scopes can be named as desired based on your studio naming conventions. The root prim is typically given the name of the asset. For example \"fruitBowl\" " 
-            -t "Missing \"geo\" group" -button "Got it";
+            confirmDialog -message "Missing \"geo\" group. Structure must be \n\nroot/ (asset name)\n   geo/\n      render/ \n      proxy/\n\nNote that \"geo\" must be the exact name for the geometry scope. The render and proxy purpose scopes can be named as desired based on your studio naming conventions. The root prim is typically given the name of the asset. For example \"fruitBowl\" " -button "Got it";
             return;
         }
 
         if ($justTwo != 2) {
-            confirmDialog -message "Just two child groups under \"geo\" please. Render and Proxy, in that order" -title "Wrong group count" -button "Sorry";
+            confirmDialog -message "Just two child groups under \"geo\" please. Render and Proxy, in that order" -button "Sorry";
             return;
         }
 
@@ -136,12 +137,14 @@ global proc mayaUsd_exportGeo()
         $proxy_value = `optionVar -q optVar_proxy`; //pass this value to python
         $fileName = $filepath[0];
         
-        python("import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "')");
+        if (size($fileName) > 0){
+            python("import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "')");
+        }
 
     } else {
-        confirmDialog -message "Nothing Selected. Select the root node of your asset." -t "Nothing Selected" -button "Derp";
+        confirmDialog -message "Nothing Selected. Select the root node of your asset." -button "Derp";
     }
 }
 
-mayaUsd_exportGeo()
+//mayaUsd_exportGeo()
 

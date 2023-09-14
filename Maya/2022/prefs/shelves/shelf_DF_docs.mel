@@ -299,6 +299,41 @@ global proc shelf_DF_docs () {
         -manage 1
         -visible 1
         -preventOverride 0
+        -annotation "import dfMakeTexPy3\ndfMakeTexPy3.Main()" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "dfMakeTexPy3" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "mktex" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "Z:/UNIVERSAL/VFX-software-prefs-main/Maya/prefs/icons/MkTex.png" 
+        -image1 "Z:/UNIVERSAL/VFX-software-prefs-main/Maya/prefs/icons/MkTex.png" 
+        -style "iconOnly" 
+        -marginWidth 0
+        -marginHeight 1
+        -command "import dfMakeTexPy3\ndfMakeTexPy3.Main()" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 32
+        -enable 1
+        -width 35
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
         -annotation "Rename SG to match material name for selected asset" 
         -enableBackground 0
         -backgroundColor 0 0 0 
@@ -737,7 +772,7 @@ global proc shelf_DF_docs () {
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
-        -command "//---------------------------------------------------------\n/*\n Export geo to USD with support for:\n - Proxy/render display purpose scope names detected from selected heirarchy.\n - Reference geometry (.usdc) into payload file (.usda) which is payloaded into Asset file\n - Custom metadata with originating Maya file “exported_from”\n \n Usage: Select the root prim to export. Confirm proxy and render groups in file dialog. Enter path and filename for root asset. Export.\n Will create a root asset file and corresponding geom and payload files.\n \n v3 (c) Derek Flood, 2023\n \n# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\n# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\n# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\n# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\n# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\n# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\n# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\n# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n*/\n//---------------------------------------------------------\n\noptionVar -remove optVar_root;\noptionVar -remove optVar_render;\noptionVar -remove optVar_proxy;\n\nproc setOptionVars()\n{\n    //Get the child group names under selected to populate purpose fields\n    $sel = `ls -sl`;\n    $geoGrpPath = `listRelatives -path $sel`;\n    $find_groups = `listRelatives $geoGrpPath`;\n    $found_render = $find_groups[0];\n    $found_proxy = $find_groups[1];\n\n    if (!`optionVar -exists optVar_root`) {\n        optionVar -stringValue optVar_root $sel[0];\n    }\n    \n    if (!`optionVar -exists optVar_render`) {\n        optionVar -stringValue optVar_render $found_render;\n    }\n\n    if (!`optionVar -exists optVar_proxy`) {\n        optionVar -stringValue optVar_proxy $found_proxy;\n    }\n}\n\n// creates the options of the File dialog\nglobal proc string df_UISetup(string $parent)\n{\n    setParent $parent;\n    string $layout = `scrollLayout -childResizable true`;\n\n    setParent $layout;\n    $title = \"Render and Proxy Purpose Scope Names (Detected from selected hierarchy)\";\n    $frame = `frameLayout -label $title -collapsable false`;\n    text -align left -label \"\";\n    textFieldGrp -ed 0 -bgc 0.15 0.15 0.15 -label \"Root Prim:\" -ann \"Derived from selected node.\"  root_field;\n    text -align left -label \"           \tgeo/\";\n    textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label \"Render Purpose:\" -ann \"Derived from children of selected root node.\"  render_field;\n    textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label \"Proxy Purpose:\" -ann \"Derived from children of selected root node.\"  proxy_field;\n    \n    \n    return $layout;\n}\n\n// UIInit\nglobal proc df_UIInit(string $parent, string $filterType)\n{\n    setOptionVars();\n\n    string $xpath = `optionVar -q optVar_root`;\n    string $rpath = `optionVar -q optVar_render`;\n    string $ppath = `optionVar -q optVar_proxy`;\n\n    setParent $parent;\n    textFieldGrp -e -text $xpath root_field;\n    textFieldGrp -e -text $rpath render_field;\n    textFieldGrp -e -text $ppath proxy_field;\n\n}\n\nglobal proc df_UICommit(string $parent)\n{\n    setParent $parent;\n\n    // fetch values\n    optionVar -stringValue optVar_root\n        (`textFieldGrp -q -text  root_field`);\n    optionVar -stringValue optVar_render\n        (`textFieldGrp -q -text  render_field`);\n    optionVar -stringValue optVar_proxy\n        (`textFieldGrp -q -text  proxy_field`);\n}\n\nglobal proc mayaUsd_exportGeo()\n{\n\n    $sel = `ls -sl`;\n    $isSel = `size($sel)`;\n    $workspace = `workspace -rootDirectory -query`;\n    $geoGrp = `listRelatives $sel`;\n    $geoGrpPath = `listRelatives -path $sel`;\n    $GroupCount = `listRelatives -path $geoGrpPath`;\n    $justTwo = `size $GroupCount`;\n\n    if ($isSel){\n        \n        if ($geoGrp[0] != \"geo\"){\n            confirmDialog -message \"Missing \\\"geo\\\" group. Structure must be \\n\\nroot/ (asset name)\\n   geo/\\n      render/ \\n      proxy/\\n\\nNote that \\\"geo\\\" must be the exact name for the geometry scope. The render and proxy purpose scopes can be named as desired based on your studio naming conventions. The root prim is typically given the name of the asset. For example \\\"fruitBowl\\\" \" \n            -t \"Missing \\\"geo\\\" group\" -button \"Got it\";\n            return;\n        }\n\n        if ($justTwo != 2) {\n            confirmDialog -message \"Just two child groups under \\\"geo\\\" please. Render and Proxy, in that order\" -title \"Wrong group count\" -button \"Sorry\";\n            return;\n        }\n\n        string $filepath[] = `fileDialog2 \n                      -dialogStyle 2\n                      -fileMode 0\n                      -caption \"Export selected to USD with geometry payloaded into asset file\" \n                      -fileFilter \"USD Export (*.usd *.usdc *.usda)\" \n                      -okCaption \"Export\" \n                      -dir $workspace \n                      -optionsUICreate \"df_UISetup\" \n                      -optionsUIInit \"df_UIInit\" \n                      -optionsUICommit \"df_UICommit\"`;\n\n        $render_value = `optionVar -q optVar_render`; //pass this value to python\n        $proxy_value = `optionVar -q optVar_proxy`; //pass this value to python\n        $fileName = $filepath[0];\n        \n        python(\"import df_USD_geoExport; df_USD_geoExport.main('\" + $fileName + \"', '\" + $render_value + \"', '\" + $proxy_value + \"')\");\n\n    } else {\n        confirmDialog -message \"Nothing Selected. Select the root node of your asset.\" -t \"Nothing Selected\" -button \"Derp\";\n    }\n}\n\nmayaUsd_exportGeo()\n\n" 
+        -command "source df_USD_geoExport_UI;\nmayaUsd_exportGeo();" 
         -sourceType "mel" 
         -commandRepeatable 1
         -flat 1
