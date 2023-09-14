@@ -8,6 +8,10 @@
  Usage: Select the root prim to export. Confirm proxy and render groups in file dialog. Enter path and filename for root asset. Export.
  Will create a root asset file and corresponding geom and payload files.
  
+ call with:
+ source df_USD_geoExport_UI;
+ mayaUsd_exportGeo();
+ 
  v3 (c) Derek Flood, 2023
  
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
