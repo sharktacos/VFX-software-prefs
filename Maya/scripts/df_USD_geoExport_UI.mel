@@ -56,7 +56,7 @@ global proc string df_UISetup(string $parent)
     string $layout = `scrollLayout -childResizable true`;
 
     setParent $layout;
-    $title = "Render and Proxy Purpose Scope Names (Detected from Selected Heirarchy)";
+    $title = "Render and Proxy Purpose Scope Names (Detected from selected hierarchy)";
     $frame = `frameLayout -label $title -collapsable false`;
     text -align left -label "";
     textFieldGrp -ed 0 -bgc 0.15 0.15 0.15 -label "Root Prim:" -ann "Derived from selected node."  root_field;
@@ -111,12 +111,13 @@ global proc mayaUsd_exportGeo()
     if ($isSel){
         
         if ($geoGrp[0] != "geo"){
-            confirmDialog -t "Missing \"geo\" group. Structure must be \n\nroot/ (asset name)\n   geo/\n      render/ \n      proxy/\n\nNote that \"geo\" must be the exact name for the geometry scope. The render and proxy purpose scopes can be named as desired based on your studio naming conventions. The root prim is typically given the name of the asset. For example \"fruitBowl\" " -icon "Missing \"geo\" group." -button "Got it";
+            confirmDialog -message "Missing \"geo\" group. Structure must be \n\nroot/ (asset name)\n   geo/\n      render/ \n      proxy/\n\nNote that \"geo\" must be the exact name for the geometry scope. The render and proxy purpose scopes can be named as desired based on your studio naming conventions. The root prim is typically given the name of the asset. For example \"fruitBowl\" " 
+            -t "Missing \"geo\" group" -button "Got it";
             return;
         }
 
         if ($justTwo != 2) {
-            confirmDialog -t "Just two child groups under \"geo\# please. Render and Proxy, in that order" -icon "Warning: Wrong group count found" -button "Sorry";
+            confirmDialog -message "Just two child groups under \"geo\" please. Render and Proxy, in that order" -title "Wrong group count" -button "Sorry";
             return;
         }
 
@@ -138,7 +139,7 @@ global proc mayaUsd_exportGeo()
         python("import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "')");
 
     } else {
-        confirmDialog -t "Selected the root node of your asset." -icon "warning";
+        confirmDialog -message "Nothing Selected. Select the root node of your asset." -t "Nothing Selected" -button "Derp";
     }
 }
 
