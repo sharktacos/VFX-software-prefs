@@ -7,7 +7,10 @@
  
  v3 called from Mel with filedialog options for render & proxy purpse
  (c) Derek Flood, 2023
- 
+
+ call with: 
+df_USD_geoExport_UI.mel
+
 python calls:
 import dfUSD_CreateAsset
 dfUSD_CreateAsset.payload_stage(fileName)
