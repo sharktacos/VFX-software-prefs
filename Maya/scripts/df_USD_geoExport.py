@@ -141,6 +141,15 @@ def asset_stage(fileName, render_value, proxy_value, root_asset):
     # Set kind to component 
     model_API = Usd.ModelAPI(payload_prim)
     model_API.SetKind(Kind.Tokens.component)
+    
+    # draw mode (not working with unloaded payloads currently in Maya so disabled)
+    '''
+    bbox_cache = UsdGeom.BBoxCache(Usd.TimeCode.Default(), ['default', 'render'])
+    # bbox_cache = UsdGeom.BBoxCache(1, [UsdGeom.Tokens.default_, UsdGeom.Tokens.render], useExtentsHint=False, ignoreVisibility=False)
+    root_geom_model_API = UsdGeom.ModelAPI.Apply(payload_prim)
+    extentsHint = root_geom_model_API.ComputeExtentsHint(bbox_cache)
+    root_geom_model_API.SetExtentsHint(extentsHint)
+    '''
 
     # Overs with render and proxy purposes
     render_path = Sdf.Path(root_asset + "/geo/" + render_value)

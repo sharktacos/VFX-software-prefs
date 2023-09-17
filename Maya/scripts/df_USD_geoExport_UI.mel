@@ -27,7 +27,39 @@
 */
 //---------------------------------------------------------
 
+proc setLatestLoadStageFolder( string $sceneFolder )
+{
+    optionVar -stringValue mayaUsd_LatestLoadStageFolder $sceneFolder;
+}
 
+proc string getLatestLoadStageFolder()
+{
+    string $sceneFolder;
+
+    // First check if we've saved a location in the option var
+    if (`optionVar -exists mayaUsd_LatestLoadStageFolder`)
+    {
+        $sceneFolder = `optionVar -q mayaUsd_LatestLoadStageFolder`;
+    }
+
+    // Then check if there is a current Maya scene, if so choose that as
+    // a starting point.
+    if ("" == $sceneFolder)
+    {
+        $sceneFolder = dirname(`file -q -sceneName`);
+    }
+
+    // If we are really starting from scratch then just go with the 
+    // current workspace location for scenes.
+    if ("" == $sceneFolder)
+    {
+        string $workspaceLocation = `workspace -q -fn`;
+        string $scenesFolder = `workspace -q -fileRuleEntry "scene"`;
+        $sceneFolder = $workspaceLocation + "/" + $scenesFolder;
+    }
+
+    return $sceneFolder;
+}
 
 proc setOptionVars()
 {
@@ -111,6 +143,7 @@ global proc mayaUsd_exportGeo()
     $sel = `ls -sl`;
     $isSel = `size($sel)`;
     $workspace = `workspace -rootDirectory -query`;
+    string $startFolder = getLatestLoadStageFolder();
     $geoGrp = `listRelatives $sel`;
     $geoGrpPath = `listRelatives -path $sel`;
     $GroupCount = `listRelatives -path $geoGrpPath`;
@@ -134,23 +167,26 @@ global proc mayaUsd_exportGeo()
                       -caption "Export selected to USD with geometry payloaded into asset file" 
                       -fileFilter "USD Export (*.usd *.usdc *.usda)" 
                       -okCaption "Export" 
-                      -dir $workspace 
+                      -dir $startFolder 
                       -optionsUICreate "df_UISetup" 
                       -optionsUIInit "df_UIInit" 
                       -optionsUICommit "df_UICommit"`;
 
-        $render_value = `optionVar -q optVar_render`; //pass this value to python
-        $proxy_value = `optionVar -q optVar_proxy`; //pass this value to python
+        $render_value = `optionVar -q optVar_render`; 
+        $proxy_value = `optionVar -q optVar_proxy`; 
         $fileName = $filepath[0];
         
         if (size($fileName) > 0){
+            setLatestLoadStageFolder( dirname($filepath[0]) );
             python("import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "')");
         }
+        
+
 
     } else {
         confirmDialog -message "Nothing Selected. Select the root node of your asset." -button "Derp";
     }
 }
 
-//mayaUsd_exportGeo()
+mayaUsd_exportGeo()
 
