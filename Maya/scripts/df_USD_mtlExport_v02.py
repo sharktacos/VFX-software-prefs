@@ -25,36 +25,6 @@ import maya.cmds as mc
 import os
 from pxr import Usd, UsdGeom, Sdf
 
-def setLatestLoadStageFolder(sceneFolder):
-    mc.optionVar ( stringValue=("mayaUsd_LatestLoadStageFolder", sceneFolder) )
-
-def getLatestLoadStageFolder():
-
-    sceneFolder=""
-    
-    # First check if we've saved a location in the option var
-    if mc.optionVar ( exists="mayaUsd_LatestLoadStageFolder"):
-        
-        sceneFolder = mc.optionVar (q="mayaUsd_LatestLoadStageFolder")
-        print (sceneFolder)
-    
-    # Then check if there is a current Maya scene, if so choose that as
-    # a starting point.
-    
-    if "" == sceneFolder:
-        sceneFolder = os.path.dirname(mc.file (q=True, sceneName=True))
-
-    # If we are really starting from scratch then just go with the 
-    # current workspace location for scenes.
-    if "" == sceneFolder:
-        workspaceLocation = mc.workspace (q=True, fn=True)
-        scenesFolder = mc.workspace (fileRuleEntry="scene")
-        sceneFolder = workspaceLocation + "/" + scenesFolder
-    
-
-    return sceneFolder
-
-
 
 # Adapted from Jason Coelho's post on Maya-USD Github: https://github.com/Autodesk/maya-usd/discussions/3197
 def materials_sans_mesh(root_asset, mtl_file, find_groups):
@@ -118,8 +88,7 @@ def main():
         # File export dialog...
         filepath = None
         usdfilter = "USD Export (*.usd *.usda *.usdc)"
-        #projDir = mc.workspace(rootDirectory=True, query=True)
-        projDir = getLatestLoadStageFolder()
+        projDir = mc.workspace(rootDirectory=True, query=True)
 
 
         filepath = mc.fileDialog2(fileFilter=usdfilter, caption="Export Selected to USD with materials and bindings", dialogStyle=2, dir=projDir)
@@ -133,7 +102,6 @@ def main():
             root_asset = "/" + dag_root
 
             # Export selected geo & mtl to USD...
-            setLatestLoadStageFolder( os.path.dirname(filepath[0]) )
             mc.file(mtl_file, options=";exportDisplayColor=1;exportColorSets=0;mergeTransformAndShape=1;exportComponentTags=0;defaultUSDFormat=usda;jobContext=[Arnold];materialsScopeName=mtl", typ="USD Export", pr=True, exportSelected=True, f=True)
 
             # Remove mesh properties, keep materials and bindings
@@ -147,5 +115,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
-#main()
