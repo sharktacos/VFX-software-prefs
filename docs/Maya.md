@@ -84,7 +84,7 @@ Shelf items shown above are oranized into the following sections:
  ![img](img/maya_shelf_usd.jpg)
  
    - *Export Selected to USD Geometry*<br>
-     Creates a crate geo file payloaded into an asset file with proxy and render purposes. Purposes assume group names of GEO and GEO_PROXY. See [video](https://youtu.be/0yPsnPXGQWc) for details.
+     Creates a crate geo file payloaded into an asset file with proxy and render purposes. Purposes assume geo scope under the root prim with child groups for render and proxy. The name "geo" is mandatory. See [video](https://youtu.be/0yPsnPXGQWc) for details.
    - *Export Selected to USD Material* Exports just the materials and bindings
 
    
