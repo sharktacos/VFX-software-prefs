@@ -188,5 +188,5 @@ global proc mayaUsd_exportGeo()
     }
 }
 
-mayaUsd_exportGeo()
+//mayaUsd_exportGeo()
 
