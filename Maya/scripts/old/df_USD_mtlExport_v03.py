@@ -1,7 +1,6 @@
 #--------------------------------------------------------------------------------
 '''
  Export Material to USD - materials and bindings sans geometry
- v4 - add "_mtl" tag to file name
 
  call with:
 import df_USD_mtlExport
@@ -129,7 +128,7 @@ def main():
 
             USDlayer = filepath[0]
             stripExtension = os.path.splitext(USDlayer)[0]
-            mtl_file = stripExtension + '_mtl.usda'
+            mtl_file = stripExtension + '.usda'
             dag_root = sel[0].replace("|", "")
             root_asset = "/" + dag_root
 
