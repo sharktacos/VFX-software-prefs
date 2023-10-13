@@ -1,13 +1,12 @@
 """
-https://gist.github.com/BigRoy/d3f982819176291dd5ec1a88898c3313
+USD Get material from Mesh
 Roy Nieterau 
-
+https://gist.github.com/BigRoy/758279a185e4b57b266b2dddca1918de
 """
 
 from maya import cmds
 import mayaUsd.ufe
 from pxr import Usd, UsdShade
-from collections import defaultdict
 
 
 def pairwise(iterable):
@@ -35,17 +34,20 @@ def get_ufe_path(proxy, prim):
     return "{},{}".format(proxy, prim_path)
     
         
-def convert_ufe_paths_to_bound_geo(
+def convert_ufe_paths_to_bound_materials(
     ufe_paths=None,
-    material_purpose=UsdShade.Tokens.allPurpose
+    material_purpose=UsdShade.Tokens.allPurpose,
+    include_subsets=False
 ):
-    """Convert USD material selection or ufe material node paths to bound objects.
+    """Convert selection or ufe node paths to bound materials
     
     Arguments:
-        ufe_paths (Optional[list]): UFE material paths to operate on.
+        ufe_paths (Optional[list]): UFE paths to operate on.
             If not provided current selection will be used.
         material_purpose (UsdShade.Token): Material purpose 
             to return bounds for. Defaults to all purposes.
+        include_subsets (bool): Whether to include bound
+            materials from material bind subsets.
     
     Returns:
         list: UsdShadeMaterial UFE paths.
@@ -54,38 +56,30 @@ def convert_ufe_paths_to_bound_geo(
     
     if ufe_paths is None:
         ufe_paths = list(iter_ufe_usd_selection())
-    
+
     targets = []
-    prims_per_proxy = defaultdict(set)
     for path in ufe_paths:
+        proxy, prim_path = path.split(",", 1)
         prim = mayaUsd.ufe.ufePathToPrim(path)
         if not prim:
             continue
         
-        proxy, _prim_path = path.split(",", 1)
-        prims_per_proxy[proxy].add(prim)
-        
-    bindings = defaultdict(set)
-    for proxy, prims in prims_per_proxy.items():
-        
-        stage = next(iter(prims)).GetStage()
-        stage_prims = list(stage.Traverse())
-        bounds = UsdShade.MaterialBindingAPI.ComputeBoundMaterials(stage_prims, material_purpose)
-        for stage_prim, material, relationship in zip(stage_prims, *bounds):
-            material_prim = material.GetPrim()
-            if not material_prim.IsValid():
-                continue
-                
-            bindings[material_prim].add(stage_prim)
+        search_from = [prim]
+        if include_subsets:
+            subsets = UsdShade.MaterialBindingAPI(prim).GetMaterialBindSubsets()
+            for subset in subsets:
+                search_from.append(subset.GetPrim())
             
-        for prim in prims:
-            for geo_prim in bindings.get(prim, []):
-                ufe_path = get_ufe_path(proxy, geo_prim)
-                targets.append(ufe_path)
-    
+        bounds = UsdShade.MaterialBindingAPI.ComputeBoundMaterials(search_from, material_purpose)
+        for (material, relationship) in zip(*bounds):
+            material_prim = material.GetPrim()
+            if material_prim.IsValid():
+                material_prim_ufe_path = get_ufe_path(proxy, material_prim)
+                targets.append(material_prim_ufe_path)
+        
     return targets
-    
+        
 
-targets = convert_ufe_paths_to_bound_geo()
+targets = convert_ufe_paths_to_bound_materials(include_subsets=True)
 if targets:
     cmds.select(targets, replace=True, noExpand=True)
