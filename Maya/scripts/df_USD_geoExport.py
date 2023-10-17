@@ -5,7 +5,7 @@
  - Reference geometry (.usdc) into payload file (.usda) which is payloaded into Asset file
  - Custom metadata with originating Maya file “exported_from”
  - variant switch to display high res mesh in viewport
- - switch to "_geo" naming convention for mesh file in crate binary.
+ - switch to ".geo" naming convention for mesh file in crate binary.
  
  v4 Add variant switch to display high res mesh in viewport. 
  (c) Derek Flood, 2023
@@ -70,7 +70,7 @@ def add_ext_reference(prim: Usd.Prim, ref_asset_path: str, ref_target_path: Sdf.
 def geom_stage(fileName, root_asset, render_value, proxy_value):
 
     stripExtension = os.path.splitext(fileName)[0]
-    geom_name = stripExtension + '_geo'
+    geom_name = stripExtension + '.geo'
 
     # Export the geo file
     mc.file(geom_name, options=";exportDisplayColor=1;exportColorSets=0;mergeTransformAndShape=1;exportComponentTags=0;defaultUSDFormat=usdc;jobContext=[Arnold];materialsScopeName=mtl", typ="USD Export", pr=True, ch=True, chn=True, exportSelected=True, f=True)
@@ -141,7 +141,7 @@ def asset_stage(fileName, render_value, proxy_value, root_asset):
     asset_name = os.path.splitext(asset_baseName)[0]
     
     payName = stripExtension + '_payload.usda'
-    #payName = stripExtension + '_geo.usd'
+    #payName = stripExtension + '.geo.usd'
     payfile_root = "./" + os.path.basename(payName)
 
     # Create USD "asset" stage, then create and define default prim
