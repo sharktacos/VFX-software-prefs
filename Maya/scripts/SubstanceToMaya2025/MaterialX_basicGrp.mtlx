@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<materialx version="1.38" xpos="0.0555556" ypos="0.0555556">
+  <surfacematerial name="MatName_SG" type="material" nodedef="ND_surfacematerial" xpos="3.44444" ypos="0.0555556">
+    <input name="surfaceshader" type="surfaceshader" nodename="MatName" />
+  </surfacematerial>
+  <separate3 name="separate1" type="multioutput" nodedef="ND_separate3_color3" Autodesk:hidden="true" />
+  <separate3 name="separate2" type="multioutput" nodedef="ND_separate3_color3" Autodesk:hidden="true" />
+  <standard_surface name="MatName" type="surfaceshader" nodedef="ND_standard_surface_surfaceshader" xpos="1.75" ypos="0.183333">
+    <input name="base_color" type="color3" ldx_value="0.8, 0.3368, 0.3368" output="out1" nodegraph="MatName_nodes" />
+    <input name="base" type="float" interfacename="diffuse_weight" ldx_value="0.8" value="0.8" />
+    <input name="specular" type="float" interfacename="specular_weight" ldx_value="0.5" value="0.5" />
+    <input name="subsurface_radius" type="color3" interfacename="subsurface_radius" ldx_value="0.2258, 0.0258, 0.0076" value="0.2258, 0.0258, 0.0076" />
+    <input name="subsurface_anisotropy" type="float" value="0.8" />
+    <input name="subsurface_scale" type="float" interfacename="subsurface_scale" ldx_value="0.1" value="0.1" />
+    <input name="specular_color" type="color3" interfacename="specular_color" value="1, 1, 1" />
+    <input name="transmission" type="float" interfacename="transmission_weight" value="0" />
+    <input name="transmission_color" type="color3" interfacename="transmission_color" value="1, 1, 1" />
+    <input name="transmission_depth" type="float" interfacename="transmission_depth" value="0" />
+    <input name="transmission_scatter" type="color3" interfacename="transmission_scatter" value="0, 0, 0" />
+    <input name="subsurface" type="float" interfacename="Subsurface_weight" value="0" />
+    <input name="thin_walled" type="boolean" interfacename="thin_walled" value="false" />
+    <input name="coat" type="float" interfacename="coat_weight" value="0" />
+    <input name="coat_roughness" type="float" interfacename="coat_roughness" value="0.1" />
+    <input name="coat_color" type="color3" interfacename="coat_color" value="1, 1, 1" />
+    <input name="sheen" type="float" interfacename="sheen" value="0" />
+    <input name="sheen_color" type="color3" interfacename="sheen_color" value="1, 1, 1" />
+    <input name="sheen_roughness" type="float" interfacename="sheen_roughness" value="0.3" />
+    <input name="thin_film_thickness" type="float" interfacename="thin_film_thickness" value="0" />
+    <input name="thin_film_IOR" type="float" interfacename="thin_film_IOR" value="1.5" />
+    <input name="specular_roughness" type="float" output="out" nodegraph="MatName_nodes" />
+    <input name="coat_normal" type="vector3" output="out2" nodegraph="MatName_nodes" />
+    <input name="normal" type="vector3" output="out2" nodegraph="MatName_nodes" />
+    <input name="subsurface_color" type="color3" output="out1" nodegraph="MatName_nodes" />
+    <input name="metalness" type="float" output="out3" nodegraph="MatName_nodes" />
+  </standard_surface>
+  <nodegraph name="MatName_nodes" xpos="0.0555556" ypos="0.494444" Autodesk:ldx_inputPos="620 1681" Autodesk:ldx_outputPos="620 542">
+    <output name="out3" type="float" nodename="MatName_met" />
+    <output name="out2" type="vector3" nodename="MatName_normalmap" />
+    <output name="out1" type="color3" nodename="MatName_dif" />
+    <output name="out" type="float" nodename="MatName_roughness_lerp" />
+    <tiledimage name="MatName_dif" type="color3" nodedef="ND_tiledimage_color3" xpos="0.0555556" ypos="4.39444" Autodesk:previousTexturePath="MAP_dif.jpg">
+      <input name="file" type="filename" colorspace="Color sRGB Texture" value="MAP_dif.jpg" />
+      <input name="default" type="color3" value="0.18, 0.18, 0.18" />
+    </tiledimage>
+    <tiledimage name="MatName_nor" type="vector3" nodedef="ND_tiledimage_vector3" xpos="0.0555556" ypos="1.97778" Autodesk:previousTexturePath="MAP_nor.jpg">
+      <input name="file" type="filename" colorspace="Raw" value="MAP_nor.jpg" />
+      <input name="default" type="vector3" value="0.5, 0.5, 1.0" />
+      <input name="texcoord" type="vector2" value="0, 0" />
+      <input name="uvtiling" type="vector2" value="1, 1" />
+      <input name="uvoffset" type="vector2" value="0, 0" />
+      <input name="realworldimagesize" type="vector2" value="1, 1" />
+      <input name="realworldtilesize" type="vector2" value="1, 1" />
+      <input name="filtertype" type="string" value="linear" />
+      <input name="framerange" type="string" value="" />
+      <input name="frameoffset" type="integer" value="0" />
+      <input name="frameendaction" type="string" value="constant" />
+    </tiledimage>
+    <remap name="MatName_roughness_lerp" type="float" nodedef="ND_remap_float" xpos="1.75" ypos="6.23333">
+      <input name="in" type="float" ldx_value="0" nodename="MatName_spc" />
+      <input name="inlow" type="float" value="0" />
+      <input name="inhigh" type="float" value="1" />
+      <input name="outlow" type="float" value="0.2" />
+      <input name="outhigh" type="float" value="0.4" />
+    </remap>
+    <normalmap name="MatName_normalmap" type="vector3" nodedef="ND_normalmap" xpos="1.75" ypos="2.46667">
+      <input name="in" type="vector3" nodename="MatName_nor" />
+    </normalmap>
+    <tiledimage name="MatName_met" type="float" nodedef="ND_tiledimage_float" xpos="1.75" ypos="0.0555556" Autodesk:previousTexturePath="MAP_met.jpg">
+      <input name="file" type="filename" value="MAP_met.jpg" colorspace="Raw" />
+      <input name="default" type="float" value="0" />
+      <input name="texcoord" type="vector2" value="0, 0" />
+      <input name="uvtiling" type="vector2" value="1, 1" />
+      <input name="uvoffset" type="vector2" value="0, 0" />
+      <input name="realworldimagesize" type="vector2" value="1, 1" />
+      <input name="realworldtilesize" type="vector2" value="1, 1" />
+      <input name="filtertype" type="string" value="linear" />
+      <input name="framerange" type="string" value="" />
+      <input name="frameoffset" type="integer" value="0" />
+      <input name="frameendaction" type="string" value="constant" />
+    </tiledimage>
+    <tiledimage name="MatName_spc" type="float" nodedef="ND_tiledimage_float" xpos="0.0555556" ypos="6.81111" Autodesk:previousTexturePath="MAP_spc.jpg">
+      <input name="file" type="filename" value="MAP_spc.jpg" colorspace="Raw" />
+      <input name="default" type="float" value="0" />
+      <input name="texcoord" type="vector2" value="0, 0" />
+      <input name="uvtiling" type="vector2" value="1, 1" />
+      <input name="uvoffset" type="vector2" value="0, 0" />
+      <input name="realworldimagesize" type="vector2" value="1, 1" />
+      <input name="realworldtilesize" type="vector2" value="1, 1" />
+      <input name="filtertype" type="string" value="linear" />
+      <input name="framerange" type="string" value="" />
+      <input name="frameoffset" type="integer" value="0" />
+      <input name="frameendaction" type="string" value="constant" />
+    </tiledimage>
+  </nodegraph>
+</materialx>

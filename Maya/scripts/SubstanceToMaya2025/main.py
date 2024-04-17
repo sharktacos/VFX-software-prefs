@@ -186,7 +186,7 @@ def proceed(ui, foundTextures, renderer, uiElements):
     
         # Location of materialX template doc (in parent script directory)
         script_path: Path = Path(__file__).parent.resolve()
-        mtlxBasic = script_path / "MaterialX_basic.mtlx"
+        mtlxBasic = script_path / "MaterialX_basicGrp.mtlx"
 
         # Create temp directory in User HOME 
         homeDir = os.getenv ("HOME")
@@ -224,14 +224,14 @@ def proceed(ui, foundTextures, renderer, uiElements):
             clean = ui.checkboxRem.isChecked()
             render_helper.mtlxConnect (texture, mtlxPath, clean)
             
+        for texture in texturesToUse:            
             #clean unused maps
+            
             render_helper.mtlxCleanMaps ('MAP_dif.jpg', texture, mtlxPath)
             render_helper.mtlxCleanMaps ('MAP_met.jpg', texture, mtlxPath)
             render_helper.mtlxCleanMaps ('MAP_spc.jpg', texture, mtlxPath)
-            render_helper.mtlxCleanMaps ('MAP_nor.jpg', texture, mtlxPath)            
-            #	new loop, replace SPC.jpg with ""
-            # do i disconnect map from material?
-
+            render_helper.mtlxCleanMaps ('MAP_nor.jpg', texture, mtlxPath)   
+       
             
         # import the materialx documents (shaders) to the stack
         for mtlxDoc in os.listdir(mtlxPath):
