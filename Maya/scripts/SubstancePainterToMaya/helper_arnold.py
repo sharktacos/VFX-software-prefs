@@ -1,8 +1,8 @@
 import os
+import re
 import maya.cmds as mc
 from SubstancePainterToMaya import helper
 from importlib import reload
-import PySide2
 reload(helper)
 
 def addSubdivisions(ui, texture):
@@ -301,13 +301,14 @@ def createSSSMap(texture, fileNode, colorCorrect=False, forceTexture=True):
         mc.connectAttr(fileNode + '.outColor', material + baseColor, force=forceTexture)
 
 
+
 def connect(ui, texture, renderer, fileNode):
 
     colorCorrect = False
     useBump = ui.checkbox1.isChecked()
     clean = ui.checkboxRem.isChecked()
     attributeName = texture.materialAttribute
-
+    
     # Set default shader values
     if mc.objectType(texture.textureSet) == renderer.renderParameters.SHADER:
         materialSettings(texture.textureSet)

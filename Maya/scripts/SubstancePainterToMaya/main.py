@@ -48,6 +48,9 @@ main.SPtoM()
 
 # Libraries
 import os
+from pathlib import Path
+import shutil
+import ufe
 import maya.cmds as mc
 import maya.OpenMaya as om
 import maya.mel as mel
@@ -95,10 +98,10 @@ class rendererObject:
             print ('Unreal_FBX')
 
         elif self.ui.grpRadioRenderer.checkedId() == -4:
-            from SubstancePainterToMaya import config_ue as config
+            from SubstancePainterToMaya import config_mtoa as config
             reload(config)
-            self.name = 'Unreal_ABC'
-            print ('Unreal_ABC')
+            self.name = 'MaterialX'
+            print ('MaterialX')
 
         self.renderParameters = config.config()
 
@@ -157,12 +160,18 @@ def proceed(ui, foundTextures, renderer, uiElements):
         reload(render_helper)
 #        subdivisions = ui.checkbox5.isChecked()
         subdivisions = False
-
-
+        
+    elif renderer.name == 'MaterialX':
+        from SubstancePainterToMaya import helper_materialX as render_helper
+        reload(render_helper)
+        subdivisions = False
+        
     elif renderer.name == 'Unreal_FBX' or 'Unreal_ABC':
         from SubstancePainterToMaya import helper_unreal as render_helper
         reload(render_helper)
         subdivisions = False
+        
+
 
     UDIMs = False
 
@@ -171,66 +180,109 @@ def proceed(ui, foundTextures, renderer, uiElements):
 
     # Get the textures to use
     texturesToUse = helper.getTexturesToUse(renderer, foundTextures, uiElements)
+    
+    
+    # materialX option selected
+    if renderer.name == 'MaterialX':
+    
+        # Location of materialX template doc (in parent script directory)
+        script_path: Path = Path(__file__).parent.resolve()
+        mtlxStarter = "MaterialX_basicGrp.mtlx"
+        mtlxBasic = mtlxStarter
+ 
+        # create materialX stack for scene
+        stackShapeName = mc.createNode( 'materialxStack' )
+        stackShapePath = mel.eval('ls -l {}'.format(stackShapeName))[0]
+        stackShapeItem = ufe.Hierarchy.createItem(ufe.PathString.path(stackShapePath))
+        contextOps = ufe.ContextOps.contextOps(stackShapeItem)
 
-    # Connect main textures
-    for texture in texturesToUse:
+        
+        # Get list of materials
+        materials = list()
+    
+        for texture in texturesToUse:
+        
+            if texture.textureSet not in materials:
+                materials.append(texture.textureSet)
+                
+        # create materialX docs        
+        for material in materials:        
+            
+            render_helper.mtlxImportDoc (material, stackShapePath)
+            
+        # populate texture map filepaths in mtlx docs
+        for texture in texturesToUse:    
+        
+            texture.materialAttribute = renderer.renderParameters.MAP_LIST_REAL_ATTRIBUTES[texture.indice]
+            clean = ui.checkboxRem.isChecked()
 
-        texture.materialAttribute = renderer.renderParameters.MAP_LIST_REAL_ATTRIBUTES[texture.indice]
-
-        # Defer creation of layer texture maps
-        mixNode = renderer.renderParameters.MIX_NODE
-        if texture.materialAttribute != mixNode:
-
-            # Create file node and 2dPlacer
-            if renderer.name == 'Unreal_FBX':
-                fileNode = helper.createFileNode(texture, UDIMs)
-            else:
-                fileNode = helper.createFileNode_Ai(texture, UDIMs)
-
-            # Create material
-            material, materialNotFound = helper.checkCreateMaterial(ui, texture, renderer)
-
-            if materialNotFound:
-                continue
-
-            texture.textureSet = material
-            render_helper.connect(ui, texture, renderer, fileNode)
-
-        # Add subdivisions
-        if subdivisions == True:
-            render_helper.addSubdivisions(ui, texture)
-
-    #ABC option:
-    if renderer.name == 'Unreal_ABC':
-
-        shaderGroups = mc.listConnections (texture.textureSet + '.outColor', d=True, s=False)
-
+            render_helper.mtlxConnect (texture, clean, stackShapePath)
+            
+            # Assign MaterialX shaders
+            render_helper.mtlxAssignMaterial (texture, stackShapePath)
+         
+        
+    else:
+    
+         # Connect main textures
         for texture in texturesToUse:
 
-            if mc.objExists(texture.textureSet) and not mc.objExists(texture.textureSet + '_mtl'):
+            texture.materialAttribute = renderer.renderParameters.MAP_LIST_REAL_ATTRIBUTES[texture.indice]
+   
+            # Defer creation of layer texture maps
+            mixNode = renderer.renderParameters.MIX_NODE
+            if texture.materialAttribute != mixNode:
 
-                # Rename the material.
-                materialName_orig = texture.textureSet
-                materialName_new = mc.rename(texture.textureSet, texture.textureSet + '_mtl')
+                # Create file node and 2dPlacer
+                if renderer.name == 'Unreal_FBX':
+                    fileNode = helper.createFileNode(texture, UDIMs)
+                else:
+                    fileNode = helper.createFileNode_Ai(texture, UDIMs)
 
-                SG = mc.listConnections (materialName_new + '.outColor', d=True, s=False)
-                if SG != materialName_orig:
-                    SG_new = mc.rename(SG, materialName_orig)
+                # Create material
+                material, materialNotFound = helper.checkCreateMaterial(ui, texture, renderer)
 
-    # Connect optional layer network
-    useLyr = ui.checkbox4.isChecked()
+                if materialNotFound:
+                    continue
 
-    for texture in texturesToUse:
-        if useLyr and texture.materialAttribute == mixNode:
+                texture.textureSet = material
+                render_helper.connect(ui, texture, renderer, fileNode)
 
-            # create the layer file node
-            fileNode = helper.createFileNode(texture, UDIMs)
-            # assemble the layer network
-            render_helper.createLayerNetwork(texture, renderer, fileNode)
+            # Add subdivisions
+            if subdivisions == True:
+                render_helper.addSubdivisions(ui, texture)
 
-    #delete unused nodes
-#    if ui.grpRadioMaterials.checkedId() == -4:
-#        mel.eval('hyperShadePanelMenuCommand("hyperShadePanel1", "deleteUnusedNodes");')
+        #ABC option:
+        if renderer.name == 'Unreal_ABC':
+
+            shaderGroups = mc.listConnections (texture.textureSet + '.outColor', d=True, s=False)
+
+            for texture in texturesToUse:
+
+                if mc.objExists(texture.textureSet) and not mc.objExists(texture.textureSet + '_mtl'):
+
+                    # Rename the material.
+                    materialName_orig = texture.textureSet
+                    materialName_new = mc.rename(texture.textureSet, texture.textureSet + '_mtl')
+
+                    SG = mc.listConnections (materialName_new + '.outColor', d=True, s=False)
+                    if SG != materialName_orig:
+                        SG_new = mc.rename(SG, materialName_orig)
+
+        # Connect optional layer network
+        useLyr = ui.checkbox4.isChecked()
+
+        for texture in texturesToUse:
+            if useLyr and texture.materialAttribute == mixNode:
+
+                # create the layer file node
+                fileNode = helper.createFileNode(texture, UDIMs)
+                # assemble the layer network
+                render_helper.createLayerNetwork(texture, renderer, fileNode)
+
+        #delete unused nodes
+#           if ui.grpRadioMaterials.checkedId() == -4:
+#               mel.eval('hyperShadePanelMenuCommand("hyperShadePanel1", "deleteUnusedNodes");')
 
 
     print('\n FINISHED \n')

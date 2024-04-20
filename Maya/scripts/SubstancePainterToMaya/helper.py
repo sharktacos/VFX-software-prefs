@@ -1,9 +1,14 @@
 import maya.cmds as mc
 import mtoa.core as core 
 import os
-from PySide2 import QtWidgets
-import PySide2
 import re
+
+try:
+    import PySide2 as PySide
+except:
+    import PySide6 as PySide
+    
+
 
 
 class foundMap:
@@ -174,14 +179,14 @@ def populateFoundMaps(ui, renderer, foundTextures):
             if foundTexture.mapName not in foundMapsName:
 
                 # Create the layout
-                foundMapsSubLayout2 = QtWidgets.QHBoxLayout()
+                foundMapsSubLayout2 = PySide.QtWidgets.QHBoxLayout()
                 ui.foundMapsLayout.insertLayout(-1, foundMapsSubLayout2, stretch=1)
 
                 # Create the widgets
-                map1 = QtWidgets.QLineEdit(foundTexture.mapName)
+                map1 = PySide.QtWidgets.QLineEdit(foundTexture.mapName)
                 foundMapsSubLayout2.addWidget(map1)
 
-                map1Menu = QtWidgets.QComboBox()
+                map1Menu = PySide.QtWidgets.QComboBox()
                 map1Menu.addItems(renderer.renderParameters.MAP_LIST)
                 map1Menu.setCurrentIndex(foundTexture.indice)
                 foundMapsSubLayout2.addWidget(map1Menu)
@@ -196,11 +201,11 @@ def populateFoundMaps(ui, renderer, foundTextures):
 
     else:
         # Create the layout
-        foundMapsSubLayout2 = QtWidgets.QHBoxLayout()
+        foundMapsSubLayout2 = PySide.QtWidgets.QHBoxLayout()
         ui.foundMapsLayout.insertLayout(layoutPosition, foundMapsSubLayout2, stretch=1)
 
         # Create the widgets
-        map1 = QtWidgets.QLineEdit('No texture found, \ncheck Texture Folder and Naming Convention')
+        map1 = PySide.QtWidgets.QLineEdit('No texture found, \ncheck Texture Folder and Naming Convention')
         foundMapsSubLayout2.addWidget(map1)
 
     return foundTextures, uiElements
@@ -220,7 +225,7 @@ def displaySecondPartOfUI(ui, renderer):
 
 def clearLayout(layout):
     """
-    Empty specified pySide2 layout
+    Empty specified PySide layout
     :param layout: Layout to clear
     :return: None
     """
@@ -314,6 +319,47 @@ def connectPlace2dTexture(place2d, fileNode):
     for attribute in connections:
         mc.connectAttr(place2d + '.' + attribute, fileNode + '.' + attribute)
 
+'''
+def checkCreateMaterialX(ui, texture, renderer):
+    """
+    Based on the interface options, create or use existing materials
+    :param material: The material's name
+    :return: The material's name, if the material was found
+    """
+
+    materialNotFound = False
+    materialName = texture.textureSet
+    materialType = renderer.renderParameters.SHADER
+
+    # If option: "use existing Materials. Convert if wrong material type."
+    if ui.grpRadioMaterials.checkedId() == -4:
+
+        # If the material doesn't exist
+        if not mc.objExists(materialName):
+
+            # Specify that the material was not found
+            materialNotFound = True
+            
+        # If the material is not of the right type
+        elif not mc.objectType(materialName) == materialType:
+
+            SG = mc.listConnections (materialName + '.outColor', d=True, s=False)[0] or []
+#            shaderGroups = mc.listConnections (materialName + '.outColor', d=True, s=False)
+            print ("Material wrong type:")
+            print (materialName)
+            # check if material already exists
+            if mc.objectType(SG) == 'shadingEngine':
+
+                # Delete the material and replace with material of correct type
+#                mc.delete(materialName) 
+#                material = mc.shadingNode(materialType, asShader=True, name=materialName)
+
+                # Connect the material to the original shading group        
+                for shaderGroup in shaderGroups:
+                    mc.connectAttr(material + '.outColor', shaderGroup + '.surfaceShader', force=True)
+
+    return materialName, materialNotFound
+'''   
 
 def checkCreateMaterial(ui, texture, renderer):
     """
@@ -521,25 +567,25 @@ def createDisplacementMap(texture, fileNode, colorCorrect=False, forceTexture=Tr
                            shadingGroup + '.displacementShader', force=forceTexture)
 
 def is_black_constant(path):
-    img = PySide2.QtGui.QImage(path)
+    img = PySide.QtGui.QImage(path)
 
     if img.isNull():
         return False 
 
-    if not img.format() == img.Format_Grayscale8:
-        img.convertTo(img.Format_Grayscale8)
+    if not img.format() == img.Format.Format_Grayscale8:
+        img.convertTo(img.Format.Format_Grayscale8)
 
     return not any(img.constBits())
 
 """
 def is_flat_colorRGB(path):
-    img = PySide2.QtGui.QImage(path)
+    img = PySide.QtGui.QImage(path)
 
     # sample pixel color
     pix = img.pixel(5,5)
-    r = round(PySide2.QtGui.qRed(pix) / 255, 4)
-    g = round(PySide2.QtGui.qGreen(pix) / 255, 4)
-    b = round(PySide2.QtGui.qBlue(pix) / 255, 4)
+    r = round(PySide.QtGui.qRed(pix) / 255, 4)
+    g = round(PySide.QtGui.qGreen(pix) / 255, 4)
+    b = round(PySide.QtGui.qBlue(pix) / 255, 4)
     
     # Fail-safe for invalid image formats (EXR)
     null = False
@@ -550,8 +596,8 @@ def is_flat_colorRGB(path):
         return flat, r, g, b 
 
     # convert to grayscale
-    if not img.format() == img.Format_Grayscale8:
-        img.convertTo(img.Format_Grayscale8)
+    if not img.format() == img.Format.Format_Grayscale8:
+        img.convertTo(img.Format.Format_Grayscale8)
 
     #iterate through bits to see if they are all the same
     bits = img.constBits()
@@ -583,7 +629,7 @@ def is_black_EXR(path):
 
 
 def is_flat_color(path):
-    img = PySide2.QtGui.QImage(path)
+    img = PySide.QtGui.QImage(path)
     
     # Fail-safe for invalid image formats (EXR 16/32b float)
     null = False
@@ -592,8 +638,8 @@ def is_flat_color(path):
         return False
 
     # convert to grayscale
-    if not img.format() == img.Format_Grayscale8:
-        img.convertTo(img.Format_Grayscale8)
+    if not img.format() == img.Format.Format_Grayscale8:
+        img.convertTo(img.Format.Format_Grayscale8)
 
     # iterate through bits to see if they are all the same
     bits = img.constBits()
@@ -633,6 +679,7 @@ def cleanFiles2(texture, fileNode):
         print('    '+ texture.filePath + " does not exist")
 
 
+        
 def cleanNodes2(texture, fileNode):
 
     if os.path.exists(texture.filePath):
@@ -642,6 +689,8 @@ def cleanNodes2(texture, fileNode):
  
     else:
         print('    '+ texture.filePath + " does not exist")
+        
+
 
 def createSpecMap(texture, fileNode, clean, colorCorrect=False, forceTexture=True):
     """

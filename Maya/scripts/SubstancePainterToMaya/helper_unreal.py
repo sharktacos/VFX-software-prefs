@@ -2,7 +2,6 @@ import os
 import maya.cmds as mc
 from SubstancePainterToMaya import helper
 from importlib import reload
-import PySide2
 reload(helper)
 
 
@@ -60,7 +59,7 @@ def createNormalMap(texture, renderer, fileNode, clean, colorCorrect, forceTextu
             # Connect the normal utility to the material attribute
             mc.connectAttr(normalNode + '.outNormal', material + '.' + attributeName, force=forceTexture)
 
-def createORM(texture, fileNode, clean, colorCorrect=False, forceTexture=True):
+def createORM(texture, fileNode, clean, colorCorrecSubstancePainterToMayase, forceTexture=True):
 
     """
     Connect the ORM map
