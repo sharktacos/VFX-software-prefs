@@ -729,7 +729,7 @@ global proc shelf_DF_docs () {
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1
-    ;      
+    ;
     separator
         -enable 1
         -width 34
