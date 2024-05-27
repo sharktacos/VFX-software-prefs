@@ -3,11 +3,11 @@
   <!-- Basic material network template by Derek Flood -->
   
   <surfacematerial name="MatName_SG" type="material" nodedef="ND_surfacematerial">
-    <input name="surfaceshader" type="surfaceshader" nodename="MatName_mtl" />
+    <input name="surfaceshader" type="surfaceshader" nodename="MatName_Mtl" />
   </surfacematerial>
   
   <!-- Standard Surface with better defaults -->
-  <standard_surface name="MatName_mtl" type="surfaceshader" nodedef="ND_standard_surface_surfaceshader">
+  <standard_surface name="MatName_Mtl" type="surfaceshader" nodedef="ND_standard_surface_surfaceshader">
     <input name="base_color" type="color3" output="outColor" nodegraph="MatName_nodes" />
     <input name="base" type="float" interfacename="diffuse_weight" value="0.8" />
     <input name="specular" type="float" interfacename="specular_weight" value="0.5" />

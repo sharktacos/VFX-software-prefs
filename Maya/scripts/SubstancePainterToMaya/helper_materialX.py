@@ -23,7 +23,7 @@ def mtlxImportDoc (material, stackShapePath):
     
     # rename nodes 
     mc.rename(docPath + "%MatName_SG",  materialName + "_SG" )
-    mc.rename(docPath + "%MatName", materialName)
+    mc.rename(docPath + "%MatName_mtl", materialName + "_mtl")
     
     grpPath = mc.rename(docPath + "%MatName_nodes", materialName + "_nodes")
     mc.rename(grpPath + "%MatName_dif", materialName + "_dif")
