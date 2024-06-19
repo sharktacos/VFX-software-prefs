@@ -63,7 +63,7 @@ Normal and Displacement maps are not included in our [Substance texture export t
 
 The script is included in the [custom Maya shelf](Maya.md#maya-shelf).
 
- <img src="../Maya/2022/prefs/icons/sp2.png" width="50"> 
+ <img src="../Maya/prefs/icons/sp2.png" width="50"> 
 
 Click the shelf button to launch the GUI. 
  
