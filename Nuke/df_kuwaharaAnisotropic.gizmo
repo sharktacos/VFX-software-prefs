@@ -9,7 +9,7 @@ Gizmo {
  addUserKnob {7 Anisotropic_Eccentricity l Eccentricity t "From isotropic (0) to anisotropic (1) for directional brush stokes."}
  Anisotropic_Eccentricity 1
  addUserKnob {26 ""}
- addUserKnob {7 Structure_Tensor_Blur l "Structure Tensor Blur" t "The structure tensor is smoothed to eliminate high frequency details." R 2 10}
+ addUserKnob {7 Structure_Tensor_Blur l Uniformity t "The structure tensor is smoothed with a Gaussian blur to eliminate high frequency details." R 2 10}
  Structure_Tensor_Blur 5
  addUserKnob {20 Info l info}
  addUserKnob {26 credit l "" +STARTLINE T "Adapted from the Blender GLSL script. An implementation of the Anisotropic Kuwahara\n filter described in the paper:\n\nKyprianidis, Jan Eric, Henry Kang, and Jurgen Dollner. \"Image and video abstraction by\nanisotropic Kuwahara filtering.\" 2009.\n\nBlink C++ implementation by Derek Flood\nhttps://sharktacos.github.io "}
