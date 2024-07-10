@@ -21,7 +21,7 @@ toolbar.addCommand( "Studio/FlareFactory", "nuke.createNode('FlareFactory')")
 toolbar.addCommand( "Studio/ACES Ref Gamut Compress", "nuke.createNode('ACES_ref_gamut_compress')")
 toolbar.addCommand( "Studio/Das Grain", "nuke.createNode('dasGrain')")
 toolbar.addCommand( "Studio/Das Grain Helper", "nuke.createNode('dasGrainHelper')")
-
+toolbar.addCommand( "Studio/Kuwahara Anisotropic Painterly", "nuke.createNode('df_kuwaharaAnisotropic')")
 
 #toolbar.addCommand( "Studio/Burn-In", "nuke.createNode('df_burn_in')")
 #toolbar.addCommand( "Studio/Naming Variables", "nuke.createNode('df_nameVars')")
