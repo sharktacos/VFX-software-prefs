@@ -1,6 +1,7 @@
 #! /Applications/Nuke14.0v2/Nuke14.0v2.app/Contents/MacOS/libnuke-14.0.2.dylib -nx
 version 14.0 v2
 Gizmo {
+ inputs 2
  tile_color 0x6e49a7ff
  addUserKnob {20 User}
  addUserKnob {7 Size t "Radius of brush stroke" R 0 20}
@@ -24,7 +25,21 @@ Gizmo {
 }
  Input {
   inputs 0
+  name mask
+  xpos 34
+  ypos 580
+  number 1
+ }
+ Invert {
+  channels alpha
+  name Invert1
+  xpos 34
+  ypos 638
+ }
+ Input {
+  inputs 0
   name Image
+  selected true
   xpos 77
   ypos 48
  }
@@ -113,16 +128,6 @@ push $N5bfc6800
   ypos 330
   disable {{1-normalize}}
  }
-set N5be90400 [stack 0]
- Viewer {
-  frame_range 1-100
-  colour_sample_bbox {0.271874994 0.396874994 0.2734375 0.3984375}
-  viewerProcess "ACES 1.0 - SDR-video (Gamma 2.2 - Display)"
-  name Viewer1
-  xpos -83
-  ypos 740
- }
-push $N5be90400
  Dot {
   name Dot2
   xpos 8
@@ -208,9 +213,26 @@ push $Nba77fc00
   xpos 178
   ypos 449
  }
+ Merge2 {
+  inputs 2
+  operation matte
+  name Merge6
+  xpos 178
+  ypos 642
+ }
+set N8dedca00 [stack 0]
+ Viewer {
+  frame_range 1-100
+  colour_sample_bbox {0.271874994 0.396874994 0.2734375 0.3984375}
+  viewerProcess "ACES 1.0 - SDR-video (Gamma 2.2 - Display)"
+  name Viewer1
+  xpos -83
+  ypos 740
+ }
+push $N8dedca00
  Output {
   name Output1
   xpos 178
-  ypos 535
+  ypos 710
  }
 end_group
