@@ -9,12 +9,15 @@ Gizmo {
  Sharpness 1
  addUserKnob {7 Eccentricity t "Elongates brush strokes following the direction of image details. Ranges from isotropic (0) to anisotropic (1)."}
  Eccentricity 1
- addUserKnob {26 ""}
- addUserKnob {6 map l "Use normalized alpha for radius" t "A depth map can be shuffled into the alpha to control brush radius so that out of focus objects appear more abstract and stylized. \n\nMask is normalized into a 0 to 1 range and  clamped after the color corrections to avoid values above 1. The size parameter acts as a multiplier for the mask." +STARTLINE}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 MapRadius l "Map Brush Size" T " "}
+ addUserKnob {6 map l "Enable brush size mask (alpha)" t "A depth map can be shuffled into the alpha to control brush radius so that out of focus objects appear more abstract and stylized. \n\nThe size parameter acts as a multiplier for the mask." +STARTLINE}
+ addUserKnob {6 normalize l "Normalize alpha mask" t "Mask is normalized into a 0 to 1 range and  clamped after the color corrections to avoid values above 1. " +STARTLINE}
+ normalize true
  addUserKnob {26 label_1 l "Adjust alpha" T ""}
- addUserKnob {41 black l lift T Grade1.black}
+ addUserKnob {41 black l "Lift (Blackpoint)" T Grade1.black}
+ addUserKnob {41 white l "Gain (Whitepoint)" T Grade1.white}
  addUserKnob {41 gamma T Grade1.gamma}
- addUserKnob {41 white l gain T Grade1.white}
  addUserKnob {6 disable_1 l "disable color corrections" t "disables lift, gamma, gain." +STARTLINE}
  addUserKnob {20 Info}
  addUserKnob {26 Credit l "" +STARTLINE T "Adapted from the Blender GLSL script. An implementation of the Anisotropic Kuwahara\n filter described in the paper: Kyprianidis, Jan Eric, Henry Kang, and Jurgen Dollner. \n\"Image and video abstraction by anisotropic Kuwahara filtering.\" 2009.\n\nBlink C++ implementation by Derek Flood\nhttps://sharktacos.github.io "}
@@ -50,6 +53,7 @@ push $N5bfb6200
   name min
   xpos -166
   ypos 106
+  disable {{1-normalize}}
  }
 set N5bfc6800 [stack 0]
  Merge2 {
@@ -61,6 +65,7 @@ set N5bfc6800 [stack 0]
   name Merge1
   xpos -258
   ypos 175
+  disable {{1-normalize}}
  }
 push $N5bf9aa00
  Dilate {
@@ -69,6 +74,7 @@ push $N5bf9aa00
   name max
   xpos -34
   ypos 105
+  disable {{1-normalize}}
  }
 push $N5bfc6800
  Merge2 {
@@ -80,6 +86,7 @@ push $N5bfc6800
   name Merge2
   xpos -84
   ypos 170
+  disable {{1-normalize}}
  }
  Merge2 {
   inputs 2
@@ -90,11 +97,11 @@ push $N5bfc6800
   name Merge3
   xpos -169
   ypos 238
+  disable {{1-normalize}}
  }
  Grade {
   channels alpha
   name Grade1
-  selected true
   xpos -169
   ypos 287
   disable {{disable_1}}
@@ -104,6 +111,7 @@ push $N5bfc6800
   name Clamp1
   xpos -169
   ypos 330
+  disable {{1-normalize}}
  }
 set N5be90400 [stack 0]
  Viewer {
