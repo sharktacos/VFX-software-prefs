@@ -24,6 +24,7 @@ kernel df_KuwaharaAnisotropic : ImageComputationKernel<ePixelWise>
  
     Image<eRead, eAccessRandom, eEdgeClamped> src; 
     Image<eRead, eAccessRandom, eEdgeClamped> structure_tensor;
+    Image<eRead, eAccessRandom> radius_map;  // for mapped radius
     Image<eWrite> dst; 
     
     param:
@@ -75,7 +76,18 @@ kernel df_KuwaharaAnisotropic : ImageComputationKernel<ePixelWise>
 		float eigenvalue_difference = first_eigenvalue - second_eigenvalue;
 		float anisotropy = eigenvalue_sum > 0.0f ? eigenvalue_difference / eigenvalue_sum : 0.0f;
 	
-		float radius = max(0.0f, size);				
+
+//		float radius = max(0.0f, size);	
+  //  		float alpha = radius_map(pos.x, pos.y).w; // Sample the alpha
+  	//	float maxValue = max(alpha, 0.0f); // Find the maximum value
+  		// Normalize by dividing by the maximum value
+  	//	float radius = alpha / maxValue * size;
+
+//		float radius = clamp(radius_map(pos.x, pos.y).w, 0.0f, 1.0f) * size;
+		float alpha = radius_map(pos.x, pos.y).w;
+		float radius = alpha * size;
+//		float radius = radius_map(pos.x, pos.y).w * size;
+			
 		if (radius == 0.0f) {
 				dst() = src (pos.x, pos.y);
 		  return;
@@ -287,9 +299,10 @@ kernel df_KuwaharaAnisotropic : ImageComputationKernel<ePixelWise>
   		}
 
   		weighted_sum /= sum_of_weights;
+  		//dst() = weighted_sum;
   		dst(0) = weighted_sum.x;
   		dst(1) = weighted_sum.y;
   		dst(2) = weighted_sum.z;
-  		dst(3) = center_color.w;
+  		dst(3) = alpha;
 	}
 };

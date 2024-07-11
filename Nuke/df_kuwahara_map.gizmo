@@ -1,0 +1,208 @@
+#! /Applications/Nuke14.0v2/Nuke14.0v2.app/Contents/MacOS/libnuke-14.0.2.dylib -nx
+version 14.0 v2
+Gizmo {
+ tile_color 0x6e49a7ff
+ addUserKnob {20 User}
+ addUserKnob {7 Size t "Radius of brush stroke" R 0 20}
+ Size 10
+ addUserKnob {7 Sharpness t "From (0) soft to (1) sharp brush stroke. "}
+ Sharpness 1
+ addUserKnob {7 Eccentricity t "Elongates brush strokes following the direction of image details. Ranges from isotropic (0) to anisotropic (1)."}
+ Eccentricity 1
+ addUserKnob {26 ""}
+ addUserKnob {6 map l "Use normalized alpha for radius" t "A depth map can be shuffled into the alpha to control brush radius so that out of focus objects appear more abstract and stylized. \n\nMask is normalized into a 0 to 1 range and  clamped after the color corrections to avoid values above 1. The size parameter acts as a multiplier for the mask." +STARTLINE}
+ addUserKnob {26 label_1 l "Adjust alpha" T ""}
+ addUserKnob {41 black l lift T Grade1.black}
+ addUserKnob {41 gamma T Grade1.gamma}
+ addUserKnob {41 white l gain T Grade1.white}
+ addUserKnob {6 disable_1 l "disable color corrections" t "disables lift, gamma, gain." +STARTLINE}
+ addUserKnob {20 Info}
+ addUserKnob {26 Credit l "" +STARTLINE T "Adapted from the Blender GLSL script. An implementation of the Anisotropic Kuwahara\n filter described in the paper: Kyprianidis, Jan Eric, Henry Kang, and Jurgen Dollner. \n\"Image and video abstraction by anisotropic Kuwahara filtering.\" 2009.\n\nBlink C++ implementation by Derek Flood\nhttps://sharktacos.github.io "}
+}
+ Input {
+  inputs 0
+  name Image
+  xpos 77
+  ypos 48
+ }
+set Nba77fc00 [stack 0]
+ Dot {
+  name Dot7
+  xpos 0
+  ypos 51
+ }
+set N5bf9aa00 [stack 0]
+ Dot {
+  name Dot8
+  xpos -132
+  ypos 51
+ }
+set N5bfb6200 [stack 0]
+ Dot {
+  name Dot6
+  xpos -224
+  ypos 51
+ }
+push $N5bfb6200
+ Dilate {
+  channels alpha
+  size {{width*-1}}
+  name min
+  xpos -166
+  ypos 106
+ }
+set N5bfc6800 [stack 0]
+ Merge2 {
+  inputs 2
+  operation minus
+  Achannels alpha
+  Bchannels alpha
+  output alpha
+  name Merge1
+  xpos -258
+  ypos 175
+ }
+push $N5bf9aa00
+ Dilate {
+  channels alpha
+  size {{width}}
+  name max
+  xpos -34
+  ypos 105
+ }
+push $N5bfc6800
+ Merge2 {
+  inputs 2
+  operation minus
+  Achannels alpha
+  Bchannels alpha
+  output alpha
+  name Merge2
+  xpos -84
+  ypos 170
+ }
+ Merge2 {
+  inputs 2
+  operation divide
+  Achannels alpha
+  Bchannels alpha
+  output alpha
+  name Merge3
+  xpos -169
+  ypos 238
+ }
+ Grade {
+  channels alpha
+  name Grade1
+  selected true
+  xpos -169
+  ypos 287
+  disable {{disable_1}}
+ }
+ Clamp {
+  channels alpha
+  name Clamp1
+  xpos -169
+  ypos 330
+ }
+set N5be90400 [stack 0]
+ Viewer {
+  frame_range 1-100
+  colour_sample_bbox {0.271874994 0.396874994 0.2734375 0.3984375}
+  viewerProcess "ACES 1.0 - SDR-video (Gamma 2.2 - Display)"
+  name Viewer1
+  xpos -83
+  ypos 740
+ }
+push $N5be90400
+ Dot {
+  name Dot2
+  xpos 8
+  ypos 337
+ }
+push $Nba77fc00
+ BlinkScript {
+  kernelSourceFile /Users/Derek/Documents/GitHub/VFX-software-prefs/Nuke/Kuwahara/df_kuwahara_tensor.cpp
+  recompileCount 1
+  KernelDescription "2 \"df_StructureTensor\" iterate pixelWise c7d617919d38a981e9f6151e47894f57b5fb50f8141c50358a503095f70a2622 2 \"src\" Read Random \"dst\" Write Point 0 0 0"
+  kernelSource "kernel df_StructureTensor : ImageComputationKernel<ePixelWise>\n\{\n    Image<eRead, eAccessRandom, eEdgeClamped> src; \n    Image<eWrite> dst; \n\n/*  \n *  Blink C++ implementation by Derek Flood, 2024\n *\n *  Adapted from the Blender GLSL script (Copyright: 2023 Blender Authors)\n *  https://projects.blender.org/blender/blender/src/source/blender/compositor/realtime_compositor/shaders/\n *     compositor_kuwahara_anisotropic_compute_structure_tensor.glsl\n *   ---------------------------------------------- \n *  \n *  Computes the structure tensor of the image using a Dirac delta window function as described in\n *  section \"3.2 Local Structure Estimation\" of the paper: Kyprianidis, Jan Eric. \n * \"Image and video abstraction by multi-scale anisotropic Kuwahara filtering.\" 2011.\n *  \n *  The structure tensor should then be smoothed using a Gaussian function to eliminate high frequency details.\n */\n\n    void process(int2 pos) \{\n        SampleType(src) input = src(pos.x, pos.y);\n\n  \t\t// The weight kernels of the filter optimized for rotational symmetry \n  \t\t// described in section \"3.2.1 Gradient Calculation\".\n\t\tconst float corner_weight = 0.182f;\n        const float center_weight = 1.0f - 2.0f * corner_weight;\n\n        float4 x_partial_derivative = src(pos.x - 1, pos.y + 1) * -corner_weight +                      \n                                        src(pos.x - 1, pos.y    ) * -center_weight +\n                                        src(pos.x - 1, pos.y - 1) * -corner_weight +\n                                        src(pos.x + 1, pos.y + 1) * corner_weight +\n                                        src(pos.x + 1, pos.y    ) * center_weight +\n                                        src(pos.x + 1, pos.y - 1) * corner_weight;\n\n    \tfloat4 y_partial_derivative = src(pos.x - 1, pos.y + 1) * corner_weight +\n                                        src(pos.x    , pos.y + 1) * center_weight +\n                                        src(pos.x + 1, pos.y + 1) * corner_weight +\n                                        src(pos.x - 1, pos.y - 1) * -corner_weight +\n                                        src(pos.x    , pos.y - 1) * -center_weight +\n                                        src(pos.x + 1, pos.y - 1) * -corner_weight;\n\n        float dxdx = dot(x_partial_derivative, x_partial_derivative);\n        float dxdy = dot(x_partial_derivative, y_partial_derivative);\n        float dydy = dot(y_partial_derivative, y_partial_derivative);\n        \n  \t\tdst(0) = dxdx;\n  \t\tdst(1) = dxdy;\n  \t\tdst(2) = dydy;\n\t\}\n\};\n"
+  rebuild ""
+  rebuild_finalise ""
+  name BlinkScript1
+  xpos 176
+  ypos 158
+ }
+ Blur {
+  size 5
+  name Blur1
+  xpos 176
+  ypos 213
+ }
+set N5bb93000 [stack 0]
+push $Nba77fc00
+ BlinkScript {
+  inputs 3
+  kernelSourceFile /Users/Derek/Documents/GitHub/VFX-software-prefs/Nuke/Kuwahara/df_kuwaharaAnisotropic_map.cpp
+  recompileCount 28
+  KernelDescription "2 \"df_KuwaharaAnisotropic\" iterate pixelWise 58c7ca7a9c050c67aed7643fb5cf53a523eb3d6804fbacbb0f9ad4a200add6df 4 \"src\" Read Random \"structure_tensor\" Read Random \"radius_map\" Read Random \"dst\" Write Point 3 \"Size\" Float 1 AAAgQQ== \"Sharpness\" Float 1 AACAPw== \"Eccentricity\" Float 1 AAAAPw== 3 \"size\" 1 1 \"sharpness\" 1 1 \"eccentricity\" 1 1 0"
+  kernelSource "kernel df_KuwaharaAnisotropic : ImageComputationKernel<ePixelWise>\n\{\n\n/*  \n *  Blink C++ implementation by Derek Flood, 2024\n *\n *  Adapted from the Blender GLSL script (Copyright: 2023 Blender Authors)\n *  https://projects.blender.org/blender/blender/src/source/blender/compositor/realtime_compositor/shaders/\n *  compositor_kuwahara_anisotropic.glsl\n *   ---------------------------------------------- \n *\n *  An implementation of the Anisotropic Kuwahara filter described in the paper:\n *   Kyprianidis, Jan Eric, Henry Kang, and Jurgen Dollner. \"Image and video abstraction by\n *   anisotropic Kuwahara filtering.\" 2009.\n *\n *  But with the polynomial weighting functions described in the paper:\n *   Kyprianidis, Jan Eric, et al. \"Anisotropic Kuwahara Filtering with Polynomial Weighting\n *   Functions.\" 2010.\n *\n *  And the sector weight function described in the paper:\n *  Kyprianidis, Jan Eric. \"Image and video abstraction by multi-scale anisotropic Kuwahara\n *  filtering.\" 2011.\n */ \n \n    Image<eRead, eAccessRandom, eEdgeClamped> src; \n    Image<eRead, eAccessRandom, eEdgeClamped> structure_tensor;\n    Image<eRead, eAccessRandom> radius_map;  // for mapped radius\n    Image<eWrite> dst; \n    \n    param:\n        float size; \n        float sharpness;\n        float eccentricity;\n\n    void define() \{\n        defineParam(size, \"Size\", 10.0f); \n        defineParam(sharpness, \"Sharpness\", 1.0f); \n        defineParam(eccentricity, \"Eccentricity\", 0.5f); \n    \}\n    \n    inline float square(float x) \{\n  \t\treturn x * x;\n\t\}\n\t\n\n\n    void process(int2 pos) \{\n          \t\t\n  \t\t// The structure tensor is encoded in a float4 using a column major storage order, as can be seen\n\t\t// in the compositor_kuwahara_anisotropic_compute_structure_tensor.glsl shader. \n\t\tfloat4 encoded_structure_tensor = structure_tensor (pos.x, pos.y);\n\t\t\n\t\tfloat dxdx = encoded_structure_tensor.x;\n\t\tfloat dxdy = encoded_structure_tensor.y;\n\t\tfloat dydy = encoded_structure_tensor.z;\n  \t\t\n\n\t\t// Compute the first and second eigenvalues of the structure tensor using the equations in\n\t\t// section \"3.1 Orientation and Anisotropy Estimation\" of the paper. \n\t\tfloat eigenvalue_first_term = (dxdx + dydy) / 2.f;\n  \t\tfloat eigenvalue_square_root_term = sqrt(square(dxdx - dydy) + 4.0f * square(dxdy)) / 2.0f;\n\t\tfloat first_eigenvalue = eigenvalue_first_term + eigenvalue_square_root_term;\n\t\tfloat second_eigenvalue = eigenvalue_first_term - eigenvalue_square_root_term;\n\n\t\t// Compute the normalized eigenvector of the structure tensor oriented in direction of the\n\t\t// minimum rate of change using the equations in section \"3.1 Orientation and Anisotropy\n\t\t// Estimation\" of the paper. \n\t\tfloat2 eigenvector = float2(first_eigenvalue - dxdx, -1.0f * dxdy);\n\t\tfloat eigenvector_length = length(eigenvector);\n\t\tfloat2 unit_eigenvector = eigenvector_length != 0.0f ? eigenvector / eigenvector_length : float2(1.0f);\n\n\t\t// Compute the amount of anisotropy using equations in section \"3.1 Orientation and Anisotropy\n\t\t// Estimation\" of the paper. The anisotropy ranges from 0 to 1, where 0 corresponds to isotropic\n\t\t// and 1 corresponds to entirely anisotropic regions. \n\t\tfloat eigenvalue_sum = first_eigenvalue + second_eigenvalue;\n\t\tfloat eigenvalue_difference = first_eigenvalue - second_eigenvalue;\n\t\tfloat anisotropy = eigenvalue_sum > 0.0f ? eigenvalue_difference / eigenvalue_sum : 0.0f;\n\t\n\n//\t\tfloat radius = max(0.0f, size);\t\n  //  \t\tfloat alpha = radius_map(pos.x, pos.y).w; // Sample the alpha\n  \t//\tfloat maxValue = max(alpha, 0.0f); // Find the maximum value\n  \t\t// Normalize by dividing by the maximum value\n  \t//\tfloat radius = alpha / maxValue * size;\n\n//\t\tfloat radius = clamp(radius_map(pos.x, pos.y).w, 0.0f, 1.0f) * size;\n\t\tfloat alpha = radius_map(pos.x, pos.y).w;\n\t\tfloat radius = alpha * size;\n//\t\tfloat radius = radius_map(pos.x, pos.y).w * size;\n\t\t\t\n\t\tif (radius == 0.0f) \{\n\t\t\t\tdst() = src (pos.x, pos.y);\n\t\t  return;\n\t\t\}\n\n\n\t\t// Compute the width and height of an ellipse that is more width-elongated for high anisotropy\n\t\t// and more circular for low anisotropy, controlled using the eccentricity factor. Since the\n\t\t// anisotropy is in the \[0, 1] range, the width factor tends to 1 as the eccentricity tends to\n\t\t// infinity and tends to infinity when the eccentricity tends to zero. This is based on the\n\t\t// equations in section \"3.2. Anisotropic Kuwahara Filtering\" of the paper. \n\t\tfloat eccentricity_clamp = min(eccentricity, 0.95f);\n\t\tfloat eccentric_adj = (1.0f - eccentricity_clamp) * 10.f;\n\t\tfloat ellipse_width_factor = (eccentric_adj + anisotropy) / eccentric_adj;\n\n\t\tfloat ellipse_width = ellipse_width_factor * radius;\n\t\tfloat ellipse_height = radius / ellipse_width_factor;\n\n\t\t// Compute the cosine and sine of the angle that the eigenvector makes with the x axis. Since the\n\t\t// eigenvector is normalized, its x and y components are the cosine and sine of the angle it\n\t\t// makes with the x axis. \n\t\tfloat cosine = unit_eigenvector.x;\n\t\tfloat sine = unit_eigenvector.y;\n\n\t\t// Compute an inverse transformation matrix that represents an ellipse of the given width and\n\t\t// height and makes and an angle with the x axis of the given cosine and sine. This is an inverse\n\t\t// matrix, so it transforms the ellipse into a disk of unit radius. \n\t\tfloat2 inverse_ellipse_matrix_1 (cosine / ellipse_width,     sine / ellipse_width);\n        float2 inverse_ellipse_matrix_2 (-sine / ellipse_height,     cosine / ellipse_height); \n\n\t\t// Compute the bounding box of a zero centered ellipse whose major axis is aligned with the\n\t\t// eigenvector and has the given width and height. This is based on the equations described in:\n\t\t//\n\t\t//   https://iquilezles.org/articles/ellipses/\n\t\t//\n\t\t// Notice that we only compute the upper bound, the lower bound is just negative that since the\n\t\t// ellipse is zero centered. Also notice that we take the ceiling of the bounding box, just to\n\t\t// ensure the filter window is at least 1x1. \n\t\tfloat2 ellipse_major_axis = ellipse_width * unit_eigenvector;\n\t\tfloat2 ellipse_minor_axis = float2(ellipse_height * unit_eigenvector.y * -1.f,\n                                    ellipse_height * unit_eigenvector.x * 1.f);\n\n\t\tint2 ellipse_bounds = int2(\n    \t\tceil(sqrt( square(ellipse_major_axis.x) + square(ellipse_minor_axis.x) )),\n    \t\tceil(sqrt( square(ellipse_major_axis.y) + square(ellipse_minor_axis.y) ))\n\t\t);\n\n\n\t\t// Compute the overlap polynomial parameters for 8-sector ellipse based on the equations in\n\t\t// section \"3 Alternative Weighting Functions\" of the polynomial weights paper. More on this\n\t\t// later in the code. \n\t\tconst int number_of_sectors = 8;\n\t\tfloat sector_center_overlap_parameter = 2.f / radius;\n\t\tfloat sector_envelope_angle = ((3.f / 2.f) * PI) / number_of_sectors;                          \n        float cross_sector_overlap_parameter = (sector_center_overlap_parameter + \n        \t\t\t\t\t\t\t\tcos(sector_envelope_angle)) /\n                                        square( sin(sector_envelope_angle) );\n\n\n\t\t// We need to compute the weighted mean of color and squared color of each of the 8 sectors of\n \t\t// the ellipse, so we declare arrays for accumulating those and initialize them in the next code\n \t\t// section.\n\t\tfloat4 weighted_mean_of_squared_color_of_sectors\[8];\n\t\tfloat4 weighted_mean_of_color_of_sectors\[8];\n\t\tfloat sum_of_weights_of_sectors\[8];\n\n\t\t// The center pixel (0, 0) is exempt from the main loop below for reasons that are explained in\n \t\t// the first if statement in the loop, so we need to accumulate its color, squared color, and\n \t\t// weight separately first. Luckily, the zero coordinates of the center pixel zeros out most of\n \t\t// the complex computations below, and it can easily be shown that the weight for the center\n \t\t// pixel in all sectors is simply (1 / number_of_sectors).\n\t\tfloat4 center_color = src (pos.x, pos.y); \t\t\n\t\tfloat4 center_color_squared = center_color * center_color;\n\t\tfloat center_weight_b = 1.f / number_of_sectors;\n\t\tfloat4 weighted_center_color = center_color * center_weight_b;\n\t\tfloat4 weighted_center_color_squared = center_color_squared * center_weight_b;\n\n\t\tfor (int i = 0; i < number_of_sectors; i++) \{\n\t\t\t\tweighted_mean_of_squared_color_of_sectors\[i] = weighted_center_color_squared;\n\t\t\t\tweighted_mean_of_color_of_sectors\[i] = weighted_center_color;\n\t\t\t\tsum_of_weights_of_sectors\[i] = center_weight_b;\n\t\t\}\n\n\t\t// Loop over the window of pixels inside the bounding box of the ellipse. However, we utilize the\n \t\t// fact that ellipses are mirror symmetric along the horizontal axis, so we reduce the window to\n \t\t// only the upper two quadrants, and compute each two mirrored pixels at the same time using the\n \t\t// same weight as an optimization.\n\t\tfor (int j = 0; j <= ellipse_bounds.y; j++) \{\n\t\t\tfor (int i = -ellipse_bounds.x; i <= ellipse_bounds.x; i++) \{\n\t\t\t\t\n    \t\t\t// Since we compute each two mirrored pixels at the same time, we need to also exempt the\n     \t\t\t// pixels whose x coordinates are negative and their y coordinates are zero, that's because\n     \t\t\t// those are mirrored versions of the pixels whose x coordinates are positive and their y\n     \t\t\t// coordinates are zero, and we don't want to compute and accumulate them twice. Moreover, we\n     \t\t\t// also need to exempt the center pixel with zero coordinates for the same reason, however,\n     \t\t\t// since the mirror of the center pixel is itself, it need to be accumulated separately,\n     \t\t\t// hence why we did that in the code section just before this loop.\n      \t\t\tif (j == 0 && i <= 0) \{ \n      \t\t\t\tcontinue;\n      \t\t\t\}\n\n    \t\t\t// Map the pixels of the ellipse into a unit disk, exempting any points that are not part of\n     \t\t\t// the ellipse or disk.\n     \t\t\tfloat2 disk_point(\n     \t\t\t\t\t(inverse_ellipse_matrix_1.x * i + inverse_ellipse_matrix_1.y * j), \n     \t\t\t\t\t(inverse_ellipse_matrix_2.x * i + inverse_ellipse_matrix_2.y * j)\n     \t\t\t\t\t);\n\n      \t\t\tfloat disk_point_length_squared = dot(disk_point, disk_point);\n      \t\t\tif (disk_point_length_squared > 1.0f) \{\n        \t\t\tcontinue;\n      \t\t\t\}\n\n    \t\t\t// While each pixel belongs to a single sector in the ellipse, we expand the definition of\n     \t\t\t// a sector a bit to also overlap with other sectors as illustrated in Figure 8 of the\n     \t\t\t// polynomial weights paper. So each pixel may contribute to multiple sectors, and thus we\n     \t\t\t// compute its weight in each of the 8 sectors.\n      \t\t\tfloat sector_weights\[8];\n\n    \t\t\t// We evaluate the weighting polynomial at each of the 8 sectors by rotating the disk point\n     \t\t\t// by 45 degrees and evaluating the weighting polynomial at each incremental rotation. To\n     \t\t\t// avoid potentially expensive rotations, we utilize the fact that rotations by 90 degrees\n     \t\t\t// are simply swapping of the coordinates and negating the x component. We also note that\n     \t\t\t// since the y term of the weighting polynomial is squared, it is not affected by the sign\n     \t\t\t// and can be computed once for the x and once for the y coordinates. So we compute every\n     \t\t\t// other even-indexed 4 weights by successive 90 degree rotations as discussed.\n\n      \t\t\tfloat2 polynomial = sector_center_overlap_parameter -\n                        cross_sector_overlap_parameter * disk_point * disk_point;\n      \t\t\tsector_weights\[0] = square(max(0.f, disk_point.y + polynomial.x));\n      \t\t\tsector_weights\[2] = square(max(0.f, -disk_point.x + polynomial.y));\n      \t\t\tsector_weights\[4] = square(max(0.f, -disk_point.y + polynomial.x));\n      \t\t\tsector_weights\[6] = square(max(0.f, disk_point.x + polynomial.y));\n\n    \t\t\t// Then we rotate the disk point by 45 degrees, which is a simple expression involving a\n     \t\t\t// constant as can be demonstrated by applying a 45 degree rotation matrix.\n\t\t\t\tfloat M_SQRT1_2 =  1.0f / sqrt(2.0f);  // M_SQRT1_2 = 0.70710678118654752440f  \t\t\t\n      \t\t\tfloat2 rotated_disk_point = M_SQRT1_2 *\n                                float2(disk_point.x - disk_point.y, disk_point.x + disk_point.y);\n\n\n    \t\t\t// Finally, we compute every other odd-index 4 weights starting from the 45 degrees rotated disk point.\n      \t\t\tfloat2 rotated_polynomial = sector_center_overlap_parameter -\n                                cross_sector_overlap_parameter * rotated_disk_point * rotated_disk_point;\n      \t\t\tsector_weights\[1] = square(max(0.f, rotated_disk_point.y + rotated_polynomial.x));\n      \t\t\tsector_weights\[3] = square(max(0.f, -rotated_disk_point.x + rotated_polynomial.y));\n      \t\t\tsector_weights\[5] = square(max(0.f, -rotated_disk_point.y + rotated_polynomial.x));\n      \t\t\tsector_weights\[7] = square(max(0.f, rotated_disk_point.x + rotated_polynomial.y));\n\n\n    \t\t\t// We compute a radial Gaussian weighting component such that pixels further away from the\n     \t\t\t// sector center gets attenuated, and we also divide by the sum of sector weights to\n     \t\t\t// normalize them, since the radial weight will eventually be multiplied to the sector weight below.\n      \t\t\tfloat sector_weights_sum = sector_weights\[0] + sector_weights\[1] + sector_weights\[2] +\n                                 sector_weights\[3] + sector_weights\[4] + sector_weights\[5] +\n                                 sector_weights\[6] + sector_weights\[7];\n      \t\t\tfloat radial_gaussian_weight = exp(-PI * disk_point_length_squared) / sector_weights_sum;\n\n\n    \t\t\t// Load the color of the pixel and its mirrored pixel and compute their square.\n      \t\t\tfloat4 upper_color = src (pos.x + i, pos.y + j); \n      \t\t\tfloat4 lower_color = src (pos.x - i, pos.y - j); \n      \t\t\tfloat4 upper_color_squared = upper_color * upper_color;\n      \t\t\tfloat4 lower_color_squared = lower_color * lower_color;\n\n\n      \t\t\tfor (int k = 0; k < number_of_sectors; k++) \{\n        \t\t\tfloat weight = sector_weights\[k] * radial_gaussian_weight;\n\n      \t\t\t\t// Accumulate the pixel to each of the sectors multiplied by the sector weight.\n        \t\t\tint upper_index = k;\n        \t\t\tsum_of_weights_of_sectors\[upper_index] += weight;\n        \t\t\tweighted_mean_of_color_of_sectors\[upper_index] += upper_color * weight;\n        \t\t\tweighted_mean_of_squared_color_of_sectors\[upper_index] += upper_color_squared * weight;\n\n      \t\t\t\t// Accumulate the mirrored pixel to each of the sectors multiplied by the sector weight.\n        \t\t\tint lower_index = (k + number_of_sectors / 2) % number_of_sectors;\n        \t\t\tsum_of_weights_of_sectors\[lower_index] += weight;\n        \t\t\tweighted_mean_of_color_of_sectors\[lower_index] += lower_color * weight;\n        \t\t\tweighted_mean_of_squared_color_of_sectors\[lower_index] += lower_color_squared * weight;\n        \t\t\}\n    \t\t\}\n\t\t\}\n\n\t\t// Compute the weighted sum of mean of sectors, such that sectors with lower standard deviation\n \t\t// gets more significant weight than sectors with higher standard deviation.\n  \t\tfloat sum_of_weights = 0.f;\n  \t\tfloat4 weighted_sum = float4(0.f);\n  \t\tfor (int i = 0; i < number_of_sectors; i++) \{\n    \t\tweighted_mean_of_color_of_sectors\[i] /= sum_of_weights_of_sectors\[i];\n    \t\tweighted_mean_of_squared_color_of_sectors\[i] /= sum_of_weights_of_sectors\[i];\n\n    \t\tfloat4 color_mean = weighted_mean_of_color_of_sectors\[i];\n    \t\tfloat4 squared_color_mean = weighted_mean_of_squared_color_of_sectors\[i];\n    \t\tfloat4 color_variance = fabs(squared_color_mean - color_mean * color_mean);\n\n    \t\tfloat standard_deviation = dot(sqrt(\n    \t\t\tfloat3(color_variance.x, color_variance.y, color_variance.z)), float3(1.0f));\n\n\n  \t\t\t// Compute the sector weight based on the weight function introduced in section \"3.3.1\n   \t\t\t// Single-scale Filtering\" of the multi-scale paper. Use a threshold of 0.02 to avoid zero\n   \t\t\t// division and avoid artifacts in homogeneous regions as demonstrated in the paper.\n   \t\t\tfloat normalized_sharpness = sharpness * 10.0f;\n    \t\tfloat weight = 1.0 / pow( max(0.02, standard_deviation), normalized_sharpness);\n\n    \t\tsum_of_weights += weight;\n    \t\tweighted_sum += color_mean * weight;\n  \t\t\}\n\n  \t\tweighted_sum /= sum_of_weights;\n  \t\t//dst() = weighted_sum;\n  \t\tdst(0) = weighted_sum.x;\n  \t\tdst(1) = weighted_sum.y;\n  \t\tdst(2) = weighted_sum.z;\n  \t\tdst(3) = alpha;\n\t\}\n\};\n"
+  rebuild ""
+  df_KuwaharaAnisotropic_Size {{Size}}
+  df_KuwaharaAnisotropic_Sharpness {{Sharpness}}
+  df_KuwaharaAnisotropic_Eccentricity {{Eccentricity}}
+  rebuild_finalise ""
+  name BlinkScript2
+  xpos 77
+  ypos 387
+ }
+ Dot {
+  name Dot3
+  xpos 111
+  ypos 452
+ }
+push $N5bb93000
+push $Nba77fc00
+ Dot {
+  name Dot1
+  xpos 314
+  ypos 51
+ }
+ BlinkScript {
+  inputs 2
+  kernelSourceFile /Users/Derek/Documents/GitHub/VFX-software-prefs/Nuke/Kuwahara/df_kuwaharaAnisotropic.cpp
+  recompileCount 2
+  KernelDescription "2 \"df_KuwaharaAnisotropic\" iterate pixelWise c9fac050899a11aa7d8bba6a69ec55a542ea0dedf53b14982a6fe228f427cae2 3 \"src\" Read Random \"structure_tensor\" Read Random \"dst\" Write Point 3 \"Size\" Float 1 AAAgQQ== \"Sharpness\" Float 1 AACAPw== \"Eccentricity\" Float 1 AAAAPw== 3 \"size\" 1 1 \"sharpness\" 1 1 \"eccentricity\" 1 1 0"
+  kernelSource "kernel df_KuwaharaAnisotropic : ImageComputationKernel<ePixelWise>\n\{\n\n/*  \n *  Blink C++ implementation by Derek Flood, 2024\n *\n *  Adapted from the Blender GLSL script (Copyright: 2023 Blender Authors)\n *  https://projects.blender.org/blender/blender/src/source/blender/compositor/realtime_compositor/shaders/\n *  compositor_kuwahara_anisotropic.glsl\n *   ---------------------------------------------- \n *\n *  An implementation of the Anisotropic Kuwahara filter described in the paper:\n *   Kyprianidis, Jan Eric, Henry Kang, and Jurgen Dollner. \"Image and video abstraction by\n *   anisotropic Kuwahara filtering.\" 2009.\n *\n *  But with the polynomial weighting functions described in the paper:\n *   Kyprianidis, Jan Eric, et al. \"Anisotropic Kuwahara Filtering with Polynomial Weighting\n *   Functions.\" 2010.\n *\n *  And the sector weight function described in the paper:\n *  Kyprianidis, Jan Eric. \"Image and video abstraction by multi-scale anisotropic Kuwahara\n *  filtering.\" 2011.\n */ \n \n    Image<eRead, eAccessRandom, eEdgeClamped> src; \n    Image<eRead, eAccessRandom, eEdgeClamped> structure_tensor;\n    Image<eWrite> dst; \n    \n    param:\n        float size; \n        float sharpness;\n        float eccentricity;\n\n    void define() \{\n        defineParam(size, \"Size\", 10.0f); \n        defineParam(sharpness, \"Sharpness\", 1.0f); \n        defineParam(eccentricity, \"Eccentricity\", 0.5f); \n    \}\n    \n    inline float square(float x) \{\n  \t\treturn x * x;\n\t\}\n\t\n\n\n    void process(int2 pos) \{\n          \t\t\n  \t\t// The structure tensor is encoded in a float4 using a column major storage order, as can be seen\n\t\t// in the compositor_kuwahara_anisotropic_compute_structure_tensor.glsl shader. \n\t\tfloat4 encoded_structure_tensor = structure_tensor (pos.x, pos.y);\n\t\t\n\t\tfloat dxdx = encoded_structure_tensor.x;\n\t\tfloat dxdy = encoded_structure_tensor.y;\n\t\tfloat dydy = encoded_structure_tensor.z;\n  \t\t\n\n\t\t// Compute the first and second eigenvalues of the structure tensor using the equations in\n\t\t// section \"3.1 Orientation and Anisotropy Estimation\" of the paper. \n\t\tfloat eigenvalue_first_term = (dxdx + dydy) / 2.f;\n  \t\tfloat eigenvalue_square_root_term = sqrt(square(dxdx - dydy) + 4.0f * square(dxdy)) / 2.0f;\n\t\tfloat first_eigenvalue = eigenvalue_first_term + eigenvalue_square_root_term;\n\t\tfloat second_eigenvalue = eigenvalue_first_term - eigenvalue_square_root_term;\n\n\t\t// Compute the normalized eigenvector of the structure tensor oriented in direction of the\n\t\t// minimum rate of change using the equations in section \"3.1 Orientation and Anisotropy\n\t\t// Estimation\" of the paper. \n\t\tfloat2 eigenvector = float2(first_eigenvalue - dxdx, -1.0f * dxdy);\n\t\tfloat eigenvector_length = length(eigenvector);\n\t\tfloat2 unit_eigenvector = eigenvector_length != 0.0f ? eigenvector / eigenvector_length : float2(1.0f);\n\n\t\t// Compute the amount of anisotropy using equations in section \"3.1 Orientation and Anisotropy\n\t\t// Estimation\" of the paper. The anisotropy ranges from 0 to 1, where 0 corresponds to isotropic\n\t\t// and 1 corresponds to entirely anisotropic regions. \n\t\tfloat eigenvalue_sum = first_eigenvalue + second_eigenvalue;\n\t\tfloat eigenvalue_difference = first_eigenvalue - second_eigenvalue;\n\t\tfloat anisotropy = eigenvalue_sum > 0.0f ? eigenvalue_difference / eigenvalue_sum : 0.0f;\n\t\n\t\tfloat radius = max(0.0f, size);\t\t\t\t\n\t\tif (radius == 0.0f) \{\n\t\t\t\tdst() = src (pos.x, pos.y);\n\t\t  return;\n\t\t\}\n\n\n\t\t// Compute the width and height of an ellipse that is more width-elongated for high anisotropy\n\t\t// and more circular for low anisotropy, controlled using the eccentricity factor. Since the\n\t\t// anisotropy is in the \[0, 1] range, the width factor tends to 1 as the eccentricity tends to\n\t\t// infinity and tends to infinity when the eccentricity tends to zero. This is based on the\n\t\t// equations in section \"3.2. Anisotropic Kuwahara Filtering\" of the paper. \n\t\tfloat eccentricity_clamp = min(eccentricity, 0.95f);\n\t\tfloat eccentric_adj = (1.0f - eccentricity_clamp) * 10.f;\n\t\tfloat ellipse_width_factor = (eccentric_adj + anisotropy) / eccentric_adj;\n\n\t\tfloat ellipse_width = ellipse_width_factor * radius;\n\t\tfloat ellipse_height = radius / ellipse_width_factor;\n\n\t\t// Compute the cosine and sine of the angle that the eigenvector makes with the x axis. Since the\n\t\t// eigenvector is normalized, its x and y components are the cosine and sine of the angle it\n\t\t// makes with the x axis. \n\t\tfloat cosine = unit_eigenvector.x;\n\t\tfloat sine = unit_eigenvector.y;\n\n\t\t// Compute an inverse transformation matrix that represents an ellipse of the given width and\n\t\t// height and makes and an angle with the x axis of the given cosine and sine. This is an inverse\n\t\t// matrix, so it transforms the ellipse into a disk of unit radius. \n\t\tfloat2 inverse_ellipse_matrix_1 (cosine / ellipse_width,     sine / ellipse_width);\n        float2 inverse_ellipse_matrix_2 (-sine / ellipse_height,     cosine / ellipse_height); \n\n\t\t// Compute the bounding box of a zero centered ellipse whose major axis is aligned with the\n\t\t// eigenvector and has the given width and height. This is based on the equations described in:\n\t\t//\n\t\t//   https://iquilezles.org/articles/ellipses/\n\t\t//\n\t\t// Notice that we only compute the upper bound, the lower bound is just negative that since the\n\t\t// ellipse is zero centered. Also notice that we take the ceiling of the bounding box, just to\n\t\t// ensure the filter window is at least 1x1. \n\t\tfloat2 ellipse_major_axis = ellipse_width * unit_eigenvector;\n\t\tfloat2 ellipse_minor_axis = float2(ellipse_height * unit_eigenvector.y * -1.f,\n                                    ellipse_height * unit_eigenvector.x * 1.f);\n\n\t\tint2 ellipse_bounds = int2(\n    \t\tceil(sqrt( square(ellipse_major_axis.x) + square(ellipse_minor_axis.x) )),\n    \t\tceil(sqrt( square(ellipse_major_axis.y) + square(ellipse_minor_axis.y) ))\n\t\t);\n\n\n\t\t// Compute the overlap polynomial parameters for 8-sector ellipse based on the equations in\n\t\t// section \"3 Alternative Weighting Functions\" of the polynomial weights paper. More on this\n\t\t// later in the code. \n\t\tconst int number_of_sectors = 8;\n\t\tfloat sector_center_overlap_parameter = 2.f / radius;\n\t\tfloat sector_envelope_angle = ((3.f / 2.f) * PI) / number_of_sectors;                          \n        float cross_sector_overlap_parameter = (sector_center_overlap_parameter + \n        \t\t\t\t\t\t\t\tcos(sector_envelope_angle)) /\n                                        square( sin(sector_envelope_angle) );\n\n\n\t\t// We need to compute the weighted mean of color and squared color of each of the 8 sectors of\n \t\t// the ellipse, so we declare arrays for accumulating those and initialize them in the next code\n \t\t// section.\n\t\tfloat4 weighted_mean_of_squared_color_of_sectors\[8];\n\t\tfloat4 weighted_mean_of_color_of_sectors\[8];\n\t\tfloat sum_of_weights_of_sectors\[8];\n\n\t\t// The center pixel (0, 0) is exempt from the main loop below for reasons that are explained in\n \t\t// the first if statement in the loop, so we need to accumulate its color, squared color, and\n \t\t// weight separately first. Luckily, the zero coordinates of the center pixel zeros out most of\n \t\t// the complex computations below, and it can easily be shown that the weight for the center\n \t\t// pixel in all sectors is simply (1 / number_of_sectors).\n\t\tfloat4 center_color = src (pos.x, pos.y); \t\t\n\t\tfloat4 center_color_squared = center_color * center_color;\n\t\tfloat center_weight_b = 1.f / number_of_sectors;\n\t\tfloat4 weighted_center_color = center_color * center_weight_b;\n\t\tfloat4 weighted_center_color_squared = center_color_squared * center_weight_b;\n\n\t\tfor (int i = 0; i < number_of_sectors; i++) \{\n\t\t\t\tweighted_mean_of_squared_color_of_sectors\[i] = weighted_center_color_squared;\n\t\t\t\tweighted_mean_of_color_of_sectors\[i] = weighted_center_color;\n\t\t\t\tsum_of_weights_of_sectors\[i] = center_weight_b;\n\t\t\}\n\n\t\t// Loop over the window of pixels inside the bounding box of the ellipse. However, we utilize the\n \t\t// fact that ellipses are mirror symmetric along the horizontal axis, so we reduce the window to\n \t\t// only the upper two quadrants, and compute each two mirrored pixels at the same time using the\n \t\t// same weight as an optimization.\n\t\tfor (int j = 0; j <= ellipse_bounds.y; j++) \{\n\t\t\tfor (int i = -ellipse_bounds.x; i <= ellipse_bounds.x; i++) \{\n\t\t\t\t\n    \t\t\t// Since we compute each two mirrored pixels at the same time, we need to also exempt the\n     \t\t\t// pixels whose x coordinates are negative and their y coordinates are zero, that's because\n     \t\t\t// those are mirrored versions of the pixels whose x coordinates are positive and their y\n     \t\t\t// coordinates are zero, and we don't want to compute and accumulate them twice. Moreover, we\n     \t\t\t// also need to exempt the center pixel with zero coordinates for the same reason, however,\n     \t\t\t// since the mirror of the center pixel is itself, it need to be accumulated separately,\n     \t\t\t// hence why we did that in the code section just before this loop.\n      \t\t\tif (j == 0 && i <= 0) \{ \n      \t\t\t\tcontinue;\n      \t\t\t\}\n\n    \t\t\t// Map the pixels of the ellipse into a unit disk, exempting any points that are not part of\n     \t\t\t// the ellipse or disk.\n     \t\t\tfloat2 disk_point(\n     \t\t\t\t\t(inverse_ellipse_matrix_1.x * i + inverse_ellipse_matrix_1.y * j), \n     \t\t\t\t\t(inverse_ellipse_matrix_2.x * i + inverse_ellipse_matrix_2.y * j)\n     \t\t\t\t\t);\n\n      \t\t\tfloat disk_point_length_squared = dot(disk_point, disk_point);\n      \t\t\tif (disk_point_length_squared > 1.0f) \{\n        \t\t\tcontinue;\n      \t\t\t\}\n\n    \t\t\t// While each pixel belongs to a single sector in the ellipse, we expand the definition of\n     \t\t\t// a sector a bit to also overlap with other sectors as illustrated in Figure 8 of the\n     \t\t\t// polynomial weights paper. So each pixel may contribute to multiple sectors, and thus we\n     \t\t\t// compute its weight in each of the 8 sectors.\n      \t\t\tfloat sector_weights\[8];\n\n    \t\t\t// We evaluate the weighting polynomial at each of the 8 sectors by rotating the disk point\n     \t\t\t// by 45 degrees and evaluating the weighting polynomial at each incremental rotation. To\n     \t\t\t// avoid potentially expensive rotations, we utilize the fact that rotations by 90 degrees\n     \t\t\t// are simply swapping of the coordinates and negating the x component. We also note that\n     \t\t\t// since the y term of the weighting polynomial is squared, it is not affected by the sign\n     \t\t\t// and can be computed once for the x and once for the y coordinates. So we compute every\n     \t\t\t// other even-indexed 4 weights by successive 90 degree rotations as discussed.\n\n      \t\t\tfloat2 polynomial = sector_center_overlap_parameter -\n                        cross_sector_overlap_parameter * disk_point * disk_point;\n      \t\t\tsector_weights\[0] = square(max(0.f, disk_point.y + polynomial.x));\n      \t\t\tsector_weights\[2] = square(max(0.f, -disk_point.x + polynomial.y));\n      \t\t\tsector_weights\[4] = square(max(0.f, -disk_point.y + polynomial.x));\n      \t\t\tsector_weights\[6] = square(max(0.f, disk_point.x + polynomial.y));\n\n    \t\t\t// Then we rotate the disk point by 45 degrees, which is a simple expression involving a\n     \t\t\t// constant as can be demonstrated by applying a 45 degree rotation matrix.\n\t\t\t\tfloat M_SQRT1_2 =  1.0f / sqrt(2.0f);  // M_SQRT1_2 = 0.70710678118654752440f  \t\t\t\n      \t\t\tfloat2 rotated_disk_point = M_SQRT1_2 *\n                                float2(disk_point.x - disk_point.y, disk_point.x + disk_point.y);\n\n\n    \t\t\t// Finally, we compute every other odd-index 4 weights starting from the 45 degrees rotated disk point.\n      \t\t\tfloat2 rotated_polynomial = sector_center_overlap_parameter -\n                                cross_sector_overlap_parameter * rotated_disk_point * rotated_disk_point;\n      \t\t\tsector_weights\[1] = square(max(0.f, rotated_disk_point.y + rotated_polynomial.x));\n      \t\t\tsector_weights\[3] = square(max(0.f, -rotated_disk_point.x + rotated_polynomial.y));\n      \t\t\tsector_weights\[5] = square(max(0.f, -rotated_disk_point.y + rotated_polynomial.x));\n      \t\t\tsector_weights\[7] = square(max(0.f, rotated_disk_point.x + rotated_polynomial.y));\n\n\n    \t\t\t// We compute a radial Gaussian weighting component such that pixels further away from the\n     \t\t\t// sector center gets attenuated, and we also divide by the sum of sector weights to\n     \t\t\t// normalize them, since the radial weight will eventually be multiplied to the sector weight below.\n      \t\t\tfloat sector_weights_sum = sector_weights\[0] + sector_weights\[1] + sector_weights\[2] +\n                                 sector_weights\[3] + sector_weights\[4] + sector_weights\[5] +\n                                 sector_weights\[6] + sector_weights\[7];\n      \t\t\tfloat radial_gaussian_weight = exp(-PI * disk_point_length_squared) / sector_weights_sum;\n\n\n    \t\t\t// Load the color of the pixel and its mirrored pixel and compute their square.\n      \t\t\tfloat4 upper_color = src (pos.x + i, pos.y + j); \n      \t\t\tfloat4 lower_color = src (pos.x - i, pos.y - j); \n      \t\t\tfloat4 upper_color_squared = upper_color * upper_color;\n      \t\t\tfloat4 lower_color_squared = lower_color * lower_color;\n\n\n      \t\t\tfor (int k = 0; k < number_of_sectors; k++) \{\n        \t\t\tfloat weight = sector_weights\[k] * radial_gaussian_weight;\n\n      \t\t\t\t// Accumulate the pixel to each of the sectors multiplied by the sector weight.\n        \t\t\tint upper_index = k;\n        \t\t\tsum_of_weights_of_sectors\[upper_index] += weight;\n        \t\t\tweighted_mean_of_color_of_sectors\[upper_index] += upper_color * weight;\n        \t\t\tweighted_mean_of_squared_color_of_sectors\[upper_index] += upper_color_squared * weight;\n\n      \t\t\t\t// Accumulate the mirrored pixel to each of the sectors multiplied by the sector weight.\n        \t\t\tint lower_index = (k + number_of_sectors / 2) % number_of_sectors;\n        \t\t\tsum_of_weights_of_sectors\[lower_index] += weight;\n        \t\t\tweighted_mean_of_color_of_sectors\[lower_index] += lower_color * weight;\n        \t\t\tweighted_mean_of_squared_color_of_sectors\[lower_index] += lower_color_squared * weight;\n        \t\t\}\n    \t\t\}\n\t\t\}\n\n\t\t// Compute the weighted sum of mean of sectors, such that sectors with lower standard deviation\n \t\t// gets more significant weight than sectors with higher standard deviation.\n  \t\tfloat sum_of_weights = 0.f;\n  \t\tfloat4 weighted_sum = float4(0.f);\n  \t\tfor (int i = 0; i < number_of_sectors; i++) \{\n    \t\tweighted_mean_of_color_of_sectors\[i] /= sum_of_weights_of_sectors\[i];\n    \t\tweighted_mean_of_squared_color_of_sectors\[i] /= sum_of_weights_of_sectors\[i];\n\n    \t\tfloat4 color_mean = weighted_mean_of_color_of_sectors\[i];\n    \t\tfloat4 squared_color_mean = weighted_mean_of_squared_color_of_sectors\[i];\n    \t\tfloat4 color_variance = fabs(squared_color_mean - color_mean * color_mean);\n\n    \t\tfloat standard_deviation = dot(sqrt(\n    \t\t\tfloat3(color_variance.x, color_variance.y, color_variance.z)), float3(1.0f));\n\n\n  \t\t\t// Compute the sector weight based on the weight function introduced in section \"3.3.1\n   \t\t\t// Single-scale Filtering\" of the multi-scale paper. Use a threshold of 0.02 to avoid zero\n   \t\t\t// division and avoid artifacts in homogeneous regions as demonstrated in the paper.\n   \t\t\tfloat normalized_sharpness = sharpness * 10.0f;\n    \t\tfloat weight = 1.0 / pow( max(0.02, standard_deviation), normalized_sharpness);\n\n    \t\tsum_of_weights += weight;\n    \t\tweighted_sum += color_mean * weight;\n  \t\t\}\n\n  \t\tweighted_sum /= sum_of_weights;\n  \t\tdst(0) = weighted_sum.x;\n  \t\tdst(1) = weighted_sum.y;\n  \t\tdst(2) = weighted_sum.z;\n  \t\tdst(3) = center_color.w;\n\t\}\n\};\n"
+  rebuild ""
+  df_KuwaharaAnisotropic_Size {{Size}}
+  df_KuwaharaAnisotropic_Sharpness {{Sharpness}}
+  df_KuwaharaAnisotropic_Eccentricity {{Eccentricity}}
+  rebuild_finalise ""
+  name BlinkScript3
+  xpos 280
+  ypos 341
+ }
+ Clamp {
+  channels alpha
+  name Clamp2
+  xpos 280
+  ypos 405
+ }
+ Dot {
+  name Dot4
+  xpos 314
+  ypos 452
+ }
+ Switch {
+  inputs 2
+  which {{map}}
+  name Switch1
+  xpos 178
+  ypos 449
+ }
+ Output {
+  name Output1
+  xpos 178
+  ypos 535
+ }
+end_group
