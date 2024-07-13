@@ -9,7 +9,7 @@ Gizmo {
  Sharpness 1
  addUserKnob {7 Eccentricity t "Elongates brush strokes following the direction of image details. Ranges from isotropic (0) to anisotropic (1)."}
  Eccentricity 1
- addUserKnob {7 Blur l Uniformity t "Gaussian smoothing of structure tensor to eliminate high frequency details." R 2 10}
+ addUserKnob {7 Blur l "Blur Structure Tensor" t "Gaussian smoothing of structure tensor to eliminate high frequency details." R 2 10}
  Blur 5
  addUserKnob {26 ""}
  addUserKnob {26 MapRadius l "Map Brush Size" T " "}
@@ -30,25 +30,25 @@ Gizmo {
   xpos 89
   ypos 48
  }
-set N47244600 [stack 0]
+set N86fcde00 [stack 0]
  Dot {
   name Dot7
   xpos 0
   ypos 51
  }
-set N47224400 [stack 0]
+set N362dd000 [stack 0]
  Dot {
   name Dot8
   xpos -132
   ypos 51
  }
-set N47277a00 [stack 0]
+set N8a604600 [stack 0]
  Dot {
   name Dot6
   xpos -224
   ypos 51
  }
-push $N47277a00
+push $N8a604600
  Dilate {
   channels alpha
   size {{width*-1}}
@@ -57,7 +57,7 @@ push $N47277a00
   ypos 106
   disable {{1-normalize}}
  }
-set N47247400 [stack 0]
+set N8a73e200 [stack 0]
  Merge2 {
   inputs 2
   operation minus
@@ -69,7 +69,7 @@ set N47247400 [stack 0]
   ypos 175
   disable {{1-normalize}}
  }
-push $N47224400
+push $N362dd000
  Dilate {
   channels alpha
   size {{width}}
@@ -78,7 +78,7 @@ push $N47224400
   ypos 105
   disable {{1-normalize}}
  }
-push $N47247400
+push $N8a73e200
  Merge2 {
   inputs 2
   operation minus
@@ -120,7 +120,7 @@ push $N47247400
   xpos 8
   ypos 337
  }
-push $N47244600
+push $N86fcde00
  BlinkScript {
   kernelSourceFile /Users/Derek/Documents/GitHub/VFX-software-prefs/Nuke/Kuwahara/df_kuwahara_tensor.cpp
   recompileCount 1
@@ -139,8 +139,8 @@ push $N47244600
   xpos 176
   ypos 213
  }
-set Ne5c08a00 [stack 0]
-push $N47244600
+set N54cfde00 [stack 0]
+push $N86fcde00
  BlinkScript {
   inputs 3
   kernelSourceFile /Users/Derek/Documents/GitHub/VFX-software-prefs/Nuke/Kuwahara/df_kuwaharaAnisotropic_map.cpp
@@ -161,8 +161,8 @@ push $N47244600
   xpos 111
   ypos 452
  }
-push $Ne5c08a00
-push $N47244600
+push $N54cfde00
+push $N86fcde00
  Dot {
   name Dot1
   xpos 314
@@ -201,7 +201,7 @@ push $N47244600
   xpos 178
   ypos 449
  }
-set N903c4e00 [stack 0]
+set N888ce600 [stack 0]
  Viewer {
   frame_range 1-100
   colour_sample_bbox {0.271874994 0.396874994 0.2734375 0.3984375}
@@ -210,7 +210,7 @@ set N903c4e00 [stack 0]
   xpos -83
   ypos 740
  }
-push $N903c4e00
+push $N888ce600
  Output {
   name Output1
   xpos 178
