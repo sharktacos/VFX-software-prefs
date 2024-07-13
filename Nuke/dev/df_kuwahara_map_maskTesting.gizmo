@@ -1,6 +1,7 @@
 #! /Applications/Nuke14.0v2/Nuke14.0v2.app/Contents/MacOS/libnuke-14.0.2.dylib -nx
 version 14.0 v2
 Gizmo {
+ inputs 2
  tile_color 0x6e49a7ff
  addUserKnob {20 User}
  addUserKnob {7 Size t "Radius of brush stroke" R 0 20}
@@ -9,9 +10,7 @@ Gizmo {
  Sharpness 1
  addUserKnob {7 Eccentricity t "Elongates brush strokes following the direction of image details. Ranges from isotropic (0) to anisotropic (1)."}
  Eccentricity 1
- addUserKnob {7 Blur l Uniformity t "Gaussian smoothing of structure tensor to eliminate high frequency details." R 2 10}
- Blur 5
- addUserKnob {26 ""}
+ addUserKnob {26 "" +STARTLINE}
  addUserKnob {26 MapRadius l "Map Brush Size" T " "}
  addUserKnob {6 map l "Enable brush size mask (alpha)" t "A depth map can be shuffled into the alpha to control brush radius so that out of focus objects appear more abstract and stylized. \n\nThe size parameter acts as a multiplier for the mask." +STARTLINE}
  addUserKnob {6 normalize l "Normalize alpha mask" t "Mask is normalized into a 0 to 1 range and  clamped after the color corrections to avoid values above 1. " +STARTLINE}
@@ -26,29 +25,43 @@ Gizmo {
 }
  Input {
   inputs 0
+  name mask
+  xpos 34
+  ypos 580
+  number 1
+ }
+ Invert {
+  channels alpha
+  name Invert1
+  xpos 34
+  ypos 638
+ }
+ Input {
+  inputs 0
   name Image
-  xpos 89
+  selected true
+  xpos 77
   ypos 48
  }
-set N47244600 [stack 0]
+set Nba77fc00 [stack 0]
  Dot {
   name Dot7
   xpos 0
   ypos 51
  }
-set N47224400 [stack 0]
+set N5bf9aa00 [stack 0]
  Dot {
   name Dot8
   xpos -132
   ypos 51
  }
-set N47277a00 [stack 0]
+set N5bfb6200 [stack 0]
  Dot {
   name Dot6
   xpos -224
   ypos 51
  }
-push $N47277a00
+push $N5bfb6200
  Dilate {
   channels alpha
   size {{width*-1}}
@@ -57,7 +70,7 @@ push $N47277a00
   ypos 106
   disable {{1-normalize}}
  }
-set N47247400 [stack 0]
+set N5bfc6800 [stack 0]
  Merge2 {
   inputs 2
   operation minus
@@ -69,7 +82,7 @@ set N47247400 [stack 0]
   ypos 175
   disable {{1-normalize}}
  }
-push $N47224400
+push $N5bf9aa00
  Dilate {
   channels alpha
   size {{width}}
@@ -78,7 +91,7 @@ push $N47224400
   ypos 105
   disable {{1-normalize}}
  }
-push $N47247400
+push $N5bfc6800
  Merge2 {
   inputs 2
   operation minus
@@ -120,11 +133,10 @@ push $N47247400
   xpos 8
   ypos 337
  }
-push $N47244600
+push $Nba77fc00
  BlinkScript {
   kernelSourceFile /Users/Derek/Documents/GitHub/VFX-software-prefs/Nuke/Kuwahara/df_kuwahara_tensor.cpp
   recompileCount 1
-  ProgramGroup 1
   KernelDescription "2 \"df_StructureTensor\" iterate pixelWise c7d617919d38a981e9f6151e47894f57b5fb50f8141c50358a503095f70a2622 2 \"src\" Read Random \"dst\" Write Point 0 0 0"
   kernelSource "kernel df_StructureTensor : ImageComputationKernel<ePixelWise>\n\{\n    Image<eRead, eAccessRandom, eEdgeClamped> src; \n    Image<eWrite> dst; \n\n/*  \n *  Blink C++ implementation by Derek Flood, 2024\n *\n *  Adapted from the Blender GLSL script (Copyright: 2023 Blender Authors)\n *  https://projects.blender.org/blender/blender/src/source/blender/compositor/realtime_compositor/shaders/\n *     compositor_kuwahara_anisotropic_compute_structure_tensor.glsl\n *   ---------------------------------------------- \n *  \n *  Computes the structure tensor of the image using a Dirac delta window function as described in\n *  section \"3.2 Local Structure Estimation\" of the paper: Kyprianidis, Jan Eric. \n * \"Image and video abstraction by multi-scale anisotropic Kuwahara filtering.\" 2011.\n *  \n *  The structure tensor should then be smoothed using a Gaussian function to eliminate high frequency details.\n */\n\n    void process(int2 pos) \{\n        SampleType(src) input = src(pos.x, pos.y);\n\n  \t\t// The weight kernels of the filter optimized for rotational symmetry \n  \t\t// described in section \"3.2.1 Gradient Calculation\".\n\t\tconst float corner_weight = 0.182f;\n        const float center_weight = 1.0f - 2.0f * corner_weight;\n\n        float4 x_partial_derivative = src(pos.x - 1, pos.y + 1) * -corner_weight +                      \n                                        src(pos.x - 1, pos.y    ) * -center_weight +\n                                        src(pos.x - 1, pos.y - 1) * -corner_weight +\n                                        src(pos.x + 1, pos.y + 1) * corner_weight +\n                                        src(pos.x + 1, pos.y    ) * center_weight +\n                                        src(pos.x + 1, pos.y - 1) * corner_weight;\n\n    \tfloat4 y_partial_derivative = src(pos.x - 1, pos.y + 1) * corner_weight +\n                                        src(pos.x    , pos.y + 1) * center_weight +\n                                        src(pos.x + 1, pos.y + 1) * corner_weight +\n                                        src(pos.x - 1, pos.y - 1) * -corner_weight +\n                                        src(pos.x    , pos.y - 1) * -center_weight +\n                                        src(pos.x + 1, pos.y - 1) * -corner_weight;\n\n        float dxdx = dot(x_partial_derivative, x_partial_derivative);\n        float dxdy = dot(x_partial_derivative, y_partial_derivative);\n        float dydy = dot(y_partial_derivative, y_partial_derivative);\n        \n  \t\tdst(0) = dxdx;\n  \t\tdst(1) = dxdy;\n  \t\tdst(2) = dydy;\n\t\}\n\};\n"
   rebuild ""
@@ -134,13 +146,13 @@ push $N47244600
   ypos 158
  }
  Blur {
-  size {{Blur}}
+  size 5
   name Blur1
   xpos 176
   ypos 213
  }
-set Ne5c08a00 [stack 0]
-push $N47244600
+set N5bb93000 [stack 0]
+push $Nba77fc00
  BlinkScript {
   inputs 3
   kernelSourceFile /Users/Derek/Documents/GitHub/VFX-software-prefs/Nuke/Kuwahara/df_kuwaharaAnisotropic_map.cpp
@@ -161,8 +173,8 @@ push $N47244600
   xpos 111
   ypos 452
  }
-push $Ne5c08a00
-push $N47244600
+push $N5bb93000
+push $Nba77fc00
  Dot {
   name Dot1
   xpos 314
@@ -201,7 +213,14 @@ push $N47244600
   xpos 178
   ypos 449
  }
-set N903c4e00 [stack 0]
+ Merge2 {
+  inputs 2
+  operation matte
+  name Merge6
+  xpos 178
+  ypos 642
+ }
+set N8dedca00 [stack 0]
  Viewer {
   frame_range 1-100
   colour_sample_bbox {0.271874994 0.396874994 0.2734375 0.3984375}
@@ -210,10 +229,10 @@ set N903c4e00 [stack 0]
   xpos -83
   ypos 740
  }
-push $N903c4e00
+push $N8dedca00
  Output {
   name Output1
   xpos 178
-  ypos 557
+  ypos 710
  }
 end_group
