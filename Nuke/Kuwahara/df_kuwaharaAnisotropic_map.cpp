@@ -75,18 +75,10 @@ kernel df_KuwaharaAnisotropic : ImageComputationKernel<ePixelWise>
 		float eigenvalue_sum = first_eigenvalue + second_eigenvalue;
 		float eigenvalue_difference = first_eigenvalue - second_eigenvalue;
 		float anisotropy = eigenvalue_sum > 0.0f ? eigenvalue_difference / eigenvalue_sum : 0.0f;
-	
-
-//		float radius = max(0.0f, size);	
-  //  		float alpha = radius_map(pos.x, pos.y).w; // Sample the alpha
-  	//	float maxValue = max(alpha, 0.0f); // Find the maximum value
-  		// Normalize by dividing by the maximum value
-  	//	float radius = alpha / maxValue * size;
-
-//		float radius = clamp(radius_map(pos.x, pos.y).w, 0.0f, 1.0f) * size;
+		
+		// Map radius
 		float alpha = radius_map(pos.x, pos.y).w;
 		float radius = alpha * size;
-//		float radius = radius_map(pos.x, pos.y).w * size;
 			
 		if (radius == 0.0f) {
 				dst() = src (pos.x, pos.y);

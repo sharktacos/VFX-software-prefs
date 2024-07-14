@@ -30,25 +30,25 @@ Gizmo {
   xpos 89
   ypos 48
  }
-set N86fcde00 [stack 0]
+set Nd8fb5800 [stack 0]
  Dot {
   name Dot7
   xpos 0
   ypos 51
  }
-set N362dd000 [stack 0]
+set Nd8b94200 [stack 0]
  Dot {
   name Dot8
   xpos -132
   ypos 51
  }
-set N8a604600 [stack 0]
+set Nd8fb4c00 [stack 0]
  Dot {
   name Dot6
   xpos -224
   ypos 51
  }
-push $N8a604600
+push $Nd8fb4c00
  Dilate {
   channels alpha
   size {{width*-1}}
@@ -57,7 +57,7 @@ push $N8a604600
   ypos 106
   disable {{1-normalize}}
  }
-set N8a73e200 [stack 0]
+set Nd8f85a00 [stack 0]
  Merge2 {
   inputs 2
   operation minus
@@ -69,7 +69,7 @@ set N8a73e200 [stack 0]
   ypos 175
   disable {{1-normalize}}
  }
-push $N362dd000
+push $Nd8b94200
  Dilate {
   channels alpha
   size {{width}}
@@ -78,7 +78,7 @@ push $N362dd000
   ypos 105
   disable {{1-normalize}}
  }
-push $N8a73e200
+push $Nd8f85a00
  Merge2 {
   inputs 2
   operation minus
@@ -111,16 +111,16 @@ push $N8a73e200
  Clamp {
   channels alpha
   name Clamp1
+  selected true
   xpos -169
   ypos 330
-  disable {{1-normalize}}
  }
  Dot {
   name Dot2
   xpos 8
   ypos 337
  }
-push $N86fcde00
+push $Nd8fb5800
  BlinkScript {
   kernelSourceFile /Users/Derek/Documents/GitHub/VFX-software-prefs/Nuke/Kuwahara/df_kuwahara_tensor.cpp
   recompileCount 1
@@ -139,8 +139,8 @@ push $N86fcde00
   xpos 176
   ypos 213
  }
-set N54cfde00 [stack 0]
-push $N86fcde00
+set Nd8f30c00 [stack 0]
+push $Nd8fb5800
  BlinkScript {
   inputs 3
   kernelSourceFile /Users/Derek/Documents/GitHub/VFX-software-prefs/Nuke/Kuwahara/df_kuwaharaAnisotropic_map.cpp
@@ -161,8 +161,8 @@ push $N86fcde00
   xpos 111
   ypos 452
  }
-push $N54cfde00
-push $N86fcde00
+push $Nd8f30c00
+push $Nd8fb5800
  Dot {
   name Dot1
   xpos 314
@@ -201,7 +201,7 @@ push $N86fcde00
   xpos 178
   ypos 449
  }
-set N888ce600 [stack 0]
+set Nc08f7800 [stack 0]
  Viewer {
   frame_range 1-100
   colour_sample_bbox {0.271874994 0.396874994 0.2734375 0.3984375}
@@ -210,7 +210,7 @@ set N888ce600 [stack 0]
   xpos -83
   ypos 740
  }
-push $N888ce600
+push $Nc08f7800
  Output {
   name Output1
   xpos 178
