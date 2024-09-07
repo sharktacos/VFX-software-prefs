@@ -7,7 +7,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -41,7 +41,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -75,7 +75,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -109,7 +109,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -156,7 +156,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -190,7 +190,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -224,7 +224,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -258,7 +258,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -292,42 +292,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
-        -enable 1
-        -width 35
-        -height 34
-        -manage 1
-        -visible 1
-        -preventOverride 0
-        -annotation "import dfMakeTexPy3\ndfMakeTexPy3.Main()" 
-        -enableBackground 0
-        -backgroundColor 0 0 0 
-        -highlightColor 0.321569 0.521569 0.65098 
-        -align "center" 
-        -label "dfMakeTexPy3" 
-        -labelOffset 0
-        -rotation 0
-        -flipX 0
-        -flipY 0
-        -useAlpha 1
-        -font "plainLabelFont" 
-        -imageOverlayLabel "mktex" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.5 
-        -image "Z:/UNIVERSAL/VFX-software-prefs-main/Maya/prefs/icons/MkTex.png" 
-        -image1 "Z:/UNIVERSAL/VFX-software-prefs-main/Maya/prefs/icons/MkTex.png" 
-        -style "iconOnly" 
-        -marginWidth 0
-        -marginHeight 1
-        -command "import dfMakeTexPy3\ndfMakeTexPy3.Main()" 
-        -sourceType "python" 
-        -commandRepeatable 1
-        -flat 1
-    ;
-    shelfButton
-        -enableCommandRepeat 1
-        -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -356,6 +321,40 @@ global proc shelf_DF_docs () {
         -marginHeight 1
         -command "import maya.cmds as mc\n\nshapes = mc.ls(sl=True, shapes=True, dag=True)\nShaderGroups = mc.listConnections(shapes, type='shadingEngine')\nsel=mc.ls(sl=True, tr=True)\n\nif sel:\n\n    for shaderGroup in ShaderGroups:\n        if shaderGroup != 'initialShadingGroup':\n            mat = mc.ls( mc.listConnections(shaderGroup), materials=True )\n            shaderGroup = mc.rename(shaderGroup, mat[0] +'SG' )\n    \n    mc.confirmDialog(t=\"Done\", message='ShaderGroup Names Fixed.', icon=\"Done\")\n\nelse:\n    mc.confirmDialog(t=\"Oops! Nothing Selected\", message='Oops! Nothing Selected.', icon=\"warning\")" 
         -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 64
+        -enable 1
+        -width 35
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "duplicate selected shading network (duplicate -upsteam)" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "duplicate -upstreamNodes;" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "nodeGrapherAddNodes.png" 
+        -image1 "nodeGrapherAddNodes.png" 
+        -style "iconOnly" 
+        -marginWidth 0
+        -marginHeight 1
+        -command "duplicate -upstreamNodes;" 
+        -sourceType "mel" 
         -commandRepeatable 1
         -flat 1
     ;
@@ -409,7 +408,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -443,7 +442,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -477,7 +476,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -512,7 +511,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -547,7 +546,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -629,7 +628,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -664,7 +663,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -699,7 +698,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -746,7 +745,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -780,7 +779,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -814,7 +813,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -848,7 +847,7 @@ global proc shelf_DF_docs () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 64
         -enable 1
         -width 35
         -height 34
@@ -869,8 +868,8 @@ global proc shelf_DF_docs () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "Z:/UNIVERSAL/VFX-software-prefs-main/Maya/prefs/icons/USD_pickMtl2.png" 
-        -image1 "Z:/UNIVERSAL/VFX-software-prefs-main/Maya/prefs/icons/USD_pickMtl2.png" 
+        -image "/Users/Derek/Library/Preferences/Autodesk/maya/2024/prefs/icons/USD_pick.png" 
+        -image1 "/Users/Derek/Library/Preferences/Autodesk/maya/2024/prefs/icons/USD_pick.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
