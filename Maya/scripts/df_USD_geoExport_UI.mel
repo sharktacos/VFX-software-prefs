@@ -4,6 +4,13 @@
  - Proxy/render display purpose scope names detected from selected heirarchy.
  - Reference geometry (.usdc) into payload file (.usda) which is payloaded into Asset file
  - Custom metadata with originating Maya file “exported_from”
+ - Variant switch to display high res mesh in viewport
+ - Switch to "_geo" naming convention for mesh file in crate binary.
+ - Look file with overs for MaterialX references.
+ 
+ v5 Export payloaded USD asset with MaterialX reference
+ (c) Derek Flood, 2025
+ 
  
  Usage: Select the root prim to export. Confirm proxy and render groups in file dialog. Enter path and filename for root asset. Export.
  Will create a root asset file and corresponding geom and payload files.
@@ -12,7 +19,6 @@
  source df_USD_geoExport_UI;
  mayaUsd_exportGeo();
  
- v3 (c) Derek Flood, 2023
  
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -27,39 +33,7 @@
 */
 //---------------------------------------------------------
 
-proc setLatestLoadStageFolder( string $sceneFolder )
-{
-    optionVar -stringValue mayaUsd_LatestLoadStageFolder $sceneFolder;
-}
 
-proc string getLatestLoadStageFolder()
-{
-    string $sceneFolder;
-
-    // First check if we've saved a location in the option var
-    if (`optionVar -exists mayaUsd_LatestLoadStageFolder`)
-    {
-        $sceneFolder = `optionVar -q mayaUsd_LatestLoadStageFolder`;
-    }
-
-    // Then check if there is a current Maya scene, if so choose that as
-    // a starting point.
-    if ("" == $sceneFolder)
-    {
-        $sceneFolder = dirname(`file -q -sceneName`);
-    }
-
-    // If we are really starting from scratch then just go with the 
-    // current workspace location for scenes.
-    if ("" == $sceneFolder)
-    {
-        string $workspaceLocation = `workspace -q -fn`;
-        string $scenesFolder = `workspace -q -fileRuleEntry "scene"`;
-        $sceneFolder = $workspaceLocation + "/" + $scenesFolder;
-    }
-
-    return $sceneFolder;
-}
 
 proc setOptionVars()
 {
@@ -143,7 +117,6 @@ global proc mayaUsd_exportGeo()
     $sel = `ls -sl`;
     $isSel = `size($sel)`;
     $workspace = `workspace -rootDirectory -query`;
-    string $startFolder = getLatestLoadStageFolder();
     $geoGrp = `listRelatives $sel`;
     $geoGrpPath = `listRelatives -path $sel`;
     $GroupCount = `listRelatives -path $geoGrpPath`;
@@ -164,24 +137,21 @@ global proc mayaUsd_exportGeo()
         string $filepath[] = `fileDialog2 
                       -dialogStyle 2
                       -fileMode 0
-                      -caption "Export selected to USD with geometry payloaded into asset file" 
+                      -caption "Export selected to USD with geometry payloaded into asset file and referenced MaterialX" 
                       -fileFilter "USD Export (*.usd *.usdc *.usda)" 
                       -okCaption "Export" 
-                      -dir $startFolder 
+                      -dir $workspace 
                       -optionsUICreate "df_UISetup" 
                       -optionsUIInit "df_UIInit" 
                       -optionsUICommit "df_UICommit"`;
 
-        $render_value = `optionVar -q optVar_render`; 
-        $proxy_value = `optionVar -q optVar_proxy`; 
+        $render_value = `optionVar -q optVar_render`; //pass this value to python
+        $proxy_value = `optionVar -q optVar_proxy`; //pass this value to python
         $fileName = $filepath[0];
         
         if (size($fileName) > 0){
-            setLatestLoadStageFolder( dirname($filepath[0]) );
             python("import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "')");
         }
-        
-
 
     } else {
         confirmDialog -message "Nothing Selected. Select the root node of your asset." -button "Derp";
