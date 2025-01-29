@@ -1,0 +1,570 @@
+
+Group {
+ name PxF_Filler
+ help "Gaussian in-fill. Useful to remove markers and create clean plates."
+ knobChanged "m = nuke.thisNode()\nkc = nuke.thisKnob()\n\nif kc.name() in \[\"iterations\"]:\n    i = nuke.toNode('Merge1')\n    i2 = nuke.toNode('Invert1')\n    o = nuke.toNode('Transform3')\n    \n    for n in nuke.allNodes():\n      if \"static\" not in n\['label'].getValue():\n          ###print \"i would delete\" + n\['name'].value()\n          nuke.delete(n)\n    \n    \n    slices = int(m\['iterations'].value())\n    step = int(1)\n    for x in range(1,slices+step,step):\n\n      b1 = nuke.nodes.Blur()\n      b1.setInput(0, i)\n      b1\['size'].setSingleValue(False)\n      b1\['size'].setExpression(\"parent.size.w\", 0)\n      b1\['size'].setExpression(\"parent.size.h\", 1)\n\n      b2 = nuke.nodes.Blur()\n      b2.setInput(0, i2)\n      b2\['size'].setSingleValue(False)\n      b2\['size'].setExpression(\"parent.size.w\", 0)\n      b2\['size'].setExpression(\"parent.size.h\", 1)\n\n      g1 = nuke.nodes.Grade()\n      g1.setInput(0, b2)\n      g1\['channels'].setValue('rgba')\n      g1\['blackpoint'].setValue(-0.0001)\n      g1\['disable'].setExpression(\"parent.softEdges ? 0 : 1\")\n\n      m1 = nuke.nodes.Merge()\n      m1.setInput(1, b1)\n      m1.setInput(0, g1)\n      m1\['operation'].setValue(\"divide\")\n      \n      if x < slices:\n         m2 = nuke.nodes.Merge()\n         m2.setInput(1, b2)\n         m2.setInput(0, g1)\n         m2\['operation'].setValue(\"divide\")\n    \n      i = m1\n      i2 = m2\n    \n    o.setInput(0, i)\n\n"
+ updateUI "\ntn = nuke.thisNode()\nncCheck = False\nif nuke.env\['nc'] or nuke.env\['indie']:\n  ncCheck = True\n  \nfor kb in  \[\"iterations\"]:\n  if ncCheck:\n    tn\[kb].setEnabled(False)\n    tn\['nc_warning'].setVisible(True)\n  else:\n    tn\[kb].setEnabled(True)\n    tn\['nc_warning'].setVisible(False)\n  "
+ tile_color 0x733520ff
+ addUserKnob {20 PxF_Filler}
+ addUserKnob {14 size t "Amount of 'in-fill' for one iteration. " R 0 100}
+ size {1 10}
+ addUserKnob {3 iterations t "How many times the blur/divide operation is repeated."}
+ iterations 10
+ addUserKnob {6 softEdges t "Smoother transition between iterations." -STARTLINE}
+ softEdges true
+ addUserKnob {7 angle t "Adjust the direction of the 'in-fill'. (Has no effect if size.w and size.h are the same value)." R -180 180}
+ addUserKnob {6 blackOutside t "Clamp to format before the 'in-fill'." +STARTLINE}
+ addUserKnob {4 maskChannel t "Which channel from the 'hole_mask' input is used to define the area to be 'in-filled'." M {Red Green Blue Alpha "" ""}}
+ maskChannel Alpha
+ addUserKnob {6 ignoreAlpha l "Don't process Alpha" t "Only process RGB channels and do not 'in-fill' the alpha channel." -STARTLINE}
+ addUserKnob {7 mix t "Dissolve between the effect and the original image."}
+ mix 1
+ addUserKnob {26 ""}
+ addUserKnob {26 nc_warning l "" +STARTLINE +HIDDEN T "<font size=2 color=#f7931e>Nuke Non-Commercial / Indie detected. Some features disabled due to Python limits.</font>"}
+ addUserKnob {26 Credits l "" t "PxF_Filler 3.0.6 - &copy; 2012-2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_Filler 3.0.6 - &copy; 2012-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_Filler.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+}
+ Input {
+  inputs 0
+  name mask
+  label static
+  xpos 183
+  ypos 1950
+  number 2
+ }
+ Input {
+  inputs 0
+  name img
+  label static
+  xpos -1073
+  ypos -113
+  addUserKnob {20 User}
+  addUserKnob {7 blur R 0 500}
+  addUserKnob {3 iterations}
+ }
+set N3c347800 [stack 0]
+push $N3c347800
+ Input {
+  inputs 0
+  name hole_mask
+  label static
+  xpos 337
+  ypos -851
+  number 1
+ }
+set N3c347c00 [stack 0]
+ Shuffle {
+  red alpha
+  green alpha
+  blue alpha
+  name Shuffle4
+  label static
+  xpos 457
+  ypos -762
+ }
+push $N3c347c00
+ Shuffle {
+  red blue
+  green blue
+  alpha blue
+  name Shuffle3
+  label static
+  xpos 373
+  ypos -762
+ }
+push $N3c347c00
+ Shuffle {
+  red green
+  blue green
+  alpha green
+  name Shuffle2
+  label static
+  xpos 290
+  ypos -762
+ }
+push $N3c347c00
+ Shuffle {
+  green red
+  blue red
+  alpha red
+  name Shuffle1
+  label static
+  xpos 207
+  ypos -762
+ }
+ Switch {
+  inputs 4
+  which {{parent.maskChannel i}}
+  name Switch2
+  label static
+  xpos 342
+  ypos -668
+ }
+set N3c393000 [stack 0]
+push $N3c393000
+ Transform {
+  rotate {{parent.angle i}}
+  center {2048 1463}
+  name Transform2
+  label static
+  xpos 342
+  ypos -587
+ }
+set N3c393400 [stack 0]
+push $N3c347800
+ Transform {
+  rotate {{parent.angle i}}
+  center {2048 1463}
+  black_outside {{parent.blackOutside i}}
+  name Transform1
+  label static
+  xpos 137
+  ypos -594
+ }
+ CopyBBox {
+  inputs 2
+  name CopyBBox1
+  label static
+  xpos 137
+  ypos -519
+ }
+push $N3c393400
+ Merge2 {
+  inputs 2
+  operation out
+  name Merge1
+  label static
+  xpos 137
+  ypos -432
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur1
+  xpos 137
+  ypos -239
+ }
+push $N3c393400
+ Clamp {
+  name Clamp1
+  label static
+  xpos 342
+  ypos -532
+ }
+ Invert {
+  name Invert1
+  label static
+  xpos 342
+  ypos -473
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur2
+  xpos 342
+  ypos -400
+ }
+set N3c3c9000 [stack 0]
+ Grade {
+  channels rgba
+  blackpoint -0.0001
+  name Grade1
+  xpos 310
+  ypos -319
+  disable {{"parent.softEdges ? 0 : 1"}}
+ }
+set N3c3c9400 [stack 0]
+ Merge {
+  inputs 2
+  operation divide
+  name Merge2
+  xpos 310
+  ypos -239
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur3
+  xpos 310
+  ypos -79
+ }
+push $N3c3c9000
+push $N3c3c9400
+ Merge {
+  inputs 2
+  operation divide
+  name Merge3
+  xpos 470
+  ypos -319
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur4
+  xpos 470
+  ypos -239
+ }
+set N3c418400 [stack 0]
+ Grade {
+  channels rgba
+  blackpoint -0.0001
+  name Grade2
+  xpos 470
+  ypos -159
+  disable {{"parent.softEdges ? 0 : 1"}}
+ }
+set N3c418800 [stack 0]
+ Merge {
+  inputs 2
+  operation divide
+  name Merge4
+  xpos 470
+  ypos -79
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur5
+  xpos 470
+  ypos 81
+ }
+push $N3c418400
+push $N3c418800
+ Merge {
+  inputs 2
+  operation divide
+  name Merge5
+  xpos 630
+  ypos -159
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur6
+  xpos 630
+  ypos -79
+ }
+set N3c419800 [stack 0]
+ Grade {
+  channels rgba
+  blackpoint -0.0001
+  name Grade3
+  xpos 630
+  ypos 1
+  disable {{"parent.softEdges ? 0 : 1"}}
+ }
+set N3c419c00 [stack 0]
+ Merge {
+  inputs 2
+  operation divide
+  name Merge6
+  xpos 630
+  ypos 81
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur7
+  xpos 630
+  ypos 241
+ }
+push $N3c419800
+push $N3c419c00
+ Merge {
+  inputs 2
+  operation divide
+  name Merge7
+  xpos 790
+  ypos 1
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur8
+  xpos 790
+  ypos 81
+ }
+set N3c456c00 [stack 0]
+ Grade {
+  channels rgba
+  blackpoint -0.0001
+  name Grade4
+  xpos 790
+  ypos 161
+  disable {{"parent.softEdges ? 0 : 1"}}
+ }
+set N3c457000 [stack 0]
+ Merge {
+  inputs 2
+  operation divide
+  name Merge8
+  xpos 790
+  ypos 241
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur9
+  xpos 790
+  ypos 401
+ }
+push $N3c456c00
+push $N3c457000
+ Merge {
+  inputs 2
+  operation divide
+  name Merge9
+  xpos 950
+  ypos 161
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur10
+  xpos 950
+  ypos 241
+ }
+set N3c49a000 [stack 0]
+ Grade {
+  channels rgba
+  blackpoint -0.0001
+  name Grade5
+  xpos 950
+  ypos 321
+  disable {{"parent.softEdges ? 0 : 1"}}
+ }
+set N3c49a400 [stack 0]
+ Merge {
+  inputs 2
+  operation divide
+  name Merge10
+  xpos 950
+  ypos 401
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur11
+  xpos 950
+  ypos 561
+ }
+push $N3c49a000
+push $N3c49a400
+ Merge {
+  inputs 2
+  operation divide
+  name Merge11
+  xpos 1110
+  ypos 321
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur12
+  xpos 1110
+  ypos 401
+ }
+set N3c49b400 [stack 0]
+ Grade {
+  channels rgba
+  blackpoint -0.0001
+  name Grade6
+  xpos 1110
+  ypos 481
+  disable {{"parent.softEdges ? 0 : 1"}}
+ }
+set N3c49b800 [stack 0]
+ Merge {
+  inputs 2
+  operation divide
+  name Merge12
+  xpos 1110
+  ypos 561
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur13
+  xpos 1110
+  ypos 721
+ }
+push $N3c49b400
+push $N3c49b800
+ Merge {
+  inputs 2
+  operation divide
+  name Merge13
+  xpos 1270
+  ypos 481
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur14
+  xpos 1270
+  ypos 561
+ }
+set N3c4e4800 [stack 0]
+ Grade {
+  channels rgba
+  blackpoint -0.0001
+  name Grade7
+  xpos 1270
+  ypos 641
+  disable {{"parent.softEdges ? 0 : 1"}}
+ }
+set N3c4e4c00 [stack 0]
+ Merge {
+  inputs 2
+  operation divide
+  name Merge14
+  xpos 1270
+  ypos 721
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur15
+  xpos 1270
+  ypos 881
+ }
+push $N3c4e4800
+push $N3c4e4c00
+ Merge {
+  inputs 2
+  operation divide
+  name Merge15
+  xpos 1430
+  ypos 641
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur16
+  xpos 1430
+  ypos 721
+ }
+set N3c4e5c00 [stack 0]
+ Grade {
+  channels rgba
+  blackpoint -0.0001
+  name Grade8
+  xpos 1430
+  ypos 801
+  disable {{"parent.softEdges ? 0 : 1"}}
+ }
+set N3c522000 [stack 0]
+ Merge {
+  inputs 2
+  operation divide
+  name Merge16
+  xpos 1430
+  ypos 881
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur17
+  xpos 1430
+  ypos 1041
+ }
+push $N3c4e5c00
+push $N3c522000
+ Merge {
+  inputs 2
+  operation divide
+  name Merge17
+  xpos 1590
+  ypos 801
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur18
+  xpos 1590
+  ypos 881
+ }
+set N3c523000 [stack 0]
+ Grade {
+  channels rgba
+  blackpoint -0.0001
+  name Grade9
+  xpos 1590
+  ypos 961
+  disable {{"parent.softEdges ? 0 : 1"}}
+ }
+set N3c523400 [stack 0]
+ Merge {
+  inputs 2
+  operation divide
+  name Merge18
+  xpos 1590
+  ypos 1041
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur19
+  xpos 1590
+  ypos 1201
+ }
+push $N3c523000
+push $N3c523400
+ Merge {
+  inputs 2
+  operation divide
+  name Merge19
+  xpos 1750
+  ypos 961
+ }
+ Blur {
+  size {{parent.size.w} {parent.size.h}}
+  name Blur20
+  xpos 1750
+  ypos 1041
+ }
+ Grade {
+  channels rgba
+  blackpoint -0.0001
+  name Grade10
+  xpos 1750
+  ypos 1121
+  disable {{"parent.softEdges ? 0 : 1"}}
+ }
+ Merge {
+  inputs 2
+  operation divide
+  name Merge20
+  xpos 1750
+  ypos 1201
+ }
+ Transform {
+  rotate {{parent.angle*-1 i}}
+  center {2048 1463}
+  name Transform3
+  label static
+  xpos -163
+  ypos 1431
+ }
+push $N3c347800
+ Keymix {
+  inputs 3
+  name Keymix1
+  label static
+  xpos -163
+  ypos 1650
+ }
+ ShuffleCopy {
+  inputs 2
+  name ShuffleCopy1
+  label static
+  xpos -163
+  ypos 1763
+  disable {{"parent.ignoreAlpha ? 0 : 1" i}}
+ }
+push $N3c347800
+ Dissolve {
+  inputs 2
+  which {{parent.mix i}}
+  name Dissolve1
+  label static
+  xpos -163
+  ypos 1923
+ }
+ Keymix {
+  inputs 3
+  invertMask true
+  bbox B
+  name Keymix2
+  label static
+  xpos -163
+  ypos 2053
+  disable {{"\[exists parent.input2] ? 0 : 1" x1 0}}
+ }
+ Output {
+  name Output1
+  label static
+  xpos -163
+  ypos 2155
+ }
+end_group

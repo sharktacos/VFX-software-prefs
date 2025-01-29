@@ -1,0 +1,141 @@
+
+Group {
+ name PxF_ChromaBlur
+ inputs 2
+ help "Blur chroma information without affecting luminance by converting the image to YCbCr and blurring the chroma channels. Useful to blur color artifacts in digital video."
+ tile_color 0x733520ff
+ addUserKnob {20 PxF_ChromaBlur}
+ addUserKnob {41 colorspace_out l colorspace T Colorspace1.colorspace_out}
+ addUserKnob {14 chan1_blur l "Channel1 blur size" t "Amount of blur on channel 1.\n\nFor example, if colorspace is set to YCbCr, channel 1 is Y (luminance).\n\nIf colorspace is set to HSL, then channel 1 is H (Hue)." R 0 100}
+ addUserKnob {6 chan1 l enable t "Enable blur on channel 1." -STARTLINE}
+ chan1 true
+ addUserKnob {14 chan2_blur l "Channel2 blur size" t "Amount of blur on channel 2.\n\nFor example, if colorspace is set to YCbCr, channel 2 is Cb (Chroma difference blue).\n\nIf colorspace is set to HSL, then channel 2 is S (Saturation)." R 0 100}
+ chan2_blur 16
+ addUserKnob {6 chan2 l enable t "Enable blur on channel 2." -STARTLINE}
+ chan2 true
+ addUserKnob {14 chan3_blur l "Channel3 blur size" t "Amount of blur on channel 3.\n\nFor example, if colorspace is set to YCbCr, channel 3 is Cr (Chroma difference red).\n\nIf colorspace is set to HSL, then channel 3 is L (Luminance)." R 0 100}
+ chan3_blur 16
+ addUserKnob {6 chan3 l enable t "Enable blur on channel 3." -STARTLINE}
+ chan3 true
+ addUserKnob {41 black_clamp l "black clamp" t "Clamp sub-zero values after chroma blur." T Grade1.black_clamp}
+ addUserKnob {41 white_clamp l "white clamp" t "Clamp values > 1.0 after the chroma blur." -STARTLINE T Grade1.white_clamp}
+ addUserKnob {6 filternan l "Blackout inf and nan" t "Converting from YCbCr back to RGB sometimes generates 'inf' and 'nan' pixels. Turning this on turns these pixels black." +STARTLINE}
+ filternan true
+ addUserKnob {7 mix t "Dissolve between the original (0) and the full effect (1)."}
+ mix 1
+ addUserKnob {26 ""}
+ addUserKnob {26 Credits l "" t "PxF_ChromaBlur 3.0 - &copy; 2012-2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_ChromaBlur 3.0 - &copy; 2012-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_ChromaBlur.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+}
+ Input {
+  inputs 0
+  name mask
+  xpos 340
+  ypos 336
+  number 1
+ }
+ Input {
+  inputs 0
+  name img
+  xpos 128
+  ypos 11
+ }
+set N37f5c100 [stack 0]
+ Dot {
+  name Dot2
+  note_font_size 22
+  xpos 30
+  ypos 105
+ }
+ Dot {
+  name Dot1
+  xpos 30
+  ypos 307
+ }
+push $N37f5c100
+ Colorspace {
+  colorspace_out YCbCr
+  name Colorspace1
+  xpos 128
+  ypos 73
+ }
+ Blur {
+  channels {rgba.red -rgba.green -rgba.blue}
+  size {{parent.chan1_blur.w} {parent.chan1_blur.h}}
+  name Blur1
+  xpos 128
+  ypos 99
+  disable {{"parent.chan1 == 0 ? 1 : 0"}}
+ }
+ Blur {
+  channels {-rgba.red rgba.green -rgba.blue none}
+  size {{parent.chan2_blur.w} {parent.chan2_blur.h}}
+  name Blur2
+  xpos 128
+  ypos 147
+  disable {{"parent.chan2 == 0 ? 1 : 0"}}
+ }
+ Blur {
+  channels {-rgba.red -rgba.green rgba.blue none}
+  size {{parent.chan3_blur.w} {parent.chan3_blur.h}}
+  name Blur3
+  xpos 128
+  ypos 173
+  disable {{"parent.chan3 == 0 ? 1 : 0"}}
+ }
+ Colorspace {
+  colorspace_in {{Colorspace1.colorspace_out x1 17}}
+  name Colorspace3
+  xpos 128
+  ypos 219
+ }
+ Grade {
+  black_clamp false
+  name Grade1
+  xpos 128
+  ypos 261
+ }
+ Expression {
+  expr0 "isinf(r) || isnan(r) ? 0 : r"
+  expr1 "isinf(g) || isnan(g) ? 0 : g"
+  expr2 "isinf(b) || isnan(b) ? 0 : b"
+  name filter_inf_nan
+  xpos 128
+  ypos 307
+  disable {{"parent.filternan ? 0 : 1"}}
+ }
+ Keymix {
+  inputs 3
+  invertMask true
+  bbox B
+  name Keymix1
+  xpos 128
+  ypos 372
+  disable {{"\[exists parent.input1] ? 0 : 1" x1 0}}
+ }
+push $N37f5c100
+ Dot {
+  name Dot3
+  note_font_size 22
+  xpos -31
+  ypos 119
+ }
+ Dot {
+  name Dot4
+  note_font_size 22
+  xpos -31
+  ypos 362
+ }
+ Dissolve {
+  inputs 2
+  which {{parent.mix}}
+  name Dissolve1
+  selected true
+  xpos 128
+  ypos 427
+ }
+ Output {
+  name Output1
+  xpos 128
+  ypos 507
+ }
+end_group

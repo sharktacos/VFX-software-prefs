@@ -1,0 +1,157 @@
+
+Group {
+ name PxF_TimeMerge
+ help "Combine previous and next frames with various Merge modes. A better version of the standard TimeEcho node."
+ knobChanged "m = nuke.thisNode()\nkc = nuke.thisKnob()\n\nif kc.name() in \['numFrames', 'operation', 'frameSkip', 'offset']:\n\n    #Delete all non-static nodes\n    for n in nuke.allNodes():\n      if \"static\" not in n\['label'].getValue():\n          nuke.delete(n)\n    \n    img        = nuke.toNode('img')           #Original image\n    mult       = nuke.toNode('Multiply1')     #Multiply node\n    bg         = mult                         #Node for B input of merges (will get overwritten in loop)\n    o          = nuke.toNode('Keymix1')       #Output node at the end of the loop            \n    numFrames  = int(m\['numFrames'].value())  #Number of frames to echo\n    frameSkip  = int(m\['frameSkip'].value())  #Number ofr frames to skip\n    operation  = m\['operation'].value()       #Operation (over, under, max, plus, etc...)\n    offset     = m\['offset'].value()          #Frame offset (start, end, middle)\n    fade_gamma = m\['fade_gamma'].value()      #Curve to apply to fade out opacity\n    tiktok     = -1                           #Variable that toggles between +1 and -1 depending if we are before or after current frame in centered mode\n    mixdenom   = 2                            #Denominator of fraction for 'fade out'\n    if offset == 'start':                     #Frame index goes backward if start offset, otherwise forward\n      frmidx = -1\n    else:\n      frmidx = 1\n            \n              \n    for x in range(1,numFrames,1):           #Loop from 1 to numFrames, increment x at every loop...\n      \n        #CREATE TIME OFFSET NODE\n        t1 = nuke.nodes.TimeOffset()                            #Create TimeOffset node\n        t1.setInput(0, img)                                     #Connect to image\n        t1\['time_offset'].setValue(frameSkip*frmidx*tiktok*-1)  #Adjust time offset.\n        t1\['label'].setValue('\[value time_offset]')             #Add autolabel to make debugging easier\n        \n        #IF MODE = AVERAGE, USE DISSOLVE NODES.\n        if operation == 'average':                                                \n          m1 = nuke.nodes.Dissolve()                            #Create Dissolve node\n          m1.setInput(0,bg)                                     #Set input to bg (previous Dissolve) \n          m1.setInput(1, t1)                                    #Set input to TimeOffset node\n          opac = \"1/\" + str(x+1)                                #Set opacity to 1/2, 1/3, 1/4, 1/5 etc...\n          m1\['which'].setExpression(\"parent.fade ? pow(\" + opac + \"/\" + str(mixdenom) + \", 1/parent.fade_gamma) : \" + opac)\n        \n        #IF MODE = EVERYTHING ELSE, USE MERGE NODES.\n        if operation != 'average':\n          m1 = nuke.nodes.Merge2()                              #Create Merge node\n          m1\['operation'].setValue(operation)                   #Set operation (Over, Under, Max, Plus, etc...)\n          m1.setInput(0,bg)                                     #Set input to bg (previous Merge node)\n          m1.setInput(1, t1)                                    #Set input to TimeOffset node\n          m1\['mix'].setExpression(\"parent.fade ? pow(1/\" + str(mixdenom) + \", 1/parent.fade_gamma) : 1\") #Set expression for 'fade out'\n        \n        #STORE MERGE/DISSOLVE NODE IN VARIABLE SO NEXT LOOP CAN CONNECT TO IT\n        bg = m1\n        \n        \n        #UPDATE FRAME RANGE IN THE UI FOR USER CONVENIENCE\n        if x == numFrames-2:                         #If we're at second to last loop...\n          if offset == 'centered':                   #... if offset is centered...\n            m\['endFrame'].setValue(frameSkip*frmidx) #... set endFrame to second to last timeoffset value.\n         \n        if x == numFrames-1:                                      #If we're at last loop...\n          if offset == 'start':                                   \n            m\['startFrame'].setValue(0)                          \n            m\['endFrame'].setValue((numFrames-1)*frameSkip)     \n          elif offset == 'end':\n            m\['startFrame'].setValue((numFrames-1)*frameSkip*-1)\n            m\['endFrame'].setValue(0)\n          elif offset == 'centered':\n            m\['startFrame'].setValue(frameSkip*frmidx*-1)\n      \n\n        #ADJUST ITERATORS DEPENDING ON THE OFFSET MODE\n        if offset == 'start':\n          frmidx = frmidx - 1\n          mixdenom = mixdenom + 1\n        elif offset == 'end':\n          frmidx = frmidx + 1\n          mixdenom = mixdenom + 1\n        elif offset == 'centered':      #If offset is centered...\n          tiktok = tiktok*-1            #...flip the tiktok at every loop\n          if tiktok == -1:\n            frmidx = frmidx + 1           #... increase frmidx at every *other* loop\n            mixdenom  = mixdenom + 1      #... increase mixdenom every *other* loop\n        \n\n    #CONNECT OUTPUT NODE TO THE LAST MERGE/DISSOLVE OF THE LOOP\n    o.setInput(0,bg)\n\n"
+ updateUI "m\['startFrame'].setEnabled(False)\nm\['endFrame'].setEnabled(False)\n\n\ntn = nuke.thisNode()\nncCheck = False\nif nuke.env\['nc'] or nuke.env\['indie']:\n  ncCheck = True\n  \nfor kb in \['numFrames', 'operation', 'frameSkip', 'offset']:\n  if ncCheck:\n    tn\[kb].setEnabled(False)\n    tn\['nc_warning'].setVisible(True)\n  else:\n    tn\[kb].setEnabled(True)\n    tn\['nc_warning'].setVisible(False)\n  "
+ tile_color 0x73351fff
+ addUserKnob {20 PxF_TimeMerge}
+ addUserKnob {4 operation t "Which blend mode to use to combine the frames." M {average over under min max plus from divide multiply "" "" "" ""}}
+ operation under
+ addUserKnob {3 numFrames l "frames to look at" t "How many frames to combine."}
+ numFrames 5
+ addUserKnob {3 frameSkip l "frame skip" t "How many frames to skip between steps. Useful to speed up render times when the source clip moves very slowly."}
+ frameSkip 1
+ addUserKnob {3 startFrame l "frame range" t "Gives an indication of which frame range relative to the current frame is being used.\nNot adjustable by the user. Use 'frames to look at' and 'frame skip' to adjust." +DISABLED}
+ startFrame -2
+ addUserKnob {3 endFrame l "" -STARTLINE +DISABLED}
+ endFrame 2
+ addUserKnob {4 offset t "Direction of the time offset.\n\nstart: Will use previous frames.\ncentered: Will use previous and following frames.\nend: Will use following frames." M {centered start end ""}}
+ addUserKnob {7 fade_gamma l "fade gamma" t "Adjusts the intensity of the fade out effect."}
+ fade_gamma 0.5
+ addUserKnob {6 fade l "fade out" t "Fade out frames according to how far they are before/after the current frame." -STARTLINE}
+ addUserKnob {6 effect_only l "effect only" t "When enabled, the current frame will be hidden. Only the frames before/after the current frame will be visible." +STARTLINE}
+ addUserKnob {7 mix t "Dissolve between the original (0) and the full effect (1)."}
+ mix 1
+ addUserKnob {26 ""}
+ addUserKnob {26 nc_warning l "" +STARTLINE +HIDDEN T "<font size=2 color=#f7931e>Nuke Non-Commercial / Indie detected. Some features disabled due to Python limits.</font>"}
+ addUserKnob {26 Credits l "" t "PxF_TimeMerge 1.1 - &copy; 2022-2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_TimeMerge 1.1 - &copy; 2022-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_TimeMerge1.1.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+}
+ Input {
+  inputs 0
+  name mask
+  label static
+  xpos -180
+  ypos -624
+  number 1
+ }
+ Input {
+  inputs 0
+  name img
+  label static
+  xpos -896
+  ypos -2009
+ }
+set N6eb98800 [stack 0]
+ Dot {
+  name Dot1
+  label static
+  note_font_size 22
+  xpos -1300
+  ypos -1263
+ }
+set N6eb98c00 [stack 0]
+push $N6eb98800
+ TimeOffset {
+  time_offset -2
+  time ""
+  name TimeOffset4
+  label "\[value time_offset]"
+  xpos -385
+  ypos -1695
+ }
+push $N6eb98800
+ TimeOffset {
+  time_offset 2
+  time ""
+  name TimeOffset3
+  label "\[value time_offset]"
+  xpos -495
+  ypos -1695
+ }
+push $N6eb98800
+ TimeOffset {
+  time_offset -1
+  time ""
+  name TimeOffset2
+  label "\[value time_offset]"
+  xpos -605
+  ypos -1695
+ }
+push $N6eb98800
+ TimeOffset {
+  time_offset 1
+  time ""
+  name TimeOffset1
+  label "\[value time_offset]"
+  xpos -715
+  ypos -1695
+ }
+push $N6eb98800
+ Multiply {
+  value 0
+  name Multiply1
+  label static
+  selected true
+  xpos -896
+  ypos -1605
+  disable {{"parent.effect_only ? 0 : 1"}}
+ }
+ Merge2 {
+  inputs 2
+  operation under
+  mix {{"parent.fade ? pow(1/2, 1/parent.fade_gamma) : 1"}}
+  name Merge1
+  xpos -715
+  ypos -1593
+ }
+ Merge2 {
+  inputs 2
+  operation under
+  mix {{"parent.fade ? pow(1/2, 1/parent.fade_gamma) : 1"}}
+  name Merge2
+  xpos -605
+  ypos -1593
+ }
+ Merge2 {
+  inputs 2
+  operation under
+  mix {{"parent.fade ? pow(1/3, 1/parent.fade_gamma) : 1"}}
+  name Merge3
+  xpos -495
+  ypos -1593
+ }
+ Merge2 {
+  inputs 2
+  operation under
+  mix {{"parent.fade ? pow(1/3, 1/parent.fade_gamma) : 1"}}
+  name Merge4
+  xpos -385
+  ypos -1593
+ }
+ Keymix {
+  inputs 3
+  invertMask true
+  bbox B
+  name Keymix1
+  label static
+  xpos -385
+  ypos -591
+  disable {{"\[exists parent.input1] ? 0 : 1" x1 0}}
+ }
+push $N6eb98c00
+ Dissolve {
+  inputs 2
+  which {{parent.mix}}
+  name Dissolve1
+  label static
+  xpos -385
+  ypos -518
+ }
+ Output {
+  name Output1
+  label static
+  xpos -385
+  ypos -436
+ }
+end_group

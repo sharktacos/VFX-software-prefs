@@ -1,0 +1,649 @@
+
+Group {
+ name PxF_DeepResample
+ help "Resample deep images to lower file sizes and increase speed."
+ knobChanged "m = nuke.thisNode()\nkc = nuke.thisKnob()\n\n\n\n#DeepSlices near picker \nif kc.name() in \['nearPick']:\n  mp = nuke.toNode('Shuffle1')\n  px = m\['nearPick'].value(0)\n  py = m\['nearPick'].value(1)\n  dp = mp.sample(\"red\", px, py)\n  m\['znear'].setValue(dp)\n\n#DeepSlices far picker\nif kc.name() in \['farPick']:\n  mp = nuke.toNode('Shuffle1')\n  px = m\['farPick'].value(0)\n  py = m\['farPick'].value(1)\n  dp = mp.sample(\"red\", px, py)\n  m\['zfar'].setValue(dp)\n\n\n# Dont let user use less than 2 slices\nif kc.name() == 'slices':\n  if m\['slices'].value() < 2:\n    m\['slices'].setValue(2)\n\n\n#MAIN LOOP\nif kc.name() in \['slices', 'depthMethod', 'sliceMethod', 'inclNear', 'inclFar']:\n  i = nuke.toNode('deep')\n  o = nuke.toNode('Output1')\n  dm = nuke.toNode('DeepMerge1')\n  \n  near = m\['znear'].value()\n  far = m\['zfar'].value()\n  slices = int(m\['slices'].value())\n  thick = (far-near)/slices\n  incnear = m\['inclNear'].getValue()\n  incfar = m\['inclFar'].getValue()\n  slices = int(m\['slices'].value())\n  trueSlices = slices\n  if incnear:\n    slices = slices + 1\n    neartodo = 1\n  if incfar:\n    slices = slices + 1\n    fartodo = 1\n\n  \n  \n  \n  #Setup stuff for slice colors\n  def hex2float(h,i):\n    return float(int(h\[i*2:(i*2)+2],16))/255    \n  palette = \['1a5fb4','e01b24','33d17a','9141ac','f6d32d','986a44','deddda','ff7800',] \n  p = 0\n  lenp = len(palette)\n\n  #Delete old nodes\n  for n in nuke.allNodes():\n      if \"static\" not in n\['label'].getValue():\n          nuke.delete(n)\n \n \n  #Create new nodes\n  for x in range(1,slices+1,1):\n\n    #Create DeepCrop...\n    if m\['sliceMethod'].getValue() == 0:\n      dc = nuke.nodes.DeepCrop()\n      dc\['use_znear'].setValue(True)\n      dc\['use_zfar'].setValue(True)\n      dc\['use_bbox'].setValue(False)\n    \n    #...or create DeepExpression\n    elif m\['sliceMethod'].getValue() == 1:\n      dc = nuke.nodes.DeepExpression()\n      dc.addKnob(nuke.Double_Knob('znear','znear'))\n      dc.addKnob(nuke.Double_Knob('zfar','zfar'))\n      dc\['temp_name0'].setValue(\"dpcheck\")\n      dc\['temp_expr0'].setValue(\"deep.front > znear && deep.front < zfar\")\n      for y in \['rgba.red','rgba.green','rgba.blue','rgba.alpha','deep.front','deep.back']:\n        dc\[y].setValue(\"dpcheck ? \"+y+\":0\")\n    \n    #Adjust common settings for DeepCrop/DeepExpression\n    dc\['label'].setValue(\"\[value znear] to \[value zfar]\")\n    dc\['selected'].setValue(False)\n    dc.setInput(0,i)     \n    \n    if x <= trueSlices:\n      dc\['znear'].setExpression(\"parent.znear+(((parent.zfar-parent.znear)/parent.slices)*\"+str(x-1)+\")\")\n      dc\['zfar'].setExpression(\"znear + ((parent.zfar-parent.znear)/parent.slices)\")      \n    elif neartodo:\n      dc\['znear'].setValue(0)\n      dc\['zfar'].setExpression(\"parent.znear\")\n      neartodo = 0\n    elif fartodo:\n      dc\['znear'].setExpression(\"parent.znear+(((parent.zfar-parent.znear)/parent.slices)*\"+str(trueSlices)+\")\")\n      dc\['zfar'].setExpression(\"znear + ((parent.zfar-parent.znear)/parent.slices)\") \n      if dc.Class() == 'DeepCrop':\n        dc\['use_zfar'].setValue(False)\n      if dc.Class() == 'DeepExpression':\n        dc\['temp_expr0'].setValue(\"deep.front > znear\")\n      dc\['label'].setValue(\"\[value znear] to infinity\")\n      fartodo = 0\n\n  \n    #Convert slice to non-deep (compress all samples to 1)\n    dt = nuke.nodes.DeepToImage()\n    dt\['selected'].setValue(False)\n    dt.setInput(0,dc)\n    \n    #Create random slice colors\n    cc = nuke.nodes.ColorCorrect()\n    cc\['selected'].setValue(False)\n    cc.setInput(0,dt)\n    cc\['saturation'].setValue(0)\n    cc\['gain'].setSingleValue(False)\n    cc\['enable'].setExpression(\"parent.inspectSlices ? 1 : 0\")\n    for c in range(0,3,1):\n      cc\['gain'].setValue(hex2float(palette\[p%lenp],c),c)\n    p = p+1\n\n    \n    #Expression to convert deep.front/back to depth\n    ex = nuke.nodes.Expression()\n    ex\['selected'].setValue(False)\n    ex.setInput(0,cc)\n    ex\['channel0'].setValue(\"depth\")    \n    if m\['depthMethod'].value() == 'deep.front':\n      ex\['expr0'].setValue(\"1/deep.front\")\n    elif m\['depthMethod'].value() == 'deep.back':\n      ex\['expr0'].setValue(\"1/deep.back\")\n    elif m\['depthMethod'].value() == 'depth':\n      ex\['expr0'].setValue(\"depth.Z\")\n    elif m\['depthMethod'].value() == 'slice depth':\n      near = dc\['znear'].value()\n      far = dc\['zfar'].value()\n      ex\['expr0'].setValue('1/' + str(((far-near)/2)+near))\n\n\n\n    #DeepFromImage - convert RGBAZ to Deep\n    df = nuke.nodes.DeepFromImage()\n    df\['selected'].setValue(False)\n    df.setInput(0,ex)\n    df\['premult'].setValue(True)\n    \n    #DeepExpression - move deep.back backwards to add thickness to samples\n    de = nuke.nodes.DeepExpression()\n    de\['selected'].setValue(False) \n    de.addKnob(nuke.Double_Knob('thick','thick'))\n    de\['thick'].setExpression('(parent.zfar-parent.znear)/parent.slices * parent.thickness')\n    de\['deep.back'].setValue(\"deep.front + thick\")\n    de\['disable'].setExpression(\"parent.thickness <= 0 ? 1 : 0\")\n    de.setInput(0,df)\n\n\n    dm.setInput(x-1,de)\n    \n  \n\n"
+ updateUI "tn = nuke.thisNode()\nncCheck = False\nif nuke.env\['nc'] or nuke.env\['indie']:\n  ncCheck = True\n  \nfor kb in \['slices', 'depthMethod', 'sliceMethod', 'inclNear', 'inclFar']:\n  if ncCheck:\n    tn\[kb].setEnabled(False)\n    tn\['nc_warning'].setVisible(True)\n  else:\n    tn\[kb].setEnabled(True)\n    tn\['nc_warning'].setVisible(False)\n  "
+ tile_color 0x733520ff
+ addUserKnob {20 PxF_DeepResample}
+ addUserKnob {6 inspectSlices l "view deep slices" t "Assign random colors to each slice to make it easier to adjust znear, zfar and the number of slices.\n\nDon't forget to turn this off before you render!" +STARTLINE}
+ addUserKnob {3 slices l "deep slices" t "Cut the deep image into this many slices."}
+ slices 10
+ addUserKnob {12 nearPick l "znear picker"}
+ nearPick {100 100}
+ addUserKnob {7 znear t "Starting point of the slices (how close to camera is the starting point)." R 0 1000}
+ addUserKnob {12 farPick l "zfar picker"}
+ farPick {200 100}
+ addUserKnob {7 zfar t "Ending point of the slices (how far from camera is the end point)." R 0 1000}
+ zfar 100
+ addUserKnob {6 inclNear l "add zero to znear slice" t "Include all deep samples between 0 and znear. All these samples will be compressed into 1 sample." +STARTLINE}
+ inclNear true
+ addUserKnob {6 inclFar l "add zfar to infinity slice" t "Include deep samples between zfar and infinity. All these samples will be compressed into 1 sample." +STARTLINE}
+ inclFar true
+ addUserKnob {7 thickness l "sample thickness" t "Percentage of the slice that will be assigned to deep.back. For example, if each slice is 50 units thick, setting thickness to 0.1 will put deep.back 5 units behind deep.front on each sample.\n\nUse this to create smooth intersections between your resampled Deep images."}
+ addUserKnob {26 ""}
+ addUserKnob {26 nc_warning l "" +STARTLINE +HIDDEN T "<font size=2 color=#f7931e>Nuke Non-Commercial / Indie detected. Some features disabled due to Python limits.</font>"}
+ addUserKnob {26 Credits l "" t "PxF_DeepResample 1.0.2 - &copy; 2022-2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_DeepResample 1.0.2 - &copy; 2022-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_DeepResample.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+ addUserKnob {20 Advanced}
+ addUserKnob {4 sliceMethod t "Which method to use to crop the deep image in slices.\n\nDeepCrop: Use DeepCrop nodes. This may be more efficient (speed, memory) but less precise. The resampled image may not look identical to the original.\n\nDeepExpression: Use DeepExpression nodes. This may be less efficient (speed, memory) but more precise. The resampled image should look identical to the original." M {DeepCrop DeepExpression "" ""}}
+ addUserKnob {4 depthMethod l "depth method" t "Which method to use to assign depth to the resampled deep pixels.\n\ndeep.front: Use the deep.front value of the closest deep sample for each pixel to assign depth. This is the preferred method and is the most precise.\n\ndeep.back: Use the deep.back value to assign depth.\n\ndepth: Use the depth.Z value (mid point between deep.front and deep.back of the frontmost sample of each pixel) to assign depth.\n\nslice depth: Assign the same depth to each pixel on the slice." M {deep.front deep.back depth "slice depth" "" "" "" ""}}
+ addUserKnob {6 drop_hidden l "drop hidden samples" +STARTLINE}
+ drop_hidden true
+}
+ Input {
+  inputs 0
+  name deep
+  label static
+  xpos 532
+  ypos -957
+ }
+set N62c93800 [stack 0]
+ DeepCrop {
+  znear {{parent.znear+(((parent.zfar-parent.znear)/parent.slices)*10)}}
+  zfar {{"znear + ((parent.zfar-parent.znear)/parent.slices)"}}
+  use_zfar false
+  bbox {384 216 1536 864}
+  use_bbox false
+  name DeepCrop12
+  label "\[value znear] to infinity"
+  xpos 1742
+  ypos -835
+ }
+ DeepToImage {
+  name DeepToImage13
+  xpos 1742
+  ypos -725
+ }
+ ColorCorrect {
+  saturation 0
+  gain {0.568627451 0.2549019608 0.6745098039 1}
+  mix {{"parent.inspectSlices ? 1 : 0"}}
+  name ColorCorrect12
+  xpos 1742
+  ypos -615
+ }
+ Expression {
+  channel0 depth
+  expr0 1/deep.front
+  name Expression12
+  xpos 1742
+  ypos -505
+ }
+ DeepFromImage {
+  premult true
+  name DeepFromImage12
+  xpos 1742
+  ypos -395
+ }
+ DeepExpression {
+  chans1 deep
+  deep.back "deep.front + thick"
+  name DeepExpression12
+  xpos 1742
+  ypos -285
+  disable {{"parent.thickness <= 0 ? 1 : 0"}}
+  addUserKnob {20 User}
+  addUserKnob {7 thick}
+  thick {{"(parent.zfar-parent.znear)/parent.slices * parent.thickness"}}
+ }
+push $N62c93800
+ DeepCrop {
+  znear 0
+  zfar {{parent.znear}}
+  bbox {384 216 1536 864}
+  use_bbox false
+  name DeepCrop11
+  label "\[value znear] to \[value zfar]"
+  xpos 1632
+  ypos -835
+ }
+ DeepToImage {
+  name DeepToImage12
+  xpos 1632
+  ypos -725
+ }
+ ColorCorrect {
+  saturation 0
+  gain {0.2 0.8196078431 0.4784313725 1}
+  mix {{"parent.inspectSlices ? 1 : 0"}}
+  name ColorCorrect11
+  xpos 1632
+  ypos -615
+ }
+ Expression {
+  channel0 depth
+  expr0 1/deep.front
+  name Expression11
+  xpos 1632
+  ypos -505
+ }
+ DeepFromImage {
+  premult true
+  name DeepFromImage11
+  xpos 1632
+  ypos -395
+ }
+ DeepExpression {
+  chans1 deep
+  deep.back "deep.front + thick"
+  name DeepExpression11
+  xpos 1632
+  ypos -285
+  disable {{"parent.thickness <= 0 ? 1 : 0"}}
+  addUserKnob {20 User}
+  addUserKnob {7 thick}
+  thick {{"(parent.zfar-parent.znear)/parent.slices * parent.thickness"}}
+ }
+push $N62c93800
+ DeepCrop {
+  znear {{parent.znear+(((parent.zfar-parent.znear)/parent.slices)*9)}}
+  zfar {{"znear + ((parent.zfar-parent.znear)/parent.slices)"}}
+  bbox {384 216 1536 864}
+  use_bbox false
+  name DeepCrop10
+  label "\[value znear] to \[value zfar]"
+  xpos 1522
+  ypos -835
+ }
+ DeepToImage {
+  name DeepToImage11
+  xpos 1522
+  ypos -725
+ }
+ ColorCorrect {
+  saturation 0
+  gain {0.8784313725 0.1058823529 0.1411764706 1}
+  mix {{"parent.inspectSlices ? 1 : 0"}}
+  name ColorCorrect10
+  xpos 1522
+  ypos -615
+ }
+ Expression {
+  channel0 depth
+  expr0 1/deep.front
+  name Expression10
+  xpos 1522
+  ypos -505
+ }
+ DeepFromImage {
+  premult true
+  name DeepFromImage10
+  xpos 1522
+  ypos -395
+ }
+ DeepExpression {
+  chans1 deep
+  deep.back "deep.front + thick"
+  name DeepExpression10
+  xpos 1522
+  ypos -285
+  disable {{"parent.thickness <= 0 ? 1 : 0"}}
+  addUserKnob {20 User}
+  addUserKnob {7 thick}
+  thick {{"(parent.zfar-parent.znear)/parent.slices * parent.thickness"}}
+ }
+push $N62c93800
+ DeepCrop {
+  znear {{parent.znear+(((parent.zfar-parent.znear)/parent.slices)*8)}}
+  zfar {{"znear + ((parent.zfar-parent.znear)/parent.slices)"}}
+  bbox {384 216 1536 864}
+  use_bbox false
+  name DeepCrop9
+  label "\[value znear] to \[value zfar]"
+  xpos 1412
+  ypos -835
+ }
+ DeepToImage {
+  name DeepToImage10
+  xpos 1412
+  ypos -725
+ }
+ ColorCorrect {
+  saturation 0
+  gain {0.1019607843 0.3725490196 0.7058823529 1}
+  mix {{"parent.inspectSlices ? 1 : 0"}}
+  name ColorCorrect9
+  xpos 1412
+  ypos -615
+ }
+ Expression {
+  channel0 depth
+  expr0 1/deep.front
+  name Expression9
+  xpos 1412
+  ypos -505
+ }
+ DeepFromImage {
+  premult true
+  name DeepFromImage9
+  xpos 1412
+  ypos -395
+ }
+ DeepExpression {
+  chans1 deep
+  deep.back "deep.front + thick"
+  name DeepExpression9
+  xpos 1412
+  ypos -285
+  disable {{"parent.thickness <= 0 ? 1 : 0"}}
+  addUserKnob {20 User}
+  addUserKnob {7 thick}
+  thick {{"(parent.zfar-parent.znear)/parent.slices * parent.thickness"}}
+ }
+push $N62c93800
+ DeepCrop {
+  znear {{parent.znear+(((parent.zfar-parent.znear)/parent.slices)*7)}}
+  zfar {{"znear + ((parent.zfar-parent.znear)/parent.slices)"}}
+  bbox {384 216 1536 864}
+  use_bbox false
+  name DeepCrop8
+  label "\[value znear] to \[value zfar]"
+  xpos 1302
+  ypos -835
+ }
+ DeepToImage {
+  name DeepToImage9
+  xpos 1302
+  ypos -725
+ }
+ ColorCorrect {
+  saturation 0
+  gain {1 0.4705882353 0 1}
+  mix {{"parent.inspectSlices ? 1 : 0"}}
+  name ColorCorrect8
+  xpos 1302
+  ypos -615
+ }
+ Expression {
+  channel0 depth
+  expr0 1/deep.front
+  name Expression8
+  xpos 1302
+  ypos -505
+ }
+ DeepFromImage {
+  premult true
+  name DeepFromImage8
+  xpos 1302
+  ypos -395
+ }
+ DeepExpression {
+  chans1 deep
+  deep.back "deep.front + thick"
+  name DeepExpression8
+  xpos 1302
+  ypos -285
+  disable {{"parent.thickness <= 0 ? 1 : 0"}}
+  addUserKnob {20 User}
+  addUserKnob {7 thick}
+  thick {{"(parent.zfar-parent.znear)/parent.slices * parent.thickness"}}
+ }
+push $N62c93800
+ DeepCrop {
+  znear {{parent.znear+(((parent.zfar-parent.znear)/parent.slices)*6)}}
+  zfar {{"znear + ((parent.zfar-parent.znear)/parent.slices)"}}
+  bbox {384 216 1536 864}
+  use_bbox false
+  name DeepCrop7
+  label "\[value znear] to \[value zfar]"
+  xpos 1192
+  ypos -835
+ }
+ DeepToImage {
+  name DeepToImage8
+  xpos 1192
+  ypos -725
+ }
+ ColorCorrect {
+  saturation 0
+  gain {0.8705882353 0.8666666667 0.8549019608 1}
+  mix {{"parent.inspectSlices ? 1 : 0"}}
+  name ColorCorrect7
+  xpos 1192
+  ypos -615
+ }
+ Expression {
+  channel0 depth
+  expr0 1/deep.front
+  name Expression7
+  xpos 1192
+  ypos -505
+ }
+ DeepFromImage {
+  premult true
+  name DeepFromImage7
+  xpos 1192
+  ypos -395
+ }
+ DeepExpression {
+  chans1 deep
+  deep.back "deep.front + thick"
+  name DeepExpression7
+  xpos 1192
+  ypos -285
+  disable {{"parent.thickness <= 0 ? 1 : 0"}}
+  addUserKnob {20 User}
+  addUserKnob {7 thick}
+  thick {{"(parent.zfar-parent.znear)/parent.slices * parent.thickness"}}
+ }
+push $N62c93800
+ DeepCrop {
+  znear {{parent.znear+(((parent.zfar-parent.znear)/parent.slices)*5)}}
+  zfar {{"znear + ((parent.zfar-parent.znear)/parent.slices)"}}
+  bbox {384 216 1536 864}
+  use_bbox false
+  name DeepCrop6
+  label "\[value znear] to \[value zfar]"
+  xpos 1082
+  ypos -835
+ }
+ DeepToImage {
+  name DeepToImage6
+  xpos 1082
+  ypos -725
+ }
+ ColorCorrect {
+  saturation 0
+  gain {0.5960784314 0.4156862745 0.2666666667 1}
+  mix {{"parent.inspectSlices ? 1 : 0"}}
+  name ColorCorrect6
+  xpos 1082
+  ypos -615
+ }
+ Expression {
+  channel0 depth
+  expr0 1/deep.front
+  name Expression6
+  xpos 1082
+  ypos -505
+ }
+ DeepFromImage {
+  premult true
+  name DeepFromImage6
+  xpos 1082
+  ypos -395
+ }
+ DeepExpression {
+  chans1 deep
+  deep.back "deep.front + thick"
+  name DeepExpression6
+  xpos 1082
+  ypos -285
+  disable {{"parent.thickness <= 0 ? 1 : 0"}}
+  addUserKnob {20 User}
+  addUserKnob {7 thick}
+  thick {{"(parent.zfar-parent.znear)/parent.slices * parent.thickness"}}
+ }
+push $N62c93800
+ DeepCrop {
+  znear {{parent.znear+(((parent.zfar-parent.znear)/parent.slices)*4)}}
+  zfar {{"znear + ((parent.zfar-parent.znear)/parent.slices)"}}
+  bbox {384 216 1536 864}
+  use_bbox false
+  name DeepCrop5
+  label "\[value znear] to \[value zfar]"
+  xpos 972
+  ypos -835
+ }
+ DeepToImage {
+  name DeepToImage5
+  xpos 972
+  ypos -725
+ }
+ ColorCorrect {
+  saturation 0
+  gain {0.9647058824 0.8274509804 0.1764705882 1}
+  mix {{"parent.inspectSlices ? 1 : 0"}}
+  name ColorCorrect5
+  xpos 972
+  ypos -615
+ }
+ Expression {
+  channel0 depth
+  expr0 1/deep.front
+  name Expression5
+  xpos 972
+  ypos -505
+ }
+ DeepFromImage {
+  premult true
+  name DeepFromImage5
+  xpos 972
+  ypos -395
+ }
+ DeepExpression {
+  chans1 deep
+  deep.back "deep.front + thick"
+  name DeepExpression5
+  xpos 972
+  ypos -285
+  disable {{"parent.thickness <= 0 ? 1 : 0"}}
+  addUserKnob {20 User}
+  addUserKnob {7 thick}
+  thick {{"(parent.zfar-parent.znear)/parent.slices * parent.thickness"}}
+ }
+push $N62c93800
+ DeepCrop {
+  znear {{parent.znear+(((parent.zfar-parent.znear)/parent.slices)*3)}}
+  zfar {{"znear + ((parent.zfar-parent.znear)/parent.slices)"}}
+  bbox {384 216 1536 864}
+  use_bbox false
+  name DeepCrop4
+  label "\[value znear] to \[value zfar]"
+  xpos 862
+  ypos -835
+ }
+ DeepToImage {
+  name DeepToImage4
+  xpos 862
+  ypos -725
+ }
+ ColorCorrect {
+  saturation 0
+  gain {0.568627451 0.2549019608 0.6745098039 1}
+  mix {{"parent.inspectSlices ? 1 : 0"}}
+  name ColorCorrect4
+  xpos 862
+  ypos -615
+ }
+ Expression {
+  channel0 depth
+  expr0 1/deep.front
+  name Expression4
+  xpos 862
+  ypos -505
+ }
+ DeepFromImage {
+  premult true
+  name DeepFromImage4
+  xpos 862
+  ypos -395
+ }
+ DeepExpression {
+  chans1 deep
+  deep.back "deep.front + thick"
+  name DeepExpression4
+  xpos 862
+  ypos -285
+  disable {{"parent.thickness <= 0 ? 1 : 0"}}
+  addUserKnob {20 User}
+  addUserKnob {7 thick}
+  thick {{"(parent.zfar-parent.znear)/parent.slices * parent.thickness"}}
+ }
+push $N62c93800
+ DeepCrop {
+  znear {{parent.znear+(((parent.zfar-parent.znear)/parent.slices)*2)}}
+  zfar {{"znear + ((parent.zfar-parent.znear)/parent.slices)"}}
+  bbox {384 216 1536 864}
+  use_bbox false
+  name DeepCrop3
+  label "\[value znear] to \[value zfar]"
+  xpos 752
+  ypos -835
+ }
+ DeepToImage {
+  name DeepToImage3
+  xpos 752
+  ypos -725
+ }
+ ColorCorrect {
+  saturation 0
+  gain {0.2 0.8196078431 0.4784313725 1}
+  mix {{"parent.inspectSlices ? 1 : 0"}}
+  name ColorCorrect3
+  xpos 752
+  ypos -615
+ }
+ Expression {
+  channel0 depth
+  expr0 1/deep.front
+  name Expression3
+  xpos 752
+  ypos -505
+ }
+ DeepFromImage {
+  premult true
+  name DeepFromImage3
+  xpos 752
+  ypos -395
+ }
+ DeepExpression {
+  chans1 deep
+  deep.back "deep.front + thick"
+  name DeepExpression3
+  xpos 752
+  ypos -285
+  disable {{"parent.thickness <= 0 ? 1 : 0"}}
+  addUserKnob {20 User}
+  addUserKnob {7 thick}
+  thick {{"(parent.zfar-parent.znear)/parent.slices * parent.thickness"}}
+ }
+push $N62c93800
+ DeepCrop {
+  znear {{parent.znear+(((parent.zfar-parent.znear)/parent.slices)*1)}}
+  zfar {{"znear + ((parent.zfar-parent.znear)/parent.slices)"}}
+  bbox {384 216 1536 864}
+  use_bbox false
+  name DeepCrop2
+  label "\[value znear] to \[value zfar]"
+  xpos 642
+  ypos -835
+ }
+ DeepToImage {
+  name DeepToImage2
+  xpos 642
+  ypos -725
+ }
+ ColorCorrect {
+  saturation 0
+  gain {0.8784313725 0.1058823529 0.1411764706 1}
+  mix {{"parent.inspectSlices ? 1 : 0"}}
+  name ColorCorrect2
+  xpos 642
+  ypos -615
+ }
+ Expression {
+  channel0 depth
+  expr0 1/deep.front
+  name Expression2
+  xpos 642
+  ypos -505
+ }
+ DeepFromImage {
+  premult true
+  name DeepFromImage2
+  xpos 642
+  ypos -395
+ }
+ DeepExpression {
+  chans1 deep
+  deep.back "deep.front + thick"
+  name DeepExpression2
+  xpos 642
+  ypos -285
+  disable {{"parent.thickness <= 0 ? 1 : 0"}}
+  addUserKnob {20 User}
+  addUserKnob {7 thick}
+  thick {{"(parent.zfar-parent.znear)/parent.slices * parent.thickness"}}
+ }
+push $N62c93800
+ DeepCrop {
+  znear {{parent.znear+(((parent.zfar-parent.znear)/parent.slices)*0)}}
+  zfar {{"znear + ((parent.zfar-parent.znear)/parent.slices)"}}
+  bbox {384 216 1536 864}
+  use_bbox false
+  name DeepCrop1
+  label "\[value znear] to \[value zfar]"
+  xpos 532
+  ypos -835
+ }
+ DeepToImage {
+  name DeepToImage1
+  xpos 532
+  ypos -725
+ }
+ ColorCorrect {
+  saturation 0
+  gain {0.1019607843 0.3725490196 0.7058823529 1}
+  mix {{"parent.inspectSlices ? 1 : 0"}}
+  name ColorCorrect1
+  xpos 532
+  ypos -615
+ }
+ Expression {
+  channel0 depth
+  expr0 1/deep.front
+  name Expression1
+  xpos 532
+  ypos -505
+ }
+ DeepFromImage {
+  premult true
+  name DeepFromImage1
+  xpos 532
+  ypos -395
+ }
+ DeepExpression {
+  chans1 deep
+  deep.back "deep.front + thick"
+  name DeepExpression1
+  xpos 532
+  ypos -285
+  disable {{"parent.thickness <= 0 ? 1 : 0"}}
+  addUserKnob {20 User}
+  addUserKnob {7 thick}
+  thick {{"(parent.zfar-parent.znear)/parent.slices * parent.thickness"}}
+ }
+ DeepMerge2 {
+  inputs 12
+  drop_hidden {{parent.drop_hidden}}
+  name DeepMerge1
+  label static
+  selected true
+  xpos 379
+  ypos -132
+ }
+ Output {
+  name Output1
+  label static
+  xpos 337
+  ypos 255
+ }
+push $N62c93800
+ DeepToImage2 {
+  name DeepToImage7
+  label static
+  xpos 20
+  ypos -674
+ }
+ Shuffle {
+  in deep
+  green black
+  blue black
+  alpha black
+  name Shuffle1
+  label "static\nfor depth picker"
+  xpos 20
+  ypos -584
+ }
+end_group

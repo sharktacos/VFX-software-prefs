@@ -1,0 +1,1102 @@
+
+Group {
+ name PxF_AreaLight
+ help "Generates a 3D Area Light Rig.\n\nPoint lights are positioned at each vertex of a card.\n\nThe RGB values of the \"map\" input are used to drive the intensity and color of each light on the rig. The image can be a flat color like a white constant or a more complex color image. Note that only still images are supported at this time. Animated light maps are not supported.\n\nThe \"axis\" input is used to scale and position the light rig in the scene.\n\nPxF_AreaLight is meant to be used to light geometry rendered via Nuke's RayRender node. Make sure to apply shader nodes to your geometry (usually \"diffuse\" and \"reflection\")."
+ knobChanged "m = nuke.thisNode()\nkc = nuke.thisKnob()\n\nncCheck = False\nif nuke.env\['nc'] or nuke.env\['indie']:\n  ncCheck = True\n  \nif ncCheck == False:\n  if kc.name() in \[\"rows\", \"columns\", \"inputChange\", \"sampleLights\", \"falloff\", \"directional\"]:\n  #if True:\n      for n in nuke.allNodes():\n        if \"lightrig\" in n\['label'].getValue():\n          nuke.delete(n)\n  \n      a = nuke.toNode(\"mAxis\")\n      s = nuke.nodes.Scene()\n      s.setInput(0, nuke.toNode(\"TransformGeo1\"))\n      s\['label'].setValue(\"lightrig\")\n      \n      nuke.toNode(\"Output1\").setInput(0,s)\n      c = nuke.toNode(\"Switch2\")\n      w = c.width()\n      h = c.height()\n      ar = w/h\n      \n      \n  \n      #get all the points from our card\n      pythonGeoNode = nuke.toNode('PythonGeo1')\n      \n      cs = pythonGeoNode.knob('geo').getGeometry()\[0].points()\n      \n      lp = int(len(cs)/3)\n      ps = \[\[] for i in range(lp)]\n   \n  \n      for i, z in enumerate(cs):\n          ps\[int(i/3)].append(z)\n  \n      \n      i = int(1)\n      for p in ps:\n          t = nuke.nodes.Light2()\n          t\['label'].setValue(\"lightrig\")\n          if m\['directional'].value() is True:\n              t\['light_type'].setValue(\"spot\")\n              t\['cone_angle'].setValue(0)\n              t\['rotate'].setValue(180, 0)\n              m\['cone_penumbra_angle'].setEnabled(True)                        \n          else:\n              t\['light_type'].setValue(\"point\")\n              m\['cone_penumbra_angle'].setEnabled(False)\n          t\['scaling'].setExpression(\"1/mAxis.worldScale.x\",0)\n          t\['scaling'].setExpression(\"1/mAxis.worldScale.y\",1)\n          t\['scaling'].setExpression(\"1/mAxis.worldScale.z\",2)\n          t\['display'].setExpression(\"parent.displayLights\")\n          t\['disable'].setExpression(\"parent.lightsEnable?0:1\")\n          t\['uniform_scale'].setExpression(\"parent.scale\")\n          t\['cone_penumbra_angle'].setExpression(\"parent.cone_penumbra_angle\")\n          t\['cast_shadows'].setExpression(\"parent.shadows\")\n          t\['shadow_mode'].setExpression(\"parent.shadow_mode\")\n          t\['intensity'].setExpression(\"parent.intensity\")\n          t\['falloff_type'].setValue(m\['falloff'].value())\n          t.addKnob(nuke.Double_Knob('x'))\n          t.addKnob(nuke.Double_Knob('y'))\n          t\['translate'].setValue(p)\n          t\['x'].setExpression(\"(translate.x+0.5)*\" + str(w))\n          t\['y'].setExpression(\"((translate.y*\"+str(ar)+\")+0.5)*\" + str(h))\n          x = t\['x'].value()\n          y = t\['y'].value()            \n          r = c.sample(\"red\", x, y)\n          g = c.sample(\"green\", x, y)\n          b = c.sample(\"blue\", x, y)\n          if r == 0.0 and g == 0.0 and b == 0.0:\n              nuke.delete(t)\n              continue\n          #t\['color'].setValue(\[r,g,b])\n          t\['color'].setSingleValue(False)\n          t\['color'].setExpression(\"pow((\" + str(r) + \" * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)\", 0)\n          t\['color'].setExpression(\"pow((\" + str(g) + \" * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)\", 1)\n          t\['color'].setExpression(\"pow((\" + str(b) + \" * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)\", 2)\n          t.setInput(0,a)\n          s.setInput(i, t)\n          i = i + 1\n      m\['lights'].setValue(i-1)"
+ updateUI "tn = nuke.thisNode()\nncCheck = False\nif nuke.env\['nc'] or nuke.env\['indie']:\n  ncCheck = True\n  \nfor kb in  \[\"rows\", \"columns\", \"sampleLights\", \"falloff\", \"directional\"]:\n  if ncCheck:\n    tn\[kb].setEnabled(False)\n    tn\['nc_warning'].setVisible(True)\n  else:\n    tn\[kb].setEnabled(True)\n    tn\['nc_warning'].setVisible(False)\n  "
+ tile_color 0x733520ff
+ addUserKnob {20 Light_Rig l "Light Rig"}
+ addUserKnob {22 sampleLights l "Sample Lights" t "Click this every time you make a change to the light map so that lights get updated with the current RGB values.\n\nColor sampling of the lights seems to be broken if the Viewer is not set to 1:1 resolution (bug in node.sample())" T "#dummy line to trigger knobChanged\nmessage=\"Sampling lights\"\n" +STARTLINE}
+ addUserKnob {3 rows t "How many rows of lights in the light rig."}
+ rows 5
+ addUserKnob {3 columns t "How many columns of lights in the light rig."}
+ columns 5
+ addUserKnob {3 lights t "Shows how many lights are in the rig. Use \"rows\" and \"columns\" to adjust how many lights are in use.\n\nMore lights add precision (especially in the shadows), but render times will be longer.\n\nThe total number of lights will be approximately (rows+1)*(columns+1). If the sampled pixel on the light map is 0,0,0, then that light will be omitted to save render time." +DISABLED}
+ lights 36
+ addUserKnob {6 lightsEnable l enable t "Enable lights in the light rig." -STARTLINE}
+ lightsEnable true
+ addUserKnob {6 displayLights l display t "Display lights in the 3D view. Does not affect the rendered image." -STARTLINE}
+ displayLights true
+ addUserKnob {7 scale l scale/spread t "Scale of individual lights in the light rig.\n\nTo scale and orient the *entire* light rig connect an Axis to the 'axis' input.\n\nWhen directional is OFF (point lights):\nAffects light icons in the 3D Viewer (does not affect the rendered result).\n\nWhen directional is ON (spot lights):\nAffects the spread of the lights.\nSmaller scale = narrower light beams.\n\n"}
+ scale 1
+ addUserKnob {7 cone_penumbra_angle l "penumbra angle" t "Refine the light spread when 'directional' is ON (spot lights).\n\nUse the 'scale' knob to make big adjustments to the light spread.\n\nMaximum spread is 180 degrees." R 0 180}
+ cone_penumbra_angle 180
+ addUserKnob {6 directional t "Limit the spread of the lights.\n\nWhen directional is off, point lights are used in the rig (light is emitted at 360 degrees around each light).\n\nWhen directional is on, spot lights are used in the rig (the light spread is adjusted with the 'scale/spread' knob)." +STARTLINE}
+ directional true
+ addUserKnob {6 shadows t "Enables shadows for every light in the rig." +STARTLINE}
+ shadows true
+ addUserKnob {4 shadow_mode l "shadow mode" t "Shadow casting modes that affect shadows cast by objects, based on the objects’ opacity: \n• solid - objects that cast shadows are considered to be completely solid. This option can be used with both ScanlineRender and RayRender. Fastest mode. \n• clipped alpha - objects that cast shadows are considered to be transparent if the object’s alpha is below the light’s clipping threshold control in the Shadows tab. This option is only relevant if you are using ScanlineRender to render your shadows. \n• full alpha - shadows are calculated based on how light is reduced when it passes through non-opaque occluders. This option is relevant if you are using ScanlineRender or RayRender to render your shadows. Slowest Mode." M {solid "clipped alpha" "full alpha" "" "" "" ""}}
+ addUserKnob {26 ""}
+ addUserKnob {26 nc_warning l "" +STARTLINE +HIDDEN T "<font size=2 color=#f7931e>Nuke Non-Commercial / Indie detected. Some features disabled due to Python limits.</font>"}
+ addUserKnob {26 Credits l "" t "PxF_AreaLight 1.0.1 - &copy; 2022-2023 - Xavier Bourque - pixelfudger.com\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_AreaLight 1.0.1 - &copy; 2022-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_AreaLight.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+ addUserKnob {20 ColorTab l Color}
+ addUserKnob {18 color t "Adjust the color of the light rig. \n\nThe rgb values sampled from the light map are multiplied by the color."}
+ color {1 1 1}
+ addUserKnob {6 color_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {7 intensity t "Adjusts the intensity of the light rig.\n\nThe value sampled from the light map is multiplied by this value.\n\nUse this to adjust the overall \"brightness\" of your scene."}
+ intensity 100
+ addUserKnob {18 gamma t "Applies a simple gamma to color values sampled from the light map to every light in the rig.\n\nNormally should be left at 1, but it can be used lighten or darken shadows."}
+ gamma 1
+ addUserKnob {6 gamma_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {4 falloff l "falloff type" t "No falloff - light does not diminish with distance. \nLinear - diminish the light at a fixed rate as it travels from the object. \nQuadratic and Cubic - diminish the light at an exponential rate." M {"No Falloff" Linear Quadratic Cubic "" "" "" ""}}
+ falloff Cubic
+ addUserKnob {20 Emissive_Object l "Emissive Object"}
+ addUserKnob {6 emiEnable l enable t "Enable the emissive object.\n\nFor an AreaLight, the emissive object is a card with the light map applied to it as a texture.\n\nUse the emissive object to see the reflection of the light source on reflective objects.\n\nLights in the light rig will still be active even if the emission object is disabled." +STARTLINE}
+ emiEnable true
+ addUserKnob {6 emiTransparent l transparent t "Set the alpha of the emissive object to zero.\n\nTo keep the emissive object visible to reflections but invisible to the camera (i.e. the beauty/rgba pass):\n\n1) Enable the emissive object.\n\n2) Enable transparent.\n\n3) In RayRender, under AOVs, turn on \"output AOV\".\n\n4) Turn on \"remove AOV from beauty pass\".\n\n5) Send \"emissive\" to any layer except \"rgba\". " +STARTLINE}
+ emiTransparent true
+ addUserKnob {18 emiColor l color t "Use this to adjust the color of the emissive object."}
+ emiColor {1 1 1}
+ addUserKnob {6 emiColor_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {7 emiIntensity l intensity t "Use this to adjust the intensity of the emissive object without affecting the light rig."}
+ emiIntensity 1
+}
+ Input {
+  inputs 0
+  name axis
+  label STATIC
+  xpos 2528
+  ypos -740
+  number 1
+ }
+ Axis2 {
+  display off
+  selectable false
+  name mAxis
+  xpos 2549
+  ypos -652
+  addUserKnob {20 User}
+  addUserKnob {3 computeWorldScale}
+  computeWorldScale {{"\[python -execlocal a\\ =\\ nuke.thisNode()\\nmk\\ =\\ a\\\[\\\"world_matrix\\\"\\]\\nmx\\ =\\ nuke.math.Matrix4()\\n\\nfor\\ y\\ in\\ range(mk.height()):\\n\\ \\ \\ \\ for\\ x\\ in\\ range(mk.width()):\\n\\ \\ \\ \\ \\ \\ \\ \\ mx\\\[x+(y*mk.width())\\]\\ =\\ mk.value(x,y)\\n\\nmx.scaleOnly()\\n\\na\\\['worldScale'\\].setValue(mx\\\[0\\],0)\\na\\\['worldScale'\\].setValue(mx\\\[5\\],1)\\na\\\['worldScale'\\].setValue(mx\\\[10\\],2)\\n\\nret=0]"}}
+  addUserKnob {13 worldScale}
+  worldScale {1 1 1}
+ }
+set N737ebc00 [stack 0]
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.5 0.28125 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light36
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.3000000119 0.28125 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light35
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.1000000238 0.28125 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light34
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.09999999404 0.28125 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light33
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.3000000119 0.28125 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light32
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.5 0.28125 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light31
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.5 0.168750003 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light30
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.3000000119 0.168750003 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light29
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.1000000238 0.168750003 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light28
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.09999999404 0.168750003 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light27
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.3000000119 0.168750003 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light26
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.5 0.168750003 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light25
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.5 0.05625001341 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light24
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.3000000119 0.05625001341 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light23
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.1000000238 0.05625001341 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light22
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.09999999404 0.05625001341 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light21
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.3000000119 0.05625001341 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light20
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.5 0.05625001341 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light19
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.5 -0.05624999851 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light18
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.3000000119 -0.05624999851 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light17
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.1000000238 -0.05624999851 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light16
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.09999999404 -0.05624999851 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light15
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.3000000119 -0.05624999851 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light14
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.5 -0.05624999851 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light13
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.5 -0.168750003 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light12
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.3000000119 -0.168750003 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light11
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.1000000238 -0.168750003 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light10
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.09999999404 -0.168750003 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light9
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.3000000119 -0.168750003 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light8
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.5 -0.168750003 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light7
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.5 -0.28125 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light6
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.3000000119 -0.28125 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light5
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.1000000238 -0.28125 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light4
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.09999999404 -0.28125 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light3
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.3000000119 -0.28125 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light2
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Light2 {
+  light_type spot
+  color {{"pow((1.0 * parent.color.r * parent.intensity / parent.lights * 25), 1/parent.gamma.r)"} {"pow((1.0 * parent.color.g * parent.intensity / parent.lights * 25), 1/parent.gamma.g)"} {"pow((1.0 * parent.color.b * parent.intensity / parent.lights * 25), 1/parent.gamma.b)"}}
+  intensity {{parent.intensity}}
+  cone_angle 0
+  cone_penumbra_angle {{parent.cone_penumbra_angle}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.5 -0.28125 0}
+  rotate {180 0 0}
+  scaling {{1/mAxis.worldScale.x} {1/mAxis.worldScale.y} {1/mAxis.worldScale.z}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light1
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+  addUserKnob {20 User}
+  addUserKnob {7 x}
+  x {{(translate.x+0.5)*1920}}
+  addUserKnob {7 y}
+  y {{((translate.y*1.7777777777777777)+0.5)*1080}}
+ }
+push $N737ebc00
+ Dot {
+  name Dot1
+  xpos 2577
+  ypos -514
+ }
+ Input {
+  inputs 0
+  name map
+  label STATIC
+  xpos -224
+  ypos -154
+ }
+ Constant {
+  inputs 0
+  color 1
+  format "256 256 0 0 256 256 1 square_256"
+  name Constant1
+  label STATIC
+  xpos -2
+  ypos -206
+ }
+ Switch {
+  inputs 2
+  which {{"\[exists parent.input0] "}}
+  name Switch2
+  label STATIC
+  selected true
+  xpos -224
+  ypos -87
+ }
+ Grade {
+  white {{parent.emiIntensity*parent.emiColor.r*parent.color.r} {parent.emiIntensity*parent.emiColor.g*parent.color.g} {parent.emiIntensity*parent.emiColor.b*parent.color.b} 1}
+  name Grade2
+  xpos -224
+  ypos -20
+ }
+set N7486e000 [stack 0]
+push $N7486e000
+ Shuffle {
+  red black
+  green black
+  blue black
+  alpha black
+  name Shuffle2
+  label "STATIC\nkill rgba"
+  xpos -9
+  ypos 38
+ }
+push $N7486e000
+ Shuffle {
+  red black
+  green black
+  blue black
+  name Shuffle1
+  label "STATIC\nkill rgb"
+  xpos -119
+  ypos 39
+ }
+ Switch {
+  inputs 2
+  which {{parent.emiTransparent}}
+  name Switch1
+  label STATIC
+  xpos -44
+  ypos 121
+ }
+ Emission {
+  inputs 2
+  emission {1 1 1}
+  name Emission1
+  label STATIC
+  xpos -213
+  ypos 131
+ }
+ Card2 {
+  display off
+  selectable false
+  cast_shadow false
+  receive_shadow false
+  rows {{parent.rows}}
+  columns {{parent.columns}}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
+1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
+1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
+1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
+1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
+1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
+1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
+1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
+1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
+  name Card1
+  label STATIC
+  xpos -207
+  ypos 286
+  disable {{"parent.emiEnable? 0 : 1"}}
+ }
+set N7486f400 [stack 0]
+push $N7486e000
+ BasicMaterial {
+  diffuse 0
+  specular 0
+  name BasicMaterial1
+  xpos -335
+  ypos 145
+ }
+ Card2 {
+  selectable false
+  render_mode off
+  cast_shadow false
+  receive_shadow false
+  rows {{parent.rows}}
+  columns {{parent.columns}}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
+1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
+1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
+1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
+1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
+1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
+1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
+1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
+1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
+  name Card2
+  label STATIC
+  xpos -335
+  ypos 282
+  disable {{"parent.emiEnable? 0 : 1"}}
+ }
+ MergeGeo {
+  inputs 2
+  name MergeGeo1
+  label static
+  xpos -228
+  ypos 380
+ }
+ TransformGeo {
+  inputs 2
+  name TransformGeo1
+  label STATIC
+  xpos -210
+  ypos 1125
+ }
+ Scene {
+  inputs 37
+  name Scene1
+  label lightrig
+ }
+ Output {
+  name Output1
+  label STATIC
+  xpos 5419
+  ypos 2013
+ }
+push $N7486f400
+ PythonGeo {
+  name PythonGeo1
+  label STATIC
+  xpos -85
+  ypos 339
+ }
+end_group

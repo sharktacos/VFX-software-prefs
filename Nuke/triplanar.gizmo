@@ -1,0 +1,498 @@
+#! C:/Program Files/Nuke13.0v5/nuke-13.0.5.dll -nx
+version 13.0 v5
+Gizmo {
+ inputs 5
+ addUserKnob {20 User}
+ addUserKnob {41 size_2 l sizeX T Expression6.size}
+ addUserKnob {41 size_1 l sizeY T Expression7.size}
+ addUserKnob {41 size l sizeZ T Expression8.size}
+ addUserKnob {13 offset}
+ addUserKnob {7 rotX l "rotate X" R 0 360}
+ rotX {0}
+ addUserKnob {7 rotY l "rotate Y" R 0 360}
+ rotY {0}
+ addUserKnob {7 rotZ l "rotate Z" R 0 360}
+ rotZ {0}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {41 blackpoint T Grade62.blackpoint}
+ addUserKnob {41 whitepoint T Grade62.whitepoint}
+ addUserKnob {41 gamma T Grade62.gamma}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 Credits l "" +STARTLINE T "© v001 Perceval Schopp 2021\n"}
+}
+ Input {
+  inputs 0
+  name Normal
+  xpos -330
+  ypos -59
+  number 4
+ }
+ Expression {
+  expr0 abs(r)
+  expr1 abs(g)
+  expr2 abs(b)
+  name Expression1
+  selected true
+  xpos -330
+  ypos -18
+ }
+ Dot {
+  name Dot2
+  xpos -296
+  ypos 29
+ }
+set Nb67f800 [stack 0]
+ Dot {
+  name Dot3
+  xpos -518
+  ypos 29
+ }
+set Nb67f400 [stack 0]
+ Dot {
+  name Dot4
+  xpos -867
+  ypos 29
+ }
+ Dot {
+  name Dot75
+  xpos -867
+  ypos 310
+ }
+ Input {
+  inputs 0
+  name Position
+  xpos -475
+  ypos -62
+  number 3
+ }
+ Add {
+  value {{parent.offset} {parent.offset} {parent.offset} {parent.offset}}
+  name Add1
+  xpos -475
+  ypos 58
+ }
+ Dot {
+  name Dot79
+  xpos -441
+  ypos 109
+ }
+set Nd63c2400 [stack 0]
+ Dot {
+  name Dot74
+  xpos -783
+  ypos 109
+ }
+ Group {
+  name Pworld_transform
+  xpos -817
+  ypos 134
+  addUserKnob {20 User}
+  addUserKnob {41 in l Position T Shuffle1.in}
+  addUserKnob {26 ""}
+  addUserKnob {41 translate T Axis1.translate}
+  addUserKnob {41 rotate T Axis1.rotate}
+  addUserKnob {41 scaling l scale T Axis1.scaling}
+  addUserKnob {41 uniform_scale l "uniform scale" T Axis1.uniform_scale}
+ }
+  Input {
+   inputs 0
+   name pworld
+   label input
+   xpos 0
+  }
+  Shuffle {
+   alpha black
+   name Shuffle1
+   label "select pworld\n"
+   xpos 0
+   ypos 50
+  }
+  Expression {
+   expr0 r-parent.Axis1.world_matrix.3
+   expr1 g-parent.Axis1.world_matrix.7
+   expr2 b-parent.Axis1.world_matrix.11
+   name Expression1
+   xpos 0
+   ypos 151
+  }
+  ColorMatrix {
+   matrix {
+       {{parent.Axis1.world_matrix.0} {parent.Axis1.world_matrix.1} {parent.Axis1.world_matrix.2}}
+       {{parent.Axis1.world_matrix.4} {parent.Axis1.world_matrix.5} {parent.Axis1.world_matrix.6}}
+       {{parent.Axis1.world_matrix.8} {parent.Axis1.world_matrix.9} {parent.Axis1.world_matrix.10}}
+     }
+   invert true
+   name ColorMatrix1
+   xpos 0
+   ypos 195
+  }
+  Output {
+   name Output1
+   xpos 0
+   ypos 300
+  }
+  Viewer {
+   frame_range 1-100
+   name Viewer1
+   xpos 0
+   ypos 326
+  }
+  Axis2 {
+   inputs 0
+   rotate {{parent.parent.rotX} 0 0}
+   name Axis1
+   xpos -150
+   ypos 171
+  }
+ end_group
+ Shuffle {
+  in rgb
+  red green
+  green blue
+  blue red2
+  alpha red2
+  name Shuffle17
+  label YZ
+  xpos -817
+  ypos 188
+ }
+ Expression {
+  expr0 r>=0?(r%size)/size:(1-(-r%size)/size)
+  expr1 g>=0?(g%size)/size:(1-(-g%size)/size)
+  expr3 abs(a)
+  name Expression6
+  xpos -817
+  ypos 265
+  addUserKnob {20 User}
+  addUserKnob {7 size R 0 300}
+  size 20
+ }
+ Input {
+  inputs 0
+  name imgX
+  xpos -720
+  ypos 257
+ }
+ Dot {
+  name Dot7
+  xpos -686
+  ypos 330
+ }
+ BlinkScript {
+  inputs 2
+  recompileCount 29
+  ProgramGroup 1
+  KernelDescription "2 \"stmap\" iterate pixelWise 7a68aa278e15934f6eed8ab5e98f4a100b5f2ecefdbe100e4f0bb62a47208981 3 \"src\" Read Random \"STMap\" Read Point \"dst\" Write Point 0 0 3 \"srcconstEdgeColor\" Float 4 1 AAAAAAAAAAAAAAAAAAAAAA== \"UV\" Float 2 1 AAAAAAAAAAA= \"resolution\" Int 2 1 AAAAAAAAAAA="
+  kernelSource "\nkernel stmap : ImageComputationKernel<ePixelWise>\n\{\n  Image<eRead, eAccessRandom, eEdgeConstant> src; // the input image\n  Image<eRead, eAccessPoint, eEdgeClamped> STMap;\n  Image<eWrite> dst; // the output image\n\n  param:\n    // This parameter is made available to the user.\n    \n    \n\n  local:\n    // This local variable is not exposed to the user.\n    float2 UV;\n    int2 resolution;\n\n  // In define(), parameters can be given labels and default values.\n  void define() \{\n    \n  \}\n\n  // The init() function is run before any calls to process().\n  // Local variables can be initialized here.\n  void init() \{\n    \n    resolution.x = src.bounds.width();\n    resolution.y = src.bounds.height();\n\n  \}\n\n  void process(int2 pos) \{\n    \n    UV.x = STMap().x*resolution.x;\n    UV.y = STMap().y*resolution.y;\n\n    // Write the result to the output image\n    dst() = bilinear(src, UV.x, UV.y);\n\n  \}\n\};\n"
+  rebuild ""
+  specifiedFormat true
+  rebuild_finalise ""
+  name BlinkScript2
+  xpos -817
+  ypos 321
+ }
+ Copy {
+  inputs 2
+  from0 rgba.red
+  to0 rgba.alpha
+  name Copy6
+  xpos -817
+  ypos 454
+ }
+ Grade {
+  channels alpha
+  blackpoint 0.17
+  whitepoint 0.57
+  gamma 0.405
+  name Grade62
+  xpos -817
+  ypos 530
+ }
+ set C1f562c00 [stack 0]
+ Premult {
+  name Premult4
+  xpos -824
+  ypos 564
+ }
+push 0
+push $Nb67f400
+ Dot {
+  name Dot76
+  xpos -518
+  ypos 312
+ }
+push $Nd63c2400
+ Group {
+  name Pworld_transform1
+  xpos -475
+  ypos 132
+  addUserKnob {20 User}
+  addUserKnob {41 in l Position T Shuffle1.in}
+  addUserKnob {26 ""}
+  addUserKnob {41 translate T Axis1.translate}
+  addUserKnob {41 rotate T Axis1.rotate}
+  addUserKnob {41 scaling l scale T Axis1.scaling}
+  addUserKnob {41 uniform_scale l "uniform scale" T Axis1.uniform_scale}
+ }
+  Input {
+   inputs 0
+   name pworld
+   label input
+   xpos 0
+  }
+  Shuffle {
+   alpha black
+   name Shuffle1
+   label "select pworld\n"
+   xpos 0
+   ypos 50
+  }
+  Expression {
+   expr0 r-parent.Axis1.world_matrix.3
+   expr1 g-parent.Axis1.world_matrix.7
+   expr2 b-parent.Axis1.world_matrix.11
+   name Expression1
+   xpos 0
+   ypos 151
+  }
+  ColorMatrix {
+   matrix {
+       {{parent.Axis1.world_matrix.0} {parent.Axis1.world_matrix.1} {parent.Axis1.world_matrix.2}}
+       {{parent.Axis1.world_matrix.4} {parent.Axis1.world_matrix.5} {parent.Axis1.world_matrix.6}}
+       {{parent.Axis1.world_matrix.8} {parent.Axis1.world_matrix.9} {parent.Axis1.world_matrix.10}}
+     }
+   invert true
+   name ColorMatrix1
+   xpos 0
+   ypos 195
+  }
+  Output {
+   name Output1
+   xpos 0
+   ypos 300
+  }
+  Viewer {
+   frame_range 1-100
+   name Viewer1
+   xpos 0
+   ypos 326
+  }
+  Axis2 {
+   inputs 0
+   rotate {0 {parent.parent.rotY} 0}
+   name Axis1
+   xpos -150
+   ypos 171
+  }
+ end_group
+ Shuffle {
+  in rgb
+  green blue
+  blue green2
+  alpha green2
+  name Shuffle18
+  label XZ
+  xpos -475
+  ypos 189
+ }
+ Expression {
+  expr0 r>=0?(r%size)/size:(1-(-r%size)/size)
+  expr1 g>=0?(g%size)/size:(1-(-g%size)/size)
+  expr2 0
+  expr3 abs(a)
+  name Expression7
+  xpos -475
+  ypos 256
+  addUserKnob {20 User}
+  addUserKnob {7 size R 0 300}
+  size 20
+ }
+ Input {
+  inputs 0
+  name imgY
+  xpos -381
+  ypos 261
+  number 2
+ }
+ Dot {
+  name Dot6
+  xpos -347
+  ypos 340
+ }
+ BlinkScript {
+  inputs 2
+  recompileCount 27
+  ProgramGroup 1
+  KernelDescription "2 \"stmap\" iterate pixelWise e2eb2abe0852e641515c9b135b45d5fe999c0cb063e785d3342ce194addf80f5 3 \"src\" Read Random \"STMap\" Read Point \"dst\" Write Point 0 0 3 \"srcconstEdgeColor\" Float 4 1 AAAAAAAAAAAAAAAAAAAAAA== \"UV\" Float 2 1 AAAAAAAAAAA= \"resolution\" Int 2 1 AAAAAAAAAAA="
+  kernelSource "\nkernel stmap : ImageComputationKernel<ePixelWise>\n\{\n  Image<eRead, eAccessRandom, eEdgeConstant> src; // the input image\n  Image<eRead, eAccessPoint, eEdgeClamped> STMap;\n  Image<eWrite> dst; // the output image\n\n  param:\n    // This parameter is made available to the user.\n    \n    \n\n  local:\n    // This local variable is not exposed to the user.\n    float2 UV;\n    int2 resolution;\n\n  // In define(), parameters can be given labels and default values.\n  void define() \{\n    \n  \}\n\n  // The init() function is run before any calls to process().\n  // Local variables can be initialized here.\n  void init() \{\n    \n    resolution.x = src.bounds.width();\n    resolution.y = src.bounds.height();\n\n  \}\n\n  void process(int2 pos) \{\n    \n    UV.x = STMap().x*resolution.x-.5f;\n    UV.y = STMap().y*resolution.y-.5f;\n\n    // Write the result to the output image\n    dst() = bilinear(src, UV.x, UV.y);\n\n  \}\n\};\n"
+  rebuild ""
+  specifiedFormat true
+  rebuild_finalise ""
+  name BlinkScript1
+  xpos -475
+  ypos 331
+ }
+ Copy {
+  inputs 2
+  from0 rgba.green
+  to0 rgba.alpha
+  name Copy7
+  xpos -475
+  ypos 414
+ }
+clone $C1f562c00 {
+  xpos -465
+  ypos 520
+  selected false
+ }
+ Premult {
+  name Premult5
+  xpos -465
+  ypos 556
+ }
+push $Nb67f800
+ Dot {
+  name Dot78
+  xpos -292
+  ypos 286
+ }
+push $Nd63c2400
+ Dot {
+  name Dot77
+  xpos -174
+  ypos 109
+ }
+ Group {
+  name Pworld_transform2
+  xpos -208
+  ypos 133
+  addUserKnob {20 User}
+  addUserKnob {41 in l Position T Shuffle1.in}
+  addUserKnob {26 ""}
+  addUserKnob {41 translate T Axis1.translate}
+  addUserKnob {41 rotate T Axis1.rotate}
+  addUserKnob {41 scaling l scale T Axis1.scaling}
+  addUserKnob {41 uniform_scale l "uniform scale" T Axis1.uniform_scale}
+ }
+  Input {
+   inputs 0
+   name pworld
+   label input
+   xpos 0
+  }
+  Shuffle {
+   alpha black
+   name Shuffle1
+   label "select pworld\n"
+   xpos 0
+   ypos 50
+  }
+  Expression {
+   expr0 r-parent.Axis1.world_matrix.3
+   expr1 g-parent.Axis1.world_matrix.7
+   expr2 b-parent.Axis1.world_matrix.11
+   name Expression1
+   xpos 0
+   ypos 151
+  }
+  ColorMatrix {
+   matrix {
+       {{parent.Axis1.world_matrix.0} {parent.Axis1.world_matrix.1} {parent.Axis1.world_matrix.2}}
+       {{parent.Axis1.world_matrix.4} {parent.Axis1.world_matrix.5} {parent.Axis1.world_matrix.6}}
+       {{parent.Axis1.world_matrix.8} {parent.Axis1.world_matrix.9} {parent.Axis1.world_matrix.10}}
+     }
+   invert true
+   name ColorMatrix1
+   xpos 0
+   ypos 195
+  }
+  Output {
+   name Output1
+   xpos 0
+   ypos 300
+  }
+  Viewer {
+   frame_range 1-100
+   name Viewer1
+   xpos 0
+   ypos 326
+  }
+  Axis2 {
+   inputs 0
+   rotate {0 0 {parent.parent.rotZ}}
+   name Axis1
+   xpos -150
+   ypos 171
+  }
+ end_group
+ Shuffle {
+  in rgb
+  blue blue2
+  alpha blue2
+  name Shuffle19
+  label XY
+  xpos -208
+  ypos 193
+ }
+ Expression {
+  expr0 r>=0?(r%size)/size:(1-(-r%size)/size)
+  expr1 g>=0?(g%size)/size:(1-(-g%size)/size)
+  expr2 0
+  expr3 abs(a)
+  name Expression8
+  xpos -208
+  ypos 253
+  addUserKnob {20 User}
+  addUserKnob {7 size R 0 300}
+  size 20
+ }
+ Input {
+  inputs 0
+  name imgZ
+  xpos -73
+  ypos 267
+  number 1
+ }
+ Dot {
+  name Dot5
+  xpos -39
+  ypos 333
+ }
+ BlinkScript {
+  inputs 2
+  recompileCount 28
+  ProgramGroup 1
+  KernelDescription "2 \"stmap\" iterate pixelWise e2eb2abe0852e641515c9b135b45d5fe999c0cb063e785d3342ce194addf80f5 3 \"src\" Read Random \"STMap\" Read Point \"dst\" Write Point 0 0 3 \"srcconstEdgeColor\" Float 4 1 AAAAAAAAAAAAAAAAAAAAAA== \"UV\" Float 2 1 AAAAAAAAAAA= \"resolution\" Int 2 1 AAAAAAAAAAA="
+  kernelSource "\nkernel stmap : ImageComputationKernel<ePixelWise>\n\{\n  Image<eRead, eAccessRandom, eEdgeConstant> src; // the input image\n  Image<eRead, eAccessPoint, eEdgeClamped> STMap;\n  Image<eWrite> dst; // the output image\n\n  param:\n    // This parameter is made available to the user.\n    \n    \n\n  local:\n    // This local variable is not exposed to the user.\n    float2 UV;\n    int2 resolution;\n\n  // In define(), parameters can be given labels and default values.\n  void define() \{\n    \n  \}\n\n  // The init() function is run before any calls to process().\n  // Local variables can be initialized here.\n  void init() \{\n    \n    resolution.x = src.bounds.width();\n    resolution.y = src.bounds.height();\n\n  \}\n\n  void process(int2 pos) \{\n    \n    UV.x = STMap().x*resolution.x-.5f;\n    UV.y = STMap().y*resolution.y-.5f;\n\n    // Write the result to the output image\n    dst() = bilinear(src, UV.x, UV.y);\n\n  \}\n\};\n"
+  rebuild ""
+  specifiedFormat true
+  rebuild_finalise ""
+  name BlinkScript3
+  xpos -208
+  ypos 324
+ }
+ Copy {
+  inputs 2
+  from0 rgba.blue
+  to0 rgba.alpha
+  name Copy8
+  xpos -208
+  ypos 413
+ }
+clone $C1f562c00 {
+  xpos -208
+  ypos 494
+  selected false
+ }
+ Merge2 {
+  inputs 3+1
+  name Merge8
+  xpos -465
+  ypos 612
+ }
+ Output {
+  name Output1
+  xpos -465
+  ypos 695
+ }
+end_group

@@ -1,0 +1,169 @@
+
+Group {
+ name PxF_Erode
+ inputs 2
+ help "Erode the edges of an RGBA image by blurring the alpha, applying a gamma to it and doing a \"min\" with the original alpha."
+ tile_color 0x733520ff
+ addUserKnob {20 PxF_Erode}
+ addUserKnob {4 channels t "Which channels to erode.\n\nrgba: Erode the RGB and Alpha channels.\n\nalpha: Erode the alpha channel only." M {rgba alpha ""}}
+ addUserKnob {7 amount t "Amount of alpha erode. Positive values erode the alpha, negative values expand the alpha." R -100 100}
+ amount 5
+ addUserKnob {7 gamma t "Controls the feather of the erode. Smaller values create a harder edge."}
+ gamma 0.5
+ addUserKnob {4 dSel l divide t "Auto: Unpremult the RGB by the alpha only if amount > 0. \n\nOn: Always unpremult RGB by the alpha.\n\nOff: Never unpremult the RGB by the alpha." M {auto on off "" ""}}
+ addUserKnob {4 mSel l multiply t "Auto: Premult the RGB by the alpha after the erode only if amount > 0. \n\nOn: Always premult the RGB by the alpha after the erode.\n\nOff: Never premult the RGB by the alpha after the erode." M {auto on off "" ""}}
+ addUserKnob {7 mix t "Dissolve between the original (0) and the full effect (1)."}
+ mix 1
+ addUserKnob {26 ""}
+ addUserKnob {26 Credits l "" t "PxF_Erode 2.1.1 - &copy; 2012-2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_Erode 2.1.1 - &copy; 2012-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_Erode.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+}
+ Input {
+  inputs 0
+  name img
+  xpos 501
+  ypos -28
+ }
+set Nf0f2cf00 [stack 0]
+ Dot {
+  name Dot1
+  xpos 735
+  ypos 245
+ }
+set Nf0f2c800 [stack 0]
+ Dot {
+  name Dot2
+  note_font_size 22
+  xpos 735
+  ypos 543
+ }
+set N4edbf200 [stack 0]
+ Dot {
+  name Dot3
+  note_font_size 22
+  xpos 735
+  ypos 604
+ }
+ Input {
+  inputs 0
+  name mask
+  xpos 627
+  ypos 423
+  number 1
+ }
+push $Nf0f2c800
+push $Nf0f2cf00
+ Unpremult {
+  name Unpremult1
+  xpos 501
+  ypos 49
+  disable {{"parent.dSel == 0 ? parent.amount < 0 ? 1 : 0 : parent.dSel == 1 ? 0 : 1"}}
+ }
+set Nf0f2c100 [stack 0]
+push $Nf0f2c100
+ Invert {
+  name Invert1
+  xpos 226
+  ypos 23
+  disable {{"amount < 0 ? 0 : 1"}}
+ }
+ Blur {
+  channels alpha
+  size {{abs(parent.amount)}}
+  name Blur1
+  xpos 226
+  ypos 73
+ }
+ Gamma {
+  channels alpha
+  value {{parent.gamma}}
+  name Gamma1
+  xpos 226
+  ypos 127
+ }
+ Invert {
+  name Invert2
+  xpos 226
+  ypos 182
+  disable {{"amount < 0 ? 0 : 1"}}
+ }
+set N189d1d00 [stack 0]
+ Merge2 {
+  inputs 2
+  name Merge1
+  xpos 445
+  ypos 244
+ }
+push $Nf0f2c100
+push $Nf0f2c100
+push $N189d1d00
+ Merge2 {
+  inputs 2
+  operation mask
+  name In
+  xpos 278
+  ypos 249
+ }
+ Switch {
+  inputs 2
+  which {{"parent.amount == 0"}}
+  name Switch2
+  xpos 330
+  ypos 296
+ }
+ Switch {
+  inputs 2
+  which {{"parent.amount < 0 ? 1 : 0"}}
+  name Switch1
+  xpos 393
+  ypos 355
+ }
+push $Nf0f2c100
+ ShuffleCopy {
+  inputs 2
+  name ShuffleCopy1
+  xpos 510
+  ypos 355
+ }
+ Premult {
+  name Premult1
+  xpos 510
+  ypos 399
+  disable {{"parent.mSel == 0 ? parent.amount < 0 ? 1 : 0 : parent.mSel == 1 ? 0 : 1"}}
+ }
+ Keymix {
+  inputs 3
+  invertMask true
+  bbox B
+  name Keymix1
+  xpos 508
+  ypos 477
+  disable {{"\[exists parent.input1] ? 0 : 1" i x1 0}}
+ }
+push $N4edbf200
+ Dissolve {
+  inputs 2
+  which {{parent.mix}}
+  name Dissolve1
+  xpos 508
+  ypos 556
+ }
+ Copy {
+  inputs 2
+  from0 rgba.red
+  to0 rgba.red
+  from1 rgba.green
+  to1 rgba.green
+  from2 rgba.blue
+  to2 rgba.blue
+  name Copy1
+  selected true
+  xpos 508
+  ypos 640
+  disable {{"parent.channels == 1 ? 0 : 1"}}
+ }
+ Output {
+  name Output1
+  xpos 508
+  ypos 731
+ }
+end_group

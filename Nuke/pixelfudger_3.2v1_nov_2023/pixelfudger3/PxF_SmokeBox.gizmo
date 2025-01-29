@@ -1,0 +1,1866 @@
+
+Group {
+ name PxF_SmokeBox
+ help "Create a box of volumetric-style noise."
+ knobChanged "m = nuke.thisNode()\nkc = nuke.thisKnob()\n\n#MAIN LOOP\nif kc.name() in \[\"numCards\", \"orientations\", \"type\", \"invert\"]:\n\n    #Delete old nodes\n    for n in nuke.allNodes():\n      if \"static\" not in n\['label'].getValue():\n        nuke.delete(n)\n   \n    numcards = int(m\['numCards'].value())\n    orientations = int(m\['orientations'].getValue())\n    #extraRGBA = int(m\['enableExtraRGBALayer'].value())\n    mg = nuke.toNode(\"MergeGeo1\")\n    cs = nuke.toNode(\"Reformat1\")\n    mgidx = 0\n\n    \n    #Create all the branches\n    for x in range(0,numcards,1):      \n      #Create each branch 1, 2 or 3 times if multiple orientations needed\n      for ori in range(0,orientations+1,1):\n        #Expression - Create noise texture\n        ns = nuke.nodes.Expression()\n        ns.setInput(0,cs)\n        ns\['channel0'].setValue('rgba')\n        ns.addKnob(nuke.Double_Knob('zpos'))\n        ns\['zpos'].setExpression('(parent.resolution / ' + str(numcards-1) + ' * ' + str(x) + ')')\n        ns\['temp_name0'].setValue('xyzgrad')\n        ns\['temp_expr0'].setValue('pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)')\n        #Check if we're doing z,x or y and adjust the right translate knob\n        if ori == 0: #Depth = z          \n          ns\['label'].setValue('Depth = z')\n          a = 'x'\n          b = 'y'\n          c = 'zpos'\n        if ori == 1: #Depth = x\n          ns\['label'].setValue('Depth = x')\n          a = 'zpos'\n          b = 'y'\n          c = 'x'\n        if ori == 2: #Depth = y\n          ns\['label'].setValue('Depth = y')\n          a = 'x'\n          b = 'zpos'\n          c = 'y'\n        if m\['type'].value() == 'fBm':\n          aa = 'fBm'\n          zz = '*.5+0.5'\n        if m\['type'].value() == 'turbulence':\n          aa = 'turbulence'\n          zz = ''\n        if m\['invert'].value() == 1:\n          inv = '1-'\n        elif m\['invert'].value() == 0:\n          inv = ''\n          \n        \n        ns\['expr0'].setValue('xyzgrad * (' + inv + '(' + aa + '(('+ a +'+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(' + b +'+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),('+ c +'+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)'+ zz +'))')\n\n        \n\n        #Gamma\n        gm = nuke.nodes.Gamma()\n        gm.setInput(0,ns)  \n        gm\['value'].setSingleValue(False)\n        gm\['value'].setExpression(\"parent.colorGamma.r\",0)\n        gm\['value'].setExpression(\"parent.colorGamma.g\",1)\n        gm\['value'].setExpression(\"parent.colorGamma.b\",2)\n        gm\['value'].setExpression(\"parent.colorGamma.a\",3)     \n        \n        \n        #Grade node\n        gr = nuke.nodes.Grade()\n        gr.setInput(0,gm)\n        gr\['channels'].setValue('all')          \n        gr\['white'].setSingleValue(False)\n        gr\['white'].setExpression(\"1 / \"+str(numcards*(orientations+1)) + \" * parent.color.r\",0)\n        gr\['white'].setExpression(\"1 / \"+str(numcards*(orientations+1)) + \" * parent.color.g\",1)\n        gr\['white'].setExpression(\"1 / \"+str(numcards*(orientations+1)) + \" * parent.color.b\",2)\n        gr\['white'].setExpression(\"1 / \"+str(numcards*(orientations+1)) + \" * parent.color.a\",3)\n\n        \n        \n        #Mask\n        mk = nuke.nodes.Merge2()\n        mk.setInput(0,gr)\n        if ori == 0:\n          mk.setInput(1,nuke.toNode('gamma_z'))\n        if ori == 1:\n          mk.setInput(1,nuke.toNode('gamma_x'))\n        if ori == 2:\n          mk.setInput(1,nuke.toNode('gamma_y'))\n        mk\['operation'].setValue('mask')\n        mk\['disable'].setExpression('parent.hideSide ? 0 : 1')\n\n\n\n        #Card\n        cd = nuke.nodes.Card2()\n        cd.setInput(0,mk)\n        cd\['image_aspect'].setValue(0)\n        cd\['pivot'].setValue(-0.5,0)\n        cd\['pivot'].setValue(-0.5,1)\n        cd\['scaling'].setExpression('parent.resolution',0)\n        cd\['scaling'].setExpression('parent.resolution',1)\n        cd\['rows'].setValue(1)\n        cd\['columns'].setValue(1)\n        \n        #Check if we're doing z,x or y and adjust the right translate knob\n        if ori == 0: #Depth = z\n          tk = 2\n          cd\['label'].setValue('Depth = z')\n          cd\['disable'].setExpression('parent.viewz ? 0 : 1')\n        if ori == 1: #Depth = x\n          cd\['rotate'].setValue(-90,1)\n          tk = 0\n          cd\['label'].setValue('Depth = x')\n          cd\['disable'].setExpression('parent.viewx ? 0 : 1')\n        if ori == 2: #Depth = y\n          cd\['rotate'].setValue(90,0)\n          tk = 1\n          cd\['label'].setValue('Depth = y')\n          cd\['disable'].setExpression('parent.viewy? 0 : 1')\n        cd\['translate'].setExpression('parent.resolution / ' + str(numcards-1) + ' * ' + str(x),tk)\n        \n        mg.setInput(mgidx,cd)\n        mgidx = mgidx + 1"
+ updateUI "\ntn = nuke.thisNode()\nncCheck = False\nif nuke.env\['nc'] or nuke.env\['indie']:\n  ncCheck = True\n  \nfor kb in  \[\"numCards\", \"orientations\", \"type\", \"invert\"]:\n  if ncCheck:\n    tn\[kb].setEnabled(False)\n    tn\['nc_warning'].setVisible(True)\n  else:\n    tn\[kb].setEnabled(True)\n    tn\['nc_warning'].setVisible(False)\n  "
+ tile_color 0x733520ff
+ addUserKnob {20 PxF_SmokeBox}
+ addUserKnob {26 label1 l "@b;Volume"}
+ addUserKnob {3 numCards l rows/columns t "Number of cards in each direction."}
+ numCards 10
+ addUserKnob {4 orientations l build t "Which card stacks to build." -STARTLINE M {Z ZX ZXY "" "" "" ""}}
+ orientations ZXY
+ addUserKnob {7 resolution t "Resolution (width/height) in pixels of the noise pattern applied on each card." R 0 8192}
+ resolution 1024
+ addUserKnob {7 softGamma l "box hardness" t "Amount of hardness of the feather on the edge of the noise texture.\n\nLower this value if you see the edge of the noise texture being cropped by the edge of the card."}
+ softGamma 1
+ addUserKnob {6 viewx l "view X" t "Show the X axis card stack." +STARTLINE}
+ viewx true
+ addUserKnob {6 viewy l "view Y" t "Show the Y axis card stack." -STARTLINE}
+ viewy true
+ addUserKnob {6 viewz l "view Z" t "Show the z axis card stack." -STARTLINE}
+ viewz true
+ addUserKnob {6 hideSide l "fade out cards not facing camera" t "To avoid seeing 'flat' cards, make the cards that are not facing camera become more and more transparent as they are seen from the side.\n\nRequires a camera connected to the camera input." +STARTLINE}
+ addUserKnob {7 fadeGamma l "camera fade gamma" t "Lower this value if you want cards to dissappear sooner when they are seen from the side."}
+ fadeGamma 0.5
+ addUserKnob {26 label2 l "@b;Noise"}
+ addUserKnob {6 color_panelDropped l "panel dropped state" +HIDDEN +STARTLINE}
+ addUserKnob {6 color_rgba_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {6 colorGamma_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {4 type t "Choose the type of noise to use:\n• fBm (fractional Brownian motion) - runs noise() octave times at different scales to get random numbers between -1 and +1 and adds them up.\n• turbulence - similar to fBm except it uses the absolute value of the noise function so the values it sums up are all between 0 and 1." M {fBm turbulence "" "" "" "" ""}}
+ addUserKnob {18 noiseSize l "noise scale" t "XYZ scale of the 3D noise pattern. Use this to 'scale' the noise inside the box."}
+ noiseSize 0.5
+ addUserKnob {6 noiseSize_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {6 color_rgb_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {6 color_rgb_1_panelDropped l "panel dropped state" +HIDDEN +STARTLINE}
+ addUserKnob {18 noiseOffset l "noise translate" t "XYZ translate of the noise pattern. Use this to move the 3D noise pattern inside the box." R -1 1}
+ noiseOffset {0 0 0}
+ addUserKnob {6 noiseOffset_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {3 octaves t "Sets the number of Perlin noise functions to add to the noise frequency. Lower values produce less detailed/smoother noise."}
+ octaves 10
+ addUserKnob {7 lacunarity t "Sets the amount by which octaves multiply noise frequency. Lower values produce smoother noise and higher values produce more granular noise."}
+ lacunarity 2
+ addUserKnob {7 gain t "Sets the amount by which octaves multiply noise amplitude. Lower values produce smoother noise."}
+ gain 0.55
+ addUserKnob {6 invert t "Invert the noise pattern." +STARTLINE}
+ addUserKnob {26 label3 l "@b;Color"}
+ addUserKnob {19 color l gain t "Adjusts the color of the noise pattern." R 0 100}
+ color 5
+ addUserKnob {6 color_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {19 colorGamma l gamma t "Adjusts the gamma of the noise pattern."}
+ colorGamma 0.2
+ addUserKnob {6 colorGamma_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {26 ""}
+ addUserKnob {26 nc_warning l "" +STARTLINE +HIDDEN T "<font size=2 color=#f7931e>Nuke Non-Commercial / Indie detected. Some features disabled due to Python limits.</font>"}
+ addUserKnob {26 Credits l "" t "PxF_SmokeBox 1.0.3 - &copy; 2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_SmokeBox 1.0.3 - &copy; 2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_SmokeBox.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+}
+ Input {
+  inputs 0
+  name camera
+  label static
+  xpos 4475
+  ypos -567
+  number 1
+ }
+ Axis2 {
+  display off
+  selectable false
+  name Axis2
+  label static
+  xpos 4489
+  ypos -342
+ }
+ Dot {
+  name Dot2
+  label static
+  note_font_size 22
+  xpos 4509
+  ypos 452
+ }
+ Input {
+  inputs 0
+  name axis
+  label static
+  xpos 4275
+  ypos -566
+ }
+ Axis2 {
+  display off
+  selectable false
+  name Axis1
+  label static
+  xpos 4285
+  ypos -390
+ }
+ Dot {
+  name Dot1
+  label static
+  note_font_size 22
+  xpos 4309
+  ypos 234
+ }
+ Constant {
+  inputs 0
+  channels rgb
+  color {0 1 0 0}
+  format "256 256 0 0 256 256 1 square_256"
+  name Constant4
+  label "untransformed normal\nstatic"
+  xpos 4991
+  ypos -637
+ }
+ Reformat {
+  type "to box"
+  box_width 12
+  box_height 12
+  box_fixed true
+  resize none
+  name Reformat13
+  label "3x3 pixels\nstatic"
+  xpos 4986
+  ypos -528
+ }
+ ColorMatrix {
+  matrix {
+      {{Axis1.world_matrix.0} {Axis1.world_matrix.1} {Axis1.world_matrix.2}}
+      {{Axis1.world_matrix.4} {Axis1.world_matrix.5} {Axis1.world_matrix.6}}
+      {{Axis1.world_matrix.8} {Axis1.world_matrix.9} {Axis1.world_matrix.10}}
+    }
+  name ColorMatrix5
+  label "apply card transform\nstatic"
+  xpos 4991
+  ypos -453
+ }
+ ColorMatrix {
+  channels rgba
+  matrix {
+      {{parent.Axis2.world_matrix.0} {parent.Axis2.world_matrix.1} {parent.Axis2.world_matrix.2}}
+      {{parent.Axis2.world_matrix.4} {parent.Axis2.world_matrix.5} {parent.Axis2.world_matrix.6}}
+      {{parent.Axis2.world_matrix.8} {parent.Axis2.world_matrix.9} {parent.Axis2.world_matrix.10}}
+    }
+  invert true
+  name ColorMatrix6
+  label "world to cam\nstatic"
+  xpos 4991
+  ypos -392
+ }
+ Expression {
+  temp_name0 length
+  temp_expr0 sqrt((r*r)+(g*g)+(b*b))
+  channel0 rgba
+  expr0 abs(b/length)
+  channel1 rgb
+  channel2 rgb
+  channel3 none
+  name Expression12
+  label "normalize N\nstatic"
+  xpos 4991
+  ypos -344
+ }
+ Gamma {
+  value {{parent.fadeGamma}}
+  name gamma_y
+  label static
+  xpos 4991
+  ypos -274
+ }
+set N2f91ec00 [stack 0]
+ Constant {
+  inputs 0
+  channels rgb
+  format "512 512 0 0 512 512 1 square_512"
+  name Constant1
+  label static
+  xpos 6018
+  ypos -851
+ }
+ Reformat {
+  type "to box"
+  box_width {{parent.resolution}}
+  box_height {{parent.resolution}}
+  box_fixed true
+  name Reformat1
+  label static
+  xpos 6098
+  ypos -767
+ }
+set N2f91f400 [stack 0]
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(zpos+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(y+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression33
+  label "Depth = y"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 9)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma30
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade30
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge30
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 {"parent.resolution / 9 * 9"} 0}
+  rotate {90 0 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card30
+  label "Depth = y"
+  disable {{"parent.viewy? 0 : 1"}}
+ }
+ Constant {
+  inputs 0
+  channels rgb
+  color {-1 0 0 0}
+  format "256 256 0 0 256 256 1 square_256"
+  name Constant3
+  label "untransformed normal\nstatic"
+  xpos 4838
+  ypos -629
+ }
+ Reformat {
+  type "to box"
+  box_width 12
+  box_height 12
+  box_fixed true
+  resize none
+  name Reformat12
+  label "3x3 pixels\nstatic"
+  xpos 4833
+  ypos -520
+ }
+ ColorMatrix {
+  matrix {
+      {{Axis1.world_matrix.0} {Axis1.world_matrix.1} {Axis1.world_matrix.2}}
+      {{Axis1.world_matrix.4} {Axis1.world_matrix.5} {Axis1.world_matrix.6}}
+      {{Axis1.world_matrix.8} {Axis1.world_matrix.9} {Axis1.world_matrix.10}}
+    }
+  name ColorMatrix1
+  label "apply card transform\nstatic"
+  xpos 4838
+  ypos -445
+ }
+ ColorMatrix {
+  channels rgba
+  matrix {
+      {{parent.Axis2.world_matrix.0} {parent.Axis2.world_matrix.1} {parent.Axis2.world_matrix.2}}
+      {{parent.Axis2.world_matrix.4} {parent.Axis2.world_matrix.5} {parent.Axis2.world_matrix.6}}
+      {{parent.Axis2.world_matrix.8} {parent.Axis2.world_matrix.9} {parent.Axis2.world_matrix.10}}
+    }
+  invert true
+  name ColorMatrix4
+  label "world to cam\nstatic"
+  xpos 4838
+  ypos -384
+ }
+ Expression {
+  temp_name0 length
+  temp_expr0 sqrt((r*r)+(g*g)+(b*b))
+  channel0 rgba
+  expr0 abs(b/length)
+  channel1 rgb
+  channel2 rgb
+  channel3 none
+  name Expression11
+  label "normalize N\nstatic"
+  xpos 4838
+  ypos -336
+ }
+ Gamma {
+  value {{parent.fadeGamma}}
+  name gamma_x
+  label static
+  xpos 4838
+  ypos -266
+ }
+set N2f9b4800 [stack 0]
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((zpos+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(x+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression32
+  label "Depth = x"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 9)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma29
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade29
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge29
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {{"parent.resolution / 9 * 9"} 0 0}
+  rotate {0 -90 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card29
+  label "Depth = x"
+  disable {{"parent.viewx ? 0 : 1"}}
+ }
+ Constant {
+  inputs 0
+  channels rgb
+  color {0 0 1 0}
+  format "256 256 0 0 256 256 1 square_256"
+  name Constant2
+  label "untransformed normal\nstatic"
+  xpos 4663
+  ypos -631
+ }
+ Reformat {
+  type "to box"
+  box_width 12
+  box_height 12
+  box_fixed true
+  resize none
+  name Reformat11
+  label "3x3 pixels\nstatic"
+  xpos 4658
+  ypos -522
+ }
+ ColorMatrix {
+  matrix {
+      {{Axis1.world_matrix.0} {Axis1.world_matrix.1} {Axis1.world_matrix.2}}
+      {{Axis1.world_matrix.4} {Axis1.world_matrix.5} {Axis1.world_matrix.6}}
+      {{Axis1.world_matrix.8} {Axis1.world_matrix.9} {Axis1.world_matrix.10}}
+    }
+  name ColorMatrix2
+  label "apply card transform\nstatic"
+  xpos 4658
+  ypos -452
+ }
+ ColorMatrix {
+  channels rgba
+  matrix {
+      {{parent.Axis2.world_matrix.0} {parent.Axis2.world_matrix.1} {parent.Axis2.world_matrix.2}}
+      {{parent.Axis2.world_matrix.4} {parent.Axis2.world_matrix.5} {parent.Axis2.world_matrix.6}}
+      {{parent.Axis2.world_matrix.8} {parent.Axis2.world_matrix.9} {parent.Axis2.world_matrix.10}}
+    }
+  invert true
+  name ColorMatrix3
+  label "world to cam\nstatic"
+  xpos 4658
+  ypos -393
+ }
+ Expression {
+  temp_name0 length
+  temp_expr0 sqrt((r*r)+(g*g)+(b*b))
+  channel0 rgba
+  expr0 abs(b/length)
+  channel1 rgb
+  channel2 rgb
+  channel3 none
+  name Expression10
+  label "normalize N\nstatic"
+  xpos 4658
+  ypos -331
+ }
+ Gamma {
+  value {{parent.fadeGamma}}
+  name gamma_z
+  label static
+  xpos 4658
+  ypos -273
+ }
+set N337e1800 [stack 0]
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(zpos+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression31
+  label "Depth = z"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 9)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma28
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade28
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge28
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 0 {"parent.resolution / 9 * 9"}}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card28
+  label "Depth = z"
+  disable {{"parent.viewz ? 0 : 1"}}
+ }
+push $N2f91ec00
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(zpos+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(y+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression30
+  label "Depth = y"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 8)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma27
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade27
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge27
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 {"parent.resolution / 9 * 8"} 0}
+  rotate {90 0 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card27
+  label "Depth = y"
+  disable {{"parent.viewy? 0 : 1"}}
+ }
+push $N2f9b4800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((zpos+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(x+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression29
+  label "Depth = x"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 8)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma26
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade26
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge26
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {{"parent.resolution / 9 * 8"} 0 0}
+  rotate {0 -90 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card26
+  label "Depth = x"
+  disable {{"parent.viewx ? 0 : 1"}}
+ }
+push $N337e1800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(zpos+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression28
+  label "Depth = z"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 8)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma25
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade25
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge25
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 0 {"parent.resolution / 9 * 8"}}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card25
+  label "Depth = z"
+  disable {{"parent.viewz ? 0 : 1"}}
+ }
+push $N2f91ec00
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(zpos+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(y+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression27
+  label "Depth = y"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 7)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma24
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade24
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge24
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 {"parent.resolution / 9 * 7"} 0}
+  rotate {90 0 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card24
+  label "Depth = y"
+  disable {{"parent.viewy? 0 : 1"}}
+ }
+push $N2f9b4800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((zpos+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(x+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression26
+  label "Depth = x"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 7)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma23
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade23
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge23
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {{"parent.resolution / 9 * 7"} 0 0}
+  rotate {0 -90 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card23
+  label "Depth = x"
+  disable {{"parent.viewx ? 0 : 1"}}
+ }
+push $N337e1800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(zpos+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression25
+  label "Depth = z"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 7)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma22
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade22
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge22
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 0 {"parent.resolution / 9 * 7"}}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card22
+  label "Depth = z"
+  disable {{"parent.viewz ? 0 : 1"}}
+ }
+push $N2f91ec00
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(zpos+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(y+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression24
+  label "Depth = y"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 6)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma21
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade21
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge21
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 {"parent.resolution / 9 * 6"} 0}
+  rotate {90 0 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card21
+  label "Depth = y"
+  disable {{"parent.viewy? 0 : 1"}}
+ }
+push $N2f9b4800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((zpos+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(x+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression23
+  label "Depth = x"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 6)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma20
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade20
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge20
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {{"parent.resolution / 9 * 6"} 0 0}
+  rotate {0 -90 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card20
+  label "Depth = x"
+  disable {{"parent.viewx ? 0 : 1"}}
+ }
+push $N337e1800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(zpos+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression22
+  label "Depth = z"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 6)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma19
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade19
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge19
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 0 {"parent.resolution / 9 * 6"}}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card19
+  label "Depth = z"
+  disable {{"parent.viewz ? 0 : 1"}}
+ }
+push $N2f91ec00
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(zpos+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(y+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression21
+  label "Depth = y"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 5)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma18
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade18
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge18
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 {"parent.resolution / 9 * 5"} 0}
+  rotate {90 0 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card18
+  label "Depth = y"
+  disable {{"parent.viewy? 0 : 1"}}
+ }
+push $N2f9b4800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((zpos+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(x+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression20
+  label "Depth = x"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 5)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma17
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade17
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge17
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {{"parent.resolution / 9 * 5"} 0 0}
+  rotate {0 -90 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card17
+  label "Depth = x"
+  disable {{"parent.viewx ? 0 : 1"}}
+ }
+push $N337e1800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(zpos+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression19
+  label "Depth = z"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 5)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma16
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade16
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge16
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 0 {"parent.resolution / 9 * 5"}}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card16
+  label "Depth = z"
+  disable {{"parent.viewz ? 0 : 1"}}
+ }
+push $N2f91ec00
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(zpos+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(y+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression18
+  label "Depth = y"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 4)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma15
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade15
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge15
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 {"parent.resolution / 9 * 4"} 0}
+  rotate {90 0 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card15
+  label "Depth = y"
+  disable {{"parent.viewy? 0 : 1"}}
+ }
+push $N2f9b4800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((zpos+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(x+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression17
+  label "Depth = x"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 4)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma14
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade14
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge14
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {{"parent.resolution / 9 * 4"} 0 0}
+  rotate {0 -90 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card14
+  label "Depth = x"
+  disable {{"parent.viewx ? 0 : 1"}}
+ }
+push $N337e1800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(zpos+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression16
+  label "Depth = z"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 4)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma13
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade13
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge13
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 0 {"parent.resolution / 9 * 4"}}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card13
+  label "Depth = z"
+  disable {{"parent.viewz ? 0 : 1"}}
+ }
+push $N2f91ec00
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(zpos+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(y+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression15
+  label "Depth = y"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 3)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma12
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade12
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge12
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 {"parent.resolution / 9 * 3"} 0}
+  rotate {90 0 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card12
+  label "Depth = y"
+  disable {{"parent.viewy? 0 : 1"}}
+ }
+push $N2f9b4800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((zpos+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(x+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression14
+  label "Depth = x"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 3)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma11
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade11
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge11
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {{"parent.resolution / 9 * 3"} 0 0}
+  rotate {0 -90 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card11
+  label "Depth = x"
+  disable {{"parent.viewx ? 0 : 1"}}
+ }
+push $N337e1800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(zpos+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression13
+  label "Depth = z"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 3)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma10
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade10
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge10
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 0 {"parent.resolution / 9 * 3"}}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card10
+  label "Depth = z"
+  disable {{"parent.viewz ? 0 : 1"}}
+ }
+push $N2f91ec00
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(zpos+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(y+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression9
+  label "Depth = y"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 2)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma9
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade9
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge9
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 {"parent.resolution / 9 * 2"} 0}
+  rotate {90 0 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card9
+  label "Depth = y"
+  disable {{"parent.viewy? 0 : 1"}}
+ }
+push $N2f9b4800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((zpos+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(x+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression8
+  label "Depth = x"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 2)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma8
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade8
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge8
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {{"parent.resolution / 9 * 2"} 0 0}
+  rotate {0 -90 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card8
+  label "Depth = x"
+  disable {{"parent.viewx ? 0 : 1"}}
+ }
+push $N337e1800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(zpos+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression7
+  label "Depth = z"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 2)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma7
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade7
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge7
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 0 {"parent.resolution / 9 * 2"}}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card7
+  label "Depth = z"
+  disable {{"parent.viewz ? 0 : 1"}}
+ }
+push $N2f91ec00
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(zpos+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(y+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression6
+  label "Depth = y"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 1)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma6
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade6
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge6
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 {"parent.resolution / 9 * 1"} 0}
+  rotate {90 0 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card6
+  label "Depth = y"
+  disable {{"parent.viewy? 0 : 1"}}
+ }
+push $N2f9b4800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((zpos+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(x+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression5
+  label "Depth = x"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 1)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma5
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade5
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge5
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {{"parent.resolution / 9 * 1"} 0 0}
+  rotate {0 -90 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card5
+  label "Depth = x"
+  disable {{"parent.viewx ? 0 : 1"}}
+ }
+push $N337e1800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(zpos+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression4
+  label "Depth = z"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 1)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma4
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade4
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge4
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 0 {"parent.resolution / 9 * 1"}}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card4
+  label "Depth = z"
+  disable {{"parent.viewz ? 0 : 1"}}
+ }
+push $N2f91ec00
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(zpos+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(y+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression3
+  label "Depth = y"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 0)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma3
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade3
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge3
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 {"parent.resolution / 9 * 0"} 0}
+  rotate {90 0 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card3
+  label "Depth = y"
+  disable {{"parent.viewy? 0 : 1"}}
+ }
+push $N2f9b4800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((zpos+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(x+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression2
+  label "Depth = x"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 0)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma2
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade2
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge2
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {{"parent.resolution / 9 * 0"} 0 0}
+  rotate {0 -90 0}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card2
+  label "Depth = x"
+  disable {{"parent.viewx ? 0 : 1"}}
+ }
+push $N337e1800
+push $N2f91f400
+ Expression {
+  temp_name0 xyzgrad
+  temp_expr0 "pow((1-abs((x/width)-0.5)*2)  *   (1-abs((y/height)-0.5)*2) * (1-abs((zpos/parent.resolution)-0.5)*2),1/parent.softGamma/4)"
+  channel0 rgba
+  expr0 "xyzgrad * ((fBm((x+(parent.resolution*parent.noiseOffset.r)*-1)*1/(parent.resolution*parent.noiseSize.r),(y+(parent.resolution*parent.noiseOffset.g)*-1)*1/(parent.resolution*parent.noiseSize.g),(zpos+(parent.resolution*parent.noiseOffset.b)*-1)*1/(parent.resolution * parent.noiseSize.b),parent.octaves,parent.lacunarity,parent.gain)*.5+0.5))"
+  name Expression1
+  label "Depth = z"
+  addUserKnob {20 User}
+  addUserKnob {7 zpos}
+  zpos {{"(parent.resolution / 9 * 0)"}}
+ }
+ Gamma {
+  value {{parent.colorGamma.r} {parent.colorGamma.g} {parent.colorGamma.b} {parent.colorGamma.a}}
+  name Gamma1
+ }
+ Grade {
+  channels all
+  white {{"1 / 30 * parent.color.r"} {"1 / 30 * parent.color.g"} {"1 / 30 * parent.color.b"} {"1 / 30 * parent.color.a"}}
+  name Grade1
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge1
+  disable {{"parent.hideSide ? 0 : 1"}}
+ }
+ Card2 {
+  image_aspect false
+  rows 1
+  columns 1
+  translate {0 0 {"parent.resolution / 9 * 0"}}
+  scaling {{parent.resolution} {parent.resolution} 1}
+  pivot_translate {-0.5 -0.5 0}
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0 0 0} 
+1 {0 -0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {0.5 0 0} 
+1 {0.5 -0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666865 0} 1 {0 0 0} 1 {1 0 0} 
+1 {-0.5 0 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0 0.5 0} 
+1 {0 0 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {0.5 0.5 0} 
+1 {0.5 0 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0.1666666716 0} 1 {0 -0.1666666716 0} 1 {1 0.5 0} 
+1 {-0.5 0.5 0} 1 {0.1666666865 0 0} 1 {0 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0 1 0} 
+1 {0 0.5 0} 1 {0.1666666716 0 0} 1 {-0.1666666716 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {0.5 1 0} 
+1 {0.5 0.5 0} 1 {0 0 0} 1 {-0.1666666865 0 0} 1 {0 0 0} 1 {0 -0.1666666865 0} 1 {1 1 0} }
+  name Card1
+  label "Depth = z"
+  disable {{"parent.viewz ? 0 : 1"}}
+ }
+ MergeGeo {
+  inputs 30
+  name MergeGeo1
+  label static
+  xpos 6049
+  ypos 81
+ }
+ TransformGeo {
+  inputs 2
+  translate {-0.5 -0.5 -0.5}
+  uniform_scale {{"1 / parent.resolution"}}
+  name TransformGeo1
+  label static
+  xpos 6049
+  ypos 338
+ }
+ Scene {
+  inputs 2
+  name Scene1
+  label static
+  xpos 6059
+  ypos 428
+ }
+ Output {
+  name Output1
+  label static
+  xpos 6049
+  ypos 561
+ }
+end_group

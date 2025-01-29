@@ -1,0 +1,773 @@
+
+Group {
+ name PxF_IDefocus
+ help "Variable blur/defocus/convolve based on a control channel."
+ onCreate "m = nuke.thisNode\nfl = nuke.toNode('Flare1')\n\nfl\['position'].setEnabled(False)"
+ knobChanged "m = nuke.thisNode()\nkc = nuke.thisKnob()\n\n\n\nif kc.name() in \[\"filter\", \"slices\"]:\n    i = nuke.toNode('img')\n    i2 = nuke.toNode('Gamma1')\n    i3 = nuke.toNode('Switch1')\n    o = nuke.toNode('mask_keymix')    \n    \n    for n in nuke.allNodes():\n      if \"static\" not in n\['label'].getValue():\n        nuke.delete(n)\n    \n    \n    slices = int(m\['slices'].value())\n    step = int(1)\n    ii = i\n    for x in range(1,slices+step,step):\n      \n      defoExpression = 'pow(parent.size/parent.slices*' + str(x) + '/parent.size,parent.sliceGamma)*parent.size'\n      \n    \n      k = nuke.nodes.Keyer()\n      k.setInput(0, i2)\n      k\['operation'].setValue(\"red keyer\")\n      k\['range'].setExpression(\"(1/parent.slices*\" + str(x) +\")-1/parent.slices\", 0)\n      k\['range'].setExpression(\"(1/parent.slices*\" + str(x-1) + \") + (1/parent.slices*parent.overlap)\", 1)\n      k\['range'].setValue(1.0, 2)\n      k\['range'].setValue(1.0, 3)\n    \n     \n      f = m\['filter'].value()\n\n      if f == \"defocus\":\n        d = nuke.nodes.Defocus()\n        d.setInput(0, i)\n        d\['defocus'].setExpression(defoExpression)\n        d\['ratio'].setExpression('parent.aspect')\n\n      if f in \[\"box\", \"triangle\", \"quadratic\", \"gaussian\"]:\n        d = nuke.nodes.Blur()\n        d.setInput(0, i)\n        d\['size'].setSingleValue(False)\n        #d\['size'].setExpression('parent.size/parent.slices*' + str(x) + \"*parent.aspect\", 0 )\n        d\['size'].setExpression(defoExpression + '*parent.aspect' , 0)\n        #d\['size'].setExpression('parent.size/parent.slices*' + str(x), 1)\n        d\['size'].setExpression(defoExpression , 1) \n        d\['filter'].setValue(m\['filter'].value())\n\n      if f == \"bokeh\":\n        r1 = nuke.nodes.Reformat()\n        r1.setInput(0, i3)\n        r1\['type'].setValue(\"to box\")\n        r1\['box_width'].setExpression(defoExpression + \"*2 > 3 ? \" + defoExpression + \"*2 \" + \": 3\" )\n        r1\['pbb'].setValue(1)\n        \n        r15 = nuke.nodes.Reformat()\n        r15.setInput(0, r1)\n        r15\['type'].setValue(\"scale\")\n        r15\['resize'].setValue(\"deform\")\n        r15\['scale'].setSingleValue(False)\n        r15\['scale'].setValue(1,1)\n        r15\['scale'].setExpression('parent.aspect',0)\n        r15\['pbb'].setValue(1)\n        \n        t1 = nuke.nodes.Transform()\n        t1.setInput(0, r15)\n        t1\['translate'].setExpression(\"fmod(width,2)?0:0.5\", 0)\n        t1\['translate'].setExpression(\"fmod(height,2)?0:0.5\", 1)\n        \n        r2 = nuke.nodes.Reformat()\n        r2.setInput(0, t1)\n        r2\['type'].setValue(\"to box\")\n        r2\['box_width'].setExpression(\"fmod(width,2)?width:width+1\")\n        r2\['box_height'].setExpression(\"fmod(height,2)?height:height+1\")\n        r2\['resize'].setValue(\"none\")\n        r2\['pbb'].setValue(1)\n        \n        c1 = nuke.nodes.Crop()\n        c1.setInput(0,r2)\n        c1\['box'].setValue(-1,0)\n        c1\['box'].setValue(-1,1)\n        c1\['box'].setExpression('width+1',2)\n        c1\['box'].setExpression('height+1',3)\n\n        d = nuke.nodes.Convolve2()\n        d.setInput(0, i)\n        d.setInput(1, c1)\n        d\['useGPUIfAvailable'].setExpression('parent.useGPU')\n        d\['use_input_channels'].setExpression('parent.filterChannel')\n        d\['mix'].setExpression(defoExpression + \"*2 > 3 ? 1 : \" + defoExpression + \"*2/3\")\n        \n    \n        \n    \n    \n      km = nuke.nodes.Keymix()\n      km.setInput(0, ii)\n      km.setInput(1, d)\n      km.setInput(2, k)\n      km\['bbox'].setValue(\"A side\")\n    \n      ii = km\n    \n    o.setInput(0, ii)\n\n\n"
+ updateUI "tn = nuke.thisNode()\nncCheck = False\nif nuke.env\['nc'] or nuke.env\['indie']:\n  ncCheck = True\n  \nfor kb in \[\"filter\", \"slices\"]:\n  if ncCheck:\n    tn\[kb].setEnabled(False)\n    tn\['nc_warning'].setVisible(True)\n  else:\n    tn\[kb].setEnabled(True)\n    tn\['nc_warning'].setVisible(False)\n  "
+ tile_color 0x733520ff
+ addUserKnob {20 PxF_IDefocus}
+ addUserKnob {4 filter t "box, triangle, quadratic, gaussian = Blur node\ndefocus = Defocus node\nbokeh = Convolve node. See 'bokeh' tab to customize bokeh or plug your own in the 'bokeh' input." M {box triangle quadratic gaussian defocus bokeh "" "" "" "" "" ""}}
+ filter bokeh
+ addUserKnob {6 useGPU l "use GPU if available" t "Enable GPU rendering on Convolve node." +STARTLINE}
+ useGPU true
+ addUserKnob {4 controlChannel t "Which channel of the 'map' input used to drive the defocus." M {red green blue alpha "" "" "" "" ""}}
+ controlChannel alpha
+ addUserKnob {7 size l "max size" t "Maximum amount of defocus (i.e when the control channel is 1.0)." R 0 100}
+ size 20
+ addUserKnob {7 aspect t "Aspect ratio of the kernel. Use this to simulate 'oval' bokeh from an anamorphic lens." R 0 4}
+ aspect 1
+ addUserKnob {3 slices t "How many slices are generated from the 'map' image. More slices are more precise, but slower."}
+ slices 10
+ addUserKnob {7 sliceGamma t "Adds a bias to the slices. A value of 1.0 is a linear bias (i.e. no bias). Values greater than 1.0 bias the slices so that smaller defocus values get more slices. " R 0 5}
+ sliceGamma 2.2
+ addUserKnob {7 overlap t "Percentage of overlap between slices. An overlap of 0 means hard slices with no soft transition. "}
+ overlap 0.5
+ addUserKnob {7 mix t "Dissolve between the original (0) and the full effect (1)."}
+ mix 1
+ addUserKnob {26 ""}
+ addUserKnob {26 nc_warning l "" +STARTLINE +HIDDEN T "<font size=2 color=#f7931e>Nuke Non-Commercial / Indie detected. Some features disabled due to Python limits.</font>"}
+ addUserKnob {26 Credits l "" t "PxF_IDefocus 1.3.2 - &copy; 2014-2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_IDefocus 1.3.2 - &copy; 2014-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_IDefocus.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+ addUserKnob {20 Bokeh}
+ addUserKnob {6 viewKernel l "view bokeh" t "View the image being used as the kernel when the filter mode is set to 'Bokeh'. Use this to see what you're doing when adjusting the kernel shape.\n\nDon't forget to turn it off when you're done!" +STARTLINE}
+ addUserKnob {26 "" l "@b;Colors"}
+ addUserKnob {7 ringWidth t "Thickness of the 'donut' around the edge of the kernel."}
+ ringWidth 0.25
+ addUserKnob {41 ring_color l "ring color" t "Color of the 'donut' around the edge of the kernel." T Flare1.ring_color}
+ addUserKnob {41 inner_color l "inner color" t "Color of the center of the kernel." T Flare1.inner_color}
+ addUserKnob {41 outer_falloff l "outer falloff" t "Falloff on the outer edge of the 'donut'." T Flare1.outer_falloff}
+ addUserKnob {41 inner_falloff l "inner falloff" t "Falloff on the inner edge of the 'donut'." T Flare1.inner_falloff}
+ addUserKnob {26 "" l "@b;Shape"}
+ addUserKnob {41 corners t "How many 'blades' are in the iris." T Flare1.corners}
+ addUserKnob {41 flattening l "edge flattening" t "0 = round aperture (no blades).\n1 = flat edges between corners." T Flare1.flattening}
+ addUserKnob {41 sharpness l "corner sharpness" T Flare1.sharpness}
+ addUserKnob {41 corners_angle l angle t "Rotate the aperture." T Flare1.corners_angle}
+ addUserKnob {26 Noise l "@b;Noise"}
+ addUserKnob {6 enableNoise l enable t "Add noise to the bokeh." +STARTLINE}
+ enableNoise true
+ addUserKnob {7 noiseSize l size R 0 50}
+ noiseSize 35
+ addUserKnob {7 noiseGain l gain t "Gain of the noise."}
+ noiseGain 0.85
+ addUserKnob {7 noiseGamma l gamma t "Gamma of the noise."}
+ noiseGamma 0.85
+ addUserKnob {7 noiseMix l mix t "Adjusts how much noise is present in the bokeh."}
+ noiseMix 0.5
+ addUserKnob {26 ChromaAb l "@b;Chroma Aberration"}
+ addUserKnob {6 chromaAbEnable l enable t "Enable chroma aberration on the bokeh.\n\nMake sure to set filter channels to rgb colour." +STARTLINE}
+ chromaAbEnable true
+ addUserKnob {7 chromaAbScale l scale t "Amount of chroma aberration on the bokeh. 1.0 = no chroma aberration." R 0 2}
+ chromaAbScale 1.02
+ addUserKnob {26 ""}
+ addUserKnob {4 filterChannel l "filter channel" t "When using Bokeh mode, which channels to use from the bokeh image.\n\nrgb luma: Use the RGB luminance of the bokeh input to defocus all channels.\n\nrgb colour: Use the RGB channels to defocus RGB and RGB luminance to defocus the alpha." M {"rgb luminance" "rgb colour" "" ""}}
+ filterChannel "rgb colour"
+}
+ Input {
+  inputs 0
+  name bokeh
+  label static
+  xpos 4496
+  ypos -1111
+  number 2
+ }
+ Keyer {
+  operation "luminance key"
+  name Keyer4
+  label static
+  xpos 4496
+  ypos -1028
+ }
+ Reformat {
+  inputs 0
+  type "to box"
+  box_width 501
+  box_height 501
+  box_fixed true
+  name Reformat4
+  label static
+  xpos 4714
+  ypos -1369
+ }
+set Ncce36800 [stack 0]
+ Noise {
+  size {{parent.noiseSize i}}
+  gain {{parent.noiseGain i}}
+  gamma {{parent.noiseGamma i}}
+  center {1440 810}
+  name Noise1
+  label static
+  xpos 4825
+  ypos -1305
+ }
+push $Ncce36800
+ Flare {
+  position {250 250}
+  radius {{0 i} {"249 - (parent.ringWidth*249)" i} {249 i}}
+  inner_color 0.75
+  outer_falloff 0.35
+  inner_falloff 10
+  vis_in 0
+  vis_out 1
+  vis_mask_size 0
+  corners 8
+  flattening 0.9
+  sharpness 0.99
+  name Flare1
+  label static
+  xpos 4717
+  ypos -1303
+ }
+ Merge2 {
+  inputs 2
+  operation multiply
+  mix {{parent.noiseMix i}}
+  name Merge1
+  label static
+  xpos 4717
+  ypos -1232
+  disable {{parent.enableNoise?0:1 i}}
+ }
+ Shuffle {
+  alpha red
+  name Shuffle2
+  label static
+  xpos 4717
+  ypos -1153
+ }
+ TransformMasked {
+  channels {rgba.red -rgba.green -rgba.blue none}
+  scale {{parent.chromaAbScale}}
+  center {250.5 250.5}
+  name Transform6
+  label static
+  xpos 4717
+  ypos -1077
+  disable {{"parent.chromaAbEnable ? 0 : 1"}}
+ }
+ TransformMasked {
+  channels {-rgba.red -rgba.green rgba.blue none}
+  scale {{"1 / parent.chromaAbScale"}}
+  center {250.5 250.5}
+  name Transform7
+  label static
+  xpos 4717
+  ypos -1014
+  disable {{"parent.chromaAbEnable ? 0 : 1"}}
+ }
+ Switch {
+  inputs 2
+  which {{"\[exists parent.input2]" i}}
+  name Switch1
+  label static
+  xpos 4717
+  ypos -912
+ }
+set N37908c00 [stack 0]
+ Input {
+  inputs 0
+  name mask
+  label static
+  xpos 4439
+  ypos -46
+  number 3
+ }
+ Input {
+  inputs 0
+  name img
+  label static
+  xpos 3511
+  ypos -1238
+ }
+set N37909400 [stack 0]
+ Input {
+  inputs 0
+  name map
+  label static
+  xpos 1952
+  ypos -1413
+  number 1
+ }
+set N37909800 [stack 0]
+ Shuffle {
+  red alpha
+  green black
+  blue black
+  alpha black
+  name Shuffle5
+  label "static\nalpha"
+  xpos 2052
+  ypos -1219
+ }
+push $N37909800
+ Shuffle {
+  red blue
+  green black
+  blue black
+  alpha black
+  name Shuffle4
+  label "static\nblue"
+  xpos 1957
+  ypos -1220
+ }
+push $N37909800
+ Shuffle {
+  red green
+  green black
+  blue black
+  alpha black
+  name Shuffle3
+  label "static\ngreen"
+  xpos 1862
+  ypos -1215
+ }
+push $N37909800
+ Shuffle {
+  green black
+  blue black
+  alpha black
+  name Shuffle1
+  label "static\nred"
+  xpos 1766
+  ypos -1217
+ }
+ Switch {
+  inputs 4
+  which {{parent.controlChannel i}}
+  name Switch3
+  label static
+  xpos 1952
+  ypos -1116
+ }
+ Gamma {
+  channels rgba
+  value {{parent.sliceGamma i}}
+  name Gamma1
+  label static
+  xpos 1952
+  ypos -935
+ }
+set N37931000 [stack 0]
+ Keyer {
+  operation "red keyer"
+  range {{(1/parent.slices*10)-1/parent.slices} {"(1/parent.slices*9) + (1/parent.slices*parent.overlap)"} 1 1}
+  name Keyer11
+ }
+push $N37908c00
+ Reformat {
+  type "to box"
+  box_width {{"pow(parent.size/parent.slices*10/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? pow(parent.size/parent.slices*10/parent.size,parent.sliceGamma)*parent.size*2 : 3"}}
+  pbb true
+  name Reformat29
+ }
+ Reformat {
+  type scale
+  scale {{parent.aspect} 1}
+  resize distort
+  pbb true
+  name Reformat30
+ }
+ Transform {
+  translate {{fmod(width,2)?0:0.5} {fmod(height,2)?0:0.5}}
+  name Transform12
+ }
+ Reformat {
+  type "to box"
+  box_width {{fmod(width,2)?width:width+1}}
+  box_height {{fmod(height,2)?height:height+1}}
+  resize none
+  pbb true
+  name Reformat31
+ }
+ Crop {
+  box {-1 -1 {width+1} {height+1}}
+  name Crop10
+ }
+push $N37909400
+ Convolve2 {
+  inputs 2
+  useGPUIfAvailable {{parent.useGPU}}
+  use_input_channels {{parent.filterChannel}}
+  mix {{"pow(parent.size/parent.slices*10/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? 1 : pow(parent.size/parent.slices*10/parent.size,parent.sliceGamma)*parent.size*2/3"}}
+  name Convolve10
+ }
+push $N37931000
+ Keyer {
+  operation "red keyer"
+  range {{(1/parent.slices*9)-1/parent.slices} {"(1/parent.slices*8) + (1/parent.slices*parent.overlap)"} 1 1}
+  name Keyer10
+ }
+push $N37908c00
+ Reformat {
+  type "to box"
+  box_width {{"pow(parent.size/parent.slices*9/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? pow(parent.size/parent.slices*9/parent.size,parent.sliceGamma)*parent.size*2 : 3"}}
+  pbb true
+  name Reformat26
+ }
+ Reformat {
+  type scale
+  scale {{parent.aspect} 1}
+  resize distort
+  pbb true
+  name Reformat27
+ }
+ Transform {
+  translate {{fmod(width,2)?0:0.5} {fmod(height,2)?0:0.5}}
+  name Transform11
+ }
+ Reformat {
+  type "to box"
+  box_width {{fmod(width,2)?width:width+1}}
+  box_height {{fmod(height,2)?height:height+1}}
+  resize none
+  pbb true
+  name Reformat28
+ }
+ Crop {
+  box {-1 -1 {width+1} {height+1}}
+  name Crop9
+ }
+push $N37909400
+ Convolve2 {
+  inputs 2
+  useGPUIfAvailable {{parent.useGPU}}
+  use_input_channels {{parent.filterChannel}}
+  mix {{"pow(parent.size/parent.slices*9/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? 1 : pow(parent.size/parent.slices*9/parent.size,parent.sliceGamma)*parent.size*2/3"}}
+  name Convolve9
+ }
+push $N37931000
+ Keyer {
+  operation "red keyer"
+  range {{(1/parent.slices*8)-1/parent.slices} {"(1/parent.slices*7) + (1/parent.slices*parent.overlap)"} 1 1}
+  name Keyer9
+ }
+push $N37908c00
+ Reformat {
+  type "to box"
+  box_width {{"pow(parent.size/parent.slices*8/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? pow(parent.size/parent.slices*8/parent.size,parent.sliceGamma)*parent.size*2 : 3"}}
+  pbb true
+  name Reformat23
+ }
+ Reformat {
+  type scale
+  scale {{parent.aspect} 1}
+  resize distort
+  pbb true
+  name Reformat24
+ }
+ Transform {
+  translate {{fmod(width,2)?0:0.5} {fmod(height,2)?0:0.5}}
+  name Transform10
+ }
+ Reformat {
+  type "to box"
+  box_width {{fmod(width,2)?width:width+1}}
+  box_height {{fmod(height,2)?height:height+1}}
+  resize none
+  pbb true
+  name Reformat25
+ }
+ Crop {
+  box {-1 -1 {width+1} {height+1}}
+  name Crop8
+ }
+push $N37909400
+ Convolve2 {
+  inputs 2
+  useGPUIfAvailable {{parent.useGPU}}
+  use_input_channels {{parent.filterChannel}}
+  mix {{"pow(parent.size/parent.slices*8/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? 1 : pow(parent.size/parent.slices*8/parent.size,parent.sliceGamma)*parent.size*2/3"}}
+  name Convolve8
+ }
+push $N37931000
+ Keyer {
+  operation "red keyer"
+  range {{(1/parent.slices*7)-1/parent.slices} {"(1/parent.slices*6) + (1/parent.slices*parent.overlap)"} 1 1}
+  name Keyer8
+ }
+push $N37908c00
+ Reformat {
+  type "to box"
+  box_width {{"pow(parent.size/parent.slices*7/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? pow(parent.size/parent.slices*7/parent.size,parent.sliceGamma)*parent.size*2 : 3"}}
+  pbb true
+  name Reformat20
+ }
+ Reformat {
+  type scale
+  scale {{parent.aspect} 1}
+  resize distort
+  pbb true
+  name Reformat21
+ }
+ Transform {
+  translate {{fmod(width,2)?0:0.5} {fmod(height,2)?0:0.5}}
+  name Transform9
+ }
+ Reformat {
+  type "to box"
+  box_width {{fmod(width,2)?width:width+1}}
+  box_height {{fmod(height,2)?height:height+1}}
+  resize none
+  pbb true
+  name Reformat22
+ }
+ Crop {
+  box {-1 -1 {width+1} {height+1}}
+  name Crop7
+ }
+push $N37909400
+ Convolve2 {
+  inputs 2
+  useGPUIfAvailable {{parent.useGPU}}
+  use_input_channels {{parent.filterChannel}}
+  mix {{"pow(parent.size/parent.slices*7/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? 1 : pow(parent.size/parent.slices*7/parent.size,parent.sliceGamma)*parent.size*2/3"}}
+  name Convolve7
+ }
+push $N37931000
+ Keyer {
+  operation "red keyer"
+  range {{(1/parent.slices*6)-1/parent.slices} {"(1/parent.slices*5) + (1/parent.slices*parent.overlap)"} 1 1}
+  name Keyer7
+ }
+push $N37908c00
+ Reformat {
+  type "to box"
+  box_width {{"pow(parent.size/parent.slices*6/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? pow(parent.size/parent.slices*6/parent.size,parent.sliceGamma)*parent.size*2 : 3"}}
+  pbb true
+  name Reformat17
+ }
+ Reformat {
+  type scale
+  scale {{parent.aspect} 1}
+  resize distort
+  pbb true
+  name Reformat18
+ }
+ Transform {
+  translate {{fmod(width,2)?0:0.5} {fmod(height,2)?0:0.5}}
+  name Transform8
+ }
+ Reformat {
+  type "to box"
+  box_width {{fmod(width,2)?width:width+1}}
+  box_height {{fmod(height,2)?height:height+1}}
+  resize none
+  pbb true
+  name Reformat19
+ }
+ Crop {
+  box {-1 -1 {width+1} {height+1}}
+  name Crop6
+ }
+push $N37909400
+ Convolve2 {
+  inputs 2
+  useGPUIfAvailable {{parent.useGPU}}
+  use_input_channels {{parent.filterChannel}}
+  mix {{"pow(parent.size/parent.slices*6/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? 1 : pow(parent.size/parent.slices*6/parent.size,parent.sliceGamma)*parent.size*2/3"}}
+  name Convolve6
+ }
+push $N37931000
+ Keyer {
+  operation "red keyer"
+  range {{(1/parent.slices*5)-1/parent.slices} {"(1/parent.slices*4) + (1/parent.slices*parent.overlap)"} 1 1}
+  name Keyer6
+ }
+push $N37908c00
+ Reformat {
+  type "to box"
+  box_width {{"pow(parent.size/parent.slices*5/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? pow(parent.size/parent.slices*5/parent.size,parent.sliceGamma)*parent.size*2 : 3"}}
+  pbb true
+  name Reformat14
+ }
+ Reformat {
+  type scale
+  scale {{parent.aspect} 1}
+  resize distort
+  pbb true
+  name Reformat15
+ }
+ Transform {
+  translate {{fmod(width,2)?0:0.5} {fmod(height,2)?0:0.5}}
+  name Transform5
+ }
+ Reformat {
+  type "to box"
+  box_width {{fmod(width,2)?width:width+1}}
+  box_height {{fmod(height,2)?height:height+1}}
+  resize none
+  pbb true
+  name Reformat16
+ }
+ Crop {
+  box {-1 -1 {width+1} {height+1}}
+  name Crop5
+ }
+push $N37909400
+ Convolve2 {
+  inputs 2
+  useGPUIfAvailable {{parent.useGPU}}
+  use_input_channels {{parent.filterChannel}}
+  mix {{"pow(parent.size/parent.slices*5/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? 1 : pow(parent.size/parent.slices*5/parent.size,parent.sliceGamma)*parent.size*2/3"}}
+  name Convolve5
+ }
+push $N37931000
+ Keyer {
+  operation "red keyer"
+  range {{(1/parent.slices*4)-1/parent.slices} {"(1/parent.slices*3) + (1/parent.slices*parent.overlap)"} 1 1}
+  name Keyer5
+ }
+push $N37908c00
+ Reformat {
+  type "to box"
+  box_width {{"pow(parent.size/parent.slices*4/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? pow(parent.size/parent.slices*4/parent.size,parent.sliceGamma)*parent.size*2 : 3"}}
+  pbb true
+  name Reformat11
+ }
+ Reformat {
+  type scale
+  scale {{parent.aspect} 1}
+  resize distort
+  pbb true
+  name Reformat12
+ }
+ Transform {
+  translate {{fmod(width,2)?0:0.5} {fmod(height,2)?0:0.5}}
+  name Transform4
+ }
+ Reformat {
+  type "to box"
+  box_width {{fmod(width,2)?width:width+1}}
+  box_height {{fmod(height,2)?height:height+1}}
+  resize none
+  pbb true
+  name Reformat13
+ }
+ Crop {
+  box {-1 -1 {width+1} {height+1}}
+  name Crop4
+ }
+push $N37909400
+ Convolve2 {
+  inputs 2
+  useGPUIfAvailable {{parent.useGPU}}
+  use_input_channels {{parent.filterChannel}}
+  mix {{"pow(parent.size/parent.slices*4/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? 1 : pow(parent.size/parent.slices*4/parent.size,parent.sliceGamma)*parent.size*2/3"}}
+  name Convolve4
+ }
+push $N37931000
+ Keyer {
+  operation "red keyer"
+  range {{(1/parent.slices*3)-1/parent.slices} {"(1/parent.slices*2) + (1/parent.slices*parent.overlap)"} 1 1}
+  name Keyer3
+ }
+push $N37908c00
+ Reformat {
+  type "to box"
+  box_width {{"pow(parent.size/parent.slices*3/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? pow(parent.size/parent.slices*3/parent.size,parent.sliceGamma)*parent.size*2 : 3"}}
+  pbb true
+  name Reformat8
+ }
+ Reformat {
+  type scale
+  scale {{parent.aspect} 1}
+  resize distort
+  pbb true
+  name Reformat9
+ }
+ Transform {
+  translate {{fmod(width,2)?0:0.5} {fmod(height,2)?0:0.5}}
+  name Transform3
+ }
+ Reformat {
+  type "to box"
+  box_width {{fmod(width,2)?width:width+1}}
+  box_height {{fmod(height,2)?height:height+1}}
+  resize none
+  pbb true
+  name Reformat10
+ }
+ Crop {
+  box {-1 -1 {width+1} {height+1}}
+  name Crop3
+ }
+push $N37909400
+ Convolve2 {
+  inputs 2
+  useGPUIfAvailable {{parent.useGPU}}
+  use_input_channels {{parent.filterChannel}}
+  mix {{"pow(parent.size/parent.slices*3/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? 1 : pow(parent.size/parent.slices*3/parent.size,parent.sliceGamma)*parent.size*2/3"}}
+  name Convolve3
+ }
+push $N37931000
+ Keyer {
+  operation "red keyer"
+  range {{(1/parent.slices*2)-1/parent.slices} {"(1/parent.slices*1) + (1/parent.slices*parent.overlap)"} 1 1}
+  name Keyer2
+ }
+push $N37908c00
+ Reformat {
+  type "to box"
+  box_width {{"pow(parent.size/parent.slices*2/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? pow(parent.size/parent.slices*2/parent.size,parent.sliceGamma)*parent.size*2 : 3"}}
+  pbb true
+  name Reformat5
+ }
+ Reformat {
+  type scale
+  scale {{parent.aspect} 1}
+  resize distort
+  pbb true
+  name Reformat6
+ }
+ Transform {
+  translate {{fmod(width,2)?0:0.5} {fmod(height,2)?0:0.5}}
+  name Transform2
+ }
+ Reformat {
+  type "to box"
+  box_width {{fmod(width,2)?width:width+1}}
+  box_height {{fmod(height,2)?height:height+1}}
+  resize none
+  pbb true
+  name Reformat7
+ }
+ Crop {
+  box {-1 -1 {width+1} {height+1}}
+  name Crop2
+ }
+push $N37909400
+ Convolve2 {
+  inputs 2
+  useGPUIfAvailable {{parent.useGPU}}
+  use_input_channels {{parent.filterChannel}}
+  mix {{"pow(parent.size/parent.slices*2/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? 1 : pow(parent.size/parent.slices*2/parent.size,parent.sliceGamma)*parent.size*2/3"}}
+  name Convolve2
+ }
+push $N37931000
+ Keyer {
+  operation "red keyer"
+  range {{(1/parent.slices*1)-1/parent.slices} {"(1/parent.slices*0) + (1/parent.slices*parent.overlap)"} 1 1}
+  name Keyer1
+ }
+push $N37908c00
+ Reformat {
+  type "to box"
+  box_width {{"pow(parent.size/parent.slices*1/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? pow(parent.size/parent.slices*1/parent.size,parent.sliceGamma)*parent.size*2 : 3"}}
+  pbb true
+  name Reformat1
+ }
+ Reformat {
+  type scale
+  scale {{parent.aspect} 1}
+  resize distort
+  pbb true
+  name Reformat2
+ }
+ Transform {
+  translate {{fmod(width,2)?0:0.5} {fmod(height,2)?0:0.5}}
+  name Transform1
+ }
+ Reformat {
+  type "to box"
+  box_width {{fmod(width,2)?width:width+1}}
+  box_height {{fmod(height,2)?height:height+1}}
+  resize none
+  pbb true
+  name Reformat3
+ }
+ Crop {
+  box {-1 -1 {width+1} {height+1}}
+  name Crop1
+ }
+push $N37909400
+ Convolve2 {
+  inputs 2
+  useGPUIfAvailable {{parent.useGPU}}
+  use_input_channels {{parent.filterChannel}}
+  mix {{"pow(parent.size/parent.slices*1/parent.size,parent.sliceGamma)*parent.size*2 > 3 ? 1 : pow(parent.size/parent.slices*1/parent.size,parent.sliceGamma)*parent.size*2/3"}}
+  name Convolve1
+ }
+push $N37909400
+ Keymix {
+  inputs 3
+  bbox A
+  name Keymix1
+ }
+ Keymix {
+  inputs 3
+  bbox A
+  name Keymix2
+ }
+ Keymix {
+  inputs 3
+  bbox A
+  name Keymix3
+ }
+ Keymix {
+  inputs 3
+  bbox A
+  name Keymix4
+ }
+ Keymix {
+  inputs 3
+  bbox A
+  name Keymix5
+ }
+ Keymix {
+  inputs 3
+  bbox A
+  name Keymix6
+ }
+ Keymix {
+  inputs 3
+  bbox A
+  name Keymix7
+ }
+ Keymix {
+  inputs 3
+  bbox A
+  name Keymix8
+ }
+ Keymix {
+  inputs 3
+  bbox A
+  name Keymix9
+ }
+ Keymix {
+  inputs 3
+  bbox A
+  name Keymix10
+ }
+ Keymix {
+  inputs 3
+  invertMask true
+  bbox B
+  name mask_keymix
+  label static
+  xpos 4061
+  ypos -34
+  disable {{"\[exists parent.input3] ? 0 : 1" x1 0}}
+ }
+push $N37909400
+ Dissolve {
+  inputs 2
+  which {{parent.mix}}
+  name Dissolve1
+  label static
+  xpos 4061
+  ypos 86
+ }
+ Switch {
+  inputs 2
+  which {{parent.viewKernel i}}
+  name Switch2
+  label static
+  xpos 4060
+  ypos 203
+ }
+ Output {
+  name Output1
+  label static
+  xpos 4060
+  ypos 275
+ }
+end_group

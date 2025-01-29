@@ -1,0 +1,140 @@
+
+Group {
+ name PxF_Bandpass
+ inputs 2
+ help "Extract detail from an image by subtracting the original image from a blur of itself.\nUseful to enhance an image for easier tracking."
+ tile_color 0x733520ff
+ addUserKnob {20 PxF_Bandpass}
+ addUserKnob {41 colorspace_out l Colorspace t "Pixel values will be converted from linear to this colorspace before processing." T Colorspace1.colorspace_out}
+ addUserKnob {41 blur_1 l blurAmount1 T Blur1.size}
+ addUserKnob {41 blur_2 l blurAmount2 T Blur2.size}
+ addUserKnob {7 brightness l Gain t "Overall gain applied after bandpass filter." R 0 20}
+ brightness 5
+ addUserKnob {41 saturation t "Overall saturation after bandpass and gain." T Saturation1.saturation}
+ addUserKnob {7 offset l offsetDarks t "Constant added after bandpass."}
+ offset 0.5
+ addUserKnob {6 pre_bc l "pre black clamp" t "Clamp blacks before bandpass." +STARTLINE}
+ pre_bc true
+ addUserKnob {6 pre_wc l "pre white clamp" t "Clamp whites before bandpass." -STARTLINE}
+ addUserKnob {6 bc l "post black clamp" t "Clamp blacks after bandpass." +STARTLINE}
+ bc true
+ addUserKnob {6 wc l "post white clamp" t "Clamp whites after bandpass." -STARTLINE}
+ wc true
+ addUserKnob {7 mix}
+ mix 1
+ addUserKnob {26 ""}
+ addUserKnob {26 Credits l "" t "PxF_Bandpass 2.5 - &copy; 2012-2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_Bandpass 2.5 - &copy; 2012-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_BandPass.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+}
+ Input {
+  inputs 0
+  name mask
+  xpos 434
+  ypos 141
+  number 1
+ }
+ Input {
+  inputs 0
+  name img
+  xpos 171
+  ypos -273
+ }
+set Nb0be6400 [stack 0]
+ Clamp {
+  minimum_enable {{parent.pre_bc}}
+  maximum_enable {{parent.pre_wc}}
+  name Clamp1
+  xpos 171
+  ypos -219
+ }
+set N88ba4100 [stack 0]
+ Dot {
+  name Dot1
+  xpos 405
+  ypos 31
+ }
+set Nb0be5d00 [stack 0]
+push $Nb0be5d00
+push $N88ba4100
+ Colorspace {
+  colorspace_out Cineon
+  name Colorspace1
+  xpos 171
+  ypos -163
+ }
+set Nb0be5600 [stack 0]
+ Blur {
+  name Blur1
+  xpos 132
+  ypos -126
+ }
+push $Nb0be5600
+ Blur {
+  size 20
+  name Blur2
+  xpos 227
+  ypos -127
+ }
+ Merge2 {
+  inputs 2
+  operation minus
+  name Merge1
+  xpos 180
+  ypos -71
+ }
+ Grade {
+  white {{brightness}}
+  add {{offset}}
+  black_clamp {{bc}}
+  white_clamp {{wc}}
+  name Grade1
+  xpos 180
+  ypos 4
+ }
+ Saturation {
+  saturation 0
+  name Saturation1
+  xpos 180
+  ypos 47
+ }
+ ShuffleCopy {
+  inputs 2
+  name ShuffleCopy1
+  xpos 180
+  ypos 163
+ }
+ Keymix {
+  inputs 3
+  invertMask true
+  bbox B
+  name Keymix1
+  xpos 180
+  ypos 229
+  disable {{"\[exists parent.input1] ? 0 : 1" x1 0}}
+ }
+push $Nb0be6400
+ Dot {
+  name Dot3
+  note_font_size 22
+  xpos 37
+  ypos -179
+ }
+ Dot {
+  name Dot2
+  note_font_size 22
+  xpos 37
+  ypos 228
+ }
+ Dissolve {
+  inputs 2
+  which {{parent.mix}}
+  name Dissolve1
+  selected true
+  xpos 180
+  ypos 294
+ }
+ Output {
+  name Output1
+  xpos 180
+  ypos 361
+ }
+end_group

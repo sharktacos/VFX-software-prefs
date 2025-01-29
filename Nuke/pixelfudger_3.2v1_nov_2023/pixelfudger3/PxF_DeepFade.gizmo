@@ -1,0 +1,114 @@
+
+Group {
+ name PxF_DeepFade
+ help "Lower the opacity of samples very close to camera and very far from camera."
+ tile_color 0x733520ff
+ addUserKnob {20 PxF_DeepFade}
+ addUserKnob {41 range l "depth range" t "Samples between B&C will be kept as is.\nSamples between A&B and C&D will have a lower opacity to create a depth 'feather'.\nSamples in front of A and behind D will be killed." T Keyer1.range}
+ addUserKnob {6 deleteZero l "Delete zero opacity samples" t "Remove samples that have zero opacity to speed up rendering." +STARTLINE}
+ deleteZero true
+ addUserKnob {7 mix t "Mix between the result and the original deep image."}
+ mix 1
+ addUserKnob {26 ""}
+ addUserKnob {26 Credits l "" t "PxF_DeepFade 1.0 - &copy; 2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_DeepFade 1.0 - &copy; 2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_DeepFade.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+}
+ Input {
+  inputs 0
+  name deep
+  xpos -514
+  ypos 267
+ }
+ Dot {
+  name Dot1
+  note_font_size 22
+  xpos -480
+  ypos 320
+ }
+set N2635a400 [stack 0]
+ DeepExpression {
+  temp_name0 feather
+  temp_expr0 "((deep.front < A1 || deep.front > D1) ? 0 : (deep.front >= A1 && deep.front <= B1) ? (deep.front - A1) / (B1 - A1) : (deep.front >= C1 && deep.front <= D1) ? 1 - (deep.front - C1) / (D1 - C1) : 1)"
+  chans1 deep
+  rgba.red "rgba.red * (((feather -1) * parent.mix) +1)"
+  rgba.green "rgba.green * (((feather -1) * parent.mix) +1)"
+  rgba.blue "rgba.blue * (((feather -1) * parent.mix) +1)"
+  rgba.alpha "rgba.alpha * (((feather -1) * parent.mix) +1)"
+  name DeepExpression1
+  label "multiply rgba by mask\nand depth feather\n(mask)"
+  selected true
+  xpos -514
+  ypos 513
+  addUserKnob {20 User}
+  addUserKnob {6 limit_z +STARTLINE}
+  limit_z {{parent.limit_z}}
+  addUserKnob {7 A1}
+  A1 {{Keyer1.range.A}}
+  addUserKnob {7 B1}
+  B1 {{Keyer1.range.B}}
+  addUserKnob {7 C1}
+  C1 {{Keyer1.range.C}}
+  addUserKnob {7 D1}
+  D1 {{Keyer1.range.D}}
+ }
+ DeepExpression {
+  temp_name0 opCheck
+  temp_expr0 "rgba.alpha <= 0"
+  chans1 deep
+  deep.front "opCheck ? -1 : deep.front"
+  deep.back "opCheck ? -1 : deep.back"
+  name DeepExpression10
+  label "push zero opacity samples behind camera"
+  xpos -514
+  ypos 659
+  disable {{"parent.deleteZero ? 0 : 1"}}
+ }
+ DeepCrop {
+  znear 0
+  use_zfar false
+  bbox {192 108 768 432}
+  use_bbox false
+  name DeepCrop3
+  label "delete samples behind camera"
+  xpos -514
+  ypos 735
+  disable {{"parent.deleteZero ? 0 : 1" x24 1}}
+ }
+ Output {
+  name Output1
+  xpos -514
+  ypos 809
+ }
+ Keyer {
+  inputs 0
+  operation "luminance key"
+  range {10 20 30 40}
+  name Keyer1
+  xpos -663
+  ypos 509
+ }
+push $N2635a400
+ DeepExpression {
+  temp_name0 feather
+  temp_expr0 "((deep.front < A1 || deep.front > D1) ? 0 : (deep.front >= A1 && deep.front <= B1) ? (deep.front - A1) / (B1 - A1) : (deep.front >= C1 && deep.front <= D1) ? 1 - (deep.front - C1) / (D1 - C1) : 1)"
+  chans1 deep
+  rgba.red "rgba.red * feather"
+  rgba.green "rgba.green * feather"
+  rgba.blue "rgba.blue * feather"
+  rgba.alpha "rgba.alpha * feather"
+  name DeepExpression2
+  label "multiply rgba by mask\nand depth feather\n(mask)"
+  xpos -406
+  ypos 491
+  addUserKnob {20 User}
+  addUserKnob {6 limit_z +STARTLINE}
+  limit_z {{parent.limit_z}}
+  addUserKnob {7 A1}
+  A1 {{Keyer1.range.A}}
+  addUserKnob {7 B1}
+  B1 {{Keyer1.range.B}}
+  addUserKnob {7 C1}
+  C1 {{Keyer1.range.C}}
+  addUserKnob {7 D1}
+  D1 {{Keyer1.range.D}}
+ }
+end_group

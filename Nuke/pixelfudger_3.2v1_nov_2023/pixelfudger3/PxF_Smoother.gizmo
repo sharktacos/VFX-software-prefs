@@ -1,0 +1,114 @@
+Group {
+ name PxF_Smoother
+ help "Blur mid-frequency details while preserving fine detail (high frequency) and overall lighting (low frequency).\n\nUseful to smooth imprefect skin for example."
+ tile_color 0x733520ff
+ addUserKnob {20 PxF_Smoother}
+ addUserKnob {14 smallBlur t "Details smaller than smallBlur will be preserved." R 0 100}
+ smallBlur 10
+ addUserKnob {14 bigBlur t "Details bigger than bigBlur will be preserved." R 0 100}
+ bigBlur 100
+ addUserKnob {7 gamma t "Apply a gamma before and after the blurs. Useful if you have really bright details that are blooming."}
+ gamma 1
+ addUserKnob {7 mix t "Dissolve between the original (0) and the full effect (1)."}
+ mix 1
+ addUserKnob {26 ""}
+ addUserKnob {26 Credits l "" t "PxF_Smoother 1.0 - &copy; 2020-2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_Smoother 1.0 - &copy; 2020-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_Smoother.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+}
+ Input {
+  inputs 0
+  name mask
+  xpos -28
+  ypos 217
+  number 1
+ }
+ Input {
+  inputs 0
+  name img
+  xpos 171
+  ypos -273
+ }
+set N201d000 [stack 0]
+ Dot {
+  name Dot1
+  xpos 634
+  ypos 28
+ }
+set N207f400 [stack 0]
+push $N207f400
+push $N201d000
+ Gamma {
+  value {{parent.gamma}}
+  name Gamma1
+  xpos 169
+  ypos -218
+ }
+set N201d400 [stack 0]
+ Dot {
+  name Dot2
+  xpos 26
+  ypos -107
+ }
+push $N201d400
+ Blur {
+  size {{parent.smallBlur.w} {parent.smallBlur.h}}
+  name Blur1
+  xpos 115
+  ypos -125
+ }
+ Merge2 {
+  inputs 2
+  operation divide
+  name Merge2
+  xpos 45
+  ypos -26
+ }
+push $N201d400
+ Blur {
+  size {{parent.bigBlur.w} {parent.bigBlur.h}}
+  name Blur2
+  xpos 228
+  ypos -127
+ }
+ Merge2 {
+  inputs 2
+  operation multiply
+  name Merge3
+  selected true
+  xpos 228
+  ypos -6
+ }
+ Gamma {
+  value {{"1 / parent.gamma"}}
+  name Gamma2
+  xpos 228
+  ypos 66
+ }
+ ShuffleCopy {
+  inputs 2
+  name ShuffleCopy1
+  xpos 228
+  ypos 166
+ }
+ Keymix {
+  inputs 3
+  invertMask true
+  bbox B
+  name Keymix1
+  xpos 228
+  ypos 232
+  disable {{"\[exists parent.input1] ? 0 : 1" i x1 0}}
+ }
+push $N207f400
+ Dissolve {
+  inputs 2
+  which {{parent.mix}}
+  name Dissolve1
+  xpos 223
+  ypos 338
+ }
+ Output {
+  name Output1
+  xpos 228
+  ypos 460
+ }
+end_group

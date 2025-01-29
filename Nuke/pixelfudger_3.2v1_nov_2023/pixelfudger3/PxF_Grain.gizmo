@@ -1,0 +1,227 @@
+Group {
+ name PxF_Grain
+ help "Standard Nuke grain with a ColorLookup to adjust the response curve by channel."
+ knobChanged "m = nuke.thisNode()\nkc = nuke.thisKnob()\n\n#check if the knob that was touched is one we care about, other wise exit.\nif kc.name() in \['red_size', 'green_size', 'blue_size', 'red_i', 'green_i', 'blue_i', 'red_m', 'green_m', 'blue_m']:\n  \n  #Create a dict. Keys = gang switches, Values = lists of knob names we care about per switch.\n  gang_knobs = \{\n      \"size_gang\": \[\"red_size\", \"green_size\", \"blue_size\"],\n      \"gang_i\": \[\"red_i\", \"green_i\", \"blue_i\"],\n      \"gang_m\": \['red_m', \"green_m\", \"blue_m\"]\n  \}\n  \n  #Go through the dict and store the switch name in gang_switch\n  #and the list of related value knobs in 'knobs'\n  for gang_switch, knobs in gang_knobs.items():\n      #If the knob we touched is in the list...\n      #...and the gang switch is on\n      if kc.name() in knobs and m\[gang_switch].value() == True:\n          #Subtract the previous value from the current value\n          ratio = kc.value() - m\[\"prev_\" + kc.name()].value()\n          #Add the diffrence to the 2 other knobs\n          for knob in knobs:\n              if knob != kc.name():\n                  m\[knob].setValue(m\[knob].value() + ratio)\n                  m\[\"prev_\" + knob].setValue(m\[knob].value())\n  #Update the value store in the hidden previous knob                \n  m\[\"prev_\" + kc.name()].setValue(kc.value())\n  \n"
+ tile_color 0x733520ff
+ addUserKnob {20 PxF_Grain}
+ addUserKnob {26 _1 l "@b;Size"}
+ addUserKnob {14 red_size l red R 0 100}
+ red_size 2
+ addUserKnob {14 prev_red_size +INVISIBLE R 0 100}
+ prev_red_size 2
+ addUserKnob {14 green_size l green R 0 100}
+ green_size 1
+ addUserKnob {14 prev_green_size +INVISIBLE R 0 100}
+ prev_green_size 1
+ addUserKnob {14 blue_size l blue R 0 100}
+ blue_size 3
+ addUserKnob {14 prev_blue_size +INVISIBLE R 0 100}
+ prev_blue_size 3
+ addUserKnob {6 size_gang l gang +STARTLINE}
+ size_gang true
+ addUserKnob {26 _2 l "@b;Irregularity"}
+ addUserKnob {7 red_i l red}
+ red_i 0.6
+ addUserKnob {7 prev_red_i +INVISIBLE}
+ prev_red_i 0.6
+ addUserKnob {7 green_i l green}
+ green_i 0.6
+ addUserKnob {7 prev_green_i +INVISIBLE}
+ prev_green_i 0.6
+ addUserKnob {7 blue_i l blue}
+ blue_i 0.6
+ addUserKnob {7 prev_blue_i +INVISIBLE}
+ prev_blue_i 0.6
+ addUserKnob {6 gang_i l gang +STARTLINE}
+ gang_i true
+ addUserKnob {26 _3 l "@b;Intensity"}
+ addUserKnob {7 red_m l red}
+ red_m 0.2
+ addUserKnob {7 prev_red_m +INVISIBLE}
+ prev_red_m 0.2
+ addUserKnob {7 green_m l green}
+ green_m 0.1
+ addUserKnob {7 prev_green_m +INVISIBLE}
+ prev_green_m 0.1
+ addUserKnob {7 blue_m l blue}
+ blue_m 0.3
+ addUserKnob {7 prev_blue_m +INVISIBLE}
+ prev_blue_m 0.3
+ addUserKnob {6 gang_m l gang +STARTLINE}
+ gang_m true
+ addUserKnob {26 r l "@b;Response" t "Use the 'red', 'green' and 'blue' curves to bias how much grain is applied in the shadows/mids/highlights.\nFlat RGB curves at 1.0 behaves the same as regular Nuke grain. Using the 'master' curve is not recommended."}
+ addUserKnob {7 maskGamma t "Apply gamma to mask to make grain more or less present in the semi-transparent areas of the mask." R 0 5}
+ maskGamma 2.5
+ addUserKnob {7 saturation t "Adjust the saturation of the grain to increase/decrease the amount of 'chroma' noise in the grain."}
+ saturation 1
+ addUserKnob {6 v_cinSpace l "Cineon Colorspace" t "Convert pixel values to Cineon colorspace before applying the grain." +STARTLINE}
+ v_cinSpace true
+ addUserKnob {41 lut l "" t "Use the 'red', 'green' and 'blue' curves to bias how much grain is applied in the shadows/mids/highlights.\nFlat RGB curves at 1.0 behaves the same as regular Nuke grain. \n\nUsing the 'master' curve is not recommended." +STARTLINE T ColorLookup1.lut}
+ addUserKnob {7 mix t "Dissolve between the original (0) and the full effect (1)."}
+ mix 1
+ addUserKnob {26 ""}
+ addUserKnob {26 Credits l "" t "PxF_Grain 1.1.1 - &copy; 2012-2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_Grain 1.1.1 - &copy; 2012-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_Grain.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+}
+ Input {
+  inputs 0
+  name mask
+  xpos -109
+  ypos 621
+  number 1
+ }
+ Dot {
+  name Dot2
+  xpos -75
+  ypos 1098
+ }
+ Gamma {
+  value {{parent.maskGamma}}
+  name Gamma1
+  xpos -204
+  ypos 1088
+ }
+ Input {
+  inputs 0
+  name img
+  xpos -329
+  ypos 474
+ }
+set Nbf155800 [stack 0]
+ Dot {
+  name Dot3
+  xpos -186
+  ypos 631
+ }
+ Dot {
+  name Dot1
+  xpos -186
+  ypos 985
+ }
+push $Nbf155800
+ Grade {
+  white 0
+  add 0.5
+  name Grade1
+  label "make grey frame"
+  xpos -526
+  ypos 595
+ }
+ Shuffle {
+  alpha white
+  name Shuffle2
+  label "White Alpha"
+  xpos -526
+  ypos 642
+ }
+ Grain2 {
+  name Grain2_3
+  label "Kodak 5217"
+  seed {{random(frame*random(frame+123))*100000}}
+  red_size {{parent.red_size.w} {parent.red_size.h}}
+  green_size {{parent.green_size.w} {parent.green_size.h}}
+  blue_size {{parent.blue_size.w} {parent.blue_size.h}}
+  red_i {{parent.red_i}}
+  green_i {{parent.green_i}}
+  blue_i {{parent.blue_i}}
+  red_m {{parent.red_m}}
+  green_m {{parent.green_m}}
+  blue_m {{parent.blue_m}}
+ }
+ Add {
+  value -0.5
+  name Add1
+  xpos -526
+  ypos 753
+ }
+push $Nbf155800
+ Colorspace {
+  colorspace_out Cineon
+  name Colorspace6
+  xpos -329
+  ypos 658
+  disable {{parent.v_cinSpace?0:1 i}}
+ }
+set Nbf1cd000 [stack 0]
+ ColorLookup {
+  lut {master {}
+    red {curve L 1 0.5 s0}
+    green {curve L 1 0.5 s0}
+    blue {curve L 1 0.5 s0}
+    alpha {}}
+  name ColorLookup1
+  xpos -407
+  ypos 716
+ }
+ Clamp {
+  maximum 13
+  MaxClampTo 13
+  name Clamp1
+  xpos -407
+  ypos 756
+ }
+ Merge2 {
+  inputs 2
+  operation multiply
+  name Merge26
+  xpos -407
+  ypos 831
+ }
+ Saturation {
+  saturation {{parent.saturation}}
+  name Saturation1
+  xpos -403
+  ypos 875
+ }
+push $Nbf1cd000
+ Merge2 {
+  inputs 2
+  operation plus
+  Achannels rgb
+  Bchannels rgb
+  output rgb
+  name Merge27
+  xpos -333
+  ypos 934
+ }
+ Colorspace {
+  colorspace_in Cineon
+  name Colorspace5
+  xpos -333
+  ypos 1011
+  disable {{parent.v_cinSpace?0:1 i}}
+ }
+ Keymix {
+  inputs 3
+  invertMask true
+  bbox B
+  name Keymix1
+  xpos -333
+  ypos 1088
+  disable {{"\[exists parent.input1] ? 0 : 1" i x1 0}}
+ }
+push $Nbf155800
+ Dot {
+  name Dot5
+  note_font_size 22
+  xpos -676
+  ypos 586
+ }
+ Dot {
+  name Dot4
+  note_font_size 22
+  xpos -676
+  ypos 878
+ }
+ Dissolve {
+  inputs 2
+  which {{parent.mix}}
+  name Dissolve1
+  xpos -333
+  ypos 1177
+ }
+ Output {
+  name Output1
+  xpos -333
+  ypos 1244
+ }
+end_group

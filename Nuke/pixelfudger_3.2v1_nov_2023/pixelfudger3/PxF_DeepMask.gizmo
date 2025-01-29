@@ -1,0 +1,172 @@
+
+Group {
+ name PxF_DeepMask
+ help "Mask or Stencil Deep samples using an arbitrary alpha channel (like a roto shape for example)."
+ tile_color 0x733520ff
+ addUserKnob {20 PxF_DeepMask}
+ addUserKnob {4 operation t "Mask = Keep deep samples that are inside the mask.\n\nStencil = Remove deep samples that are inside the mask." M {mask stencil "" "" ""}}
+ addUserKnob {41 range l "depth range" t "This setting has no effect if 'limit z' is disabled.\n\nIf mode is mask:\nSamples between B&C will be kept.\nSamples between A&B and C&D will have a lower opacity to create a depth 'feather'.\nSamples in front of A and behind D will be killed.\n\nIf mode is stencil:\nSamples between B&C will be killed.\nSamples between A&B and C&D will have a lower opacity to create a depth 'feather'.\nSamples in front of A and behind D will be kept." T Keyer1.range}
+ addUserKnob {6 limit_z l "limit Z" t "Enable the depth range." +STARTLINE}
+ addUserKnob {6 deleteZero l "Delete zero opacity samples" t "Remove samples that have zero opacity to speed up rendering." +STARTLINE}
+ deleteZero true
+ addUserKnob {7 mix t "Mix between the result and the original deep image."}
+ mix 1
+ addUserKnob {26 ""}
+ addUserKnob {26 Credits l "" t "PxF_DeepMask 1.0 - &copy; 2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_DeepMask 1.0 - &copy; 2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_DeepMask.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+}
+ Input {
+  inputs 0
+  name mask
+  xpos -208
+  ypos 254
+  number 1
+ }
+ Dot {
+  name Dot2
+  note_font_size 22
+  xpos -174
+  ypos 305
+ }
+ Shuffle2 {
+  fromInput1 {{0} B}
+  in1 alpha
+  out1 mask
+  fromInput2 {{0} B}
+  mappings "1 rgba.alpha 0 0 mask.a 0 0"
+  name Shuffle24
+  label "alpha to mask"
+  xpos -208
+  ypos 356
+ }
+ Remove {
+  operation keep
+  channels mask
+  name Remove2
+  label "keep mask only"
+  xpos -208
+  ypos 404
+ }
+ Input {
+  inputs 0
+  name deep
+  xpos -514
+  ypos 267
+ }
+ Dot {
+  name Dot1
+  note_font_size 22
+  xpos -480
+  ypos 320
+ }
+ DeepRecolor {
+  inputs 2
+  channels mask
+  name DeepRecolor3
+  label "inject mask"
+  xpos -514
+  ypos 409
+ }
+ DeepExpression {
+  chans0 mask
+  chans1 deep
+  mask.a "mask.a > 0 ? mask.a / rgba.alpha : 0"
+  name DeepExpression8
+  label "unpremult mask"
+  xpos -514
+  ypos 474
+ }
+set N613c400 [stack 0]
+ DeepExpression {
+  temp_name0 feather
+  temp_expr0 "limit_z ? ((deep.front < A1 || deep.front > D1) ? 0 : (deep.front >= A1 && deep.front <= B1) ? (deep.front - A1) / (B1 - A1) : (deep.front >= C1 && deep.front <= D1) ? 1 - (deep.front - C1) / (D1 - C1) : 1) : 1"
+  chans1 deep
+  rgba.red "\nfeather > 0 ? rgba.red * (1 - (mask.a * feather * parent.mix)) : rgba.red"
+  rgba.green "\nfeather > 0 ? rgba.green * (1 - (mask.a * feather * parent.mix)) : rgba.green"
+  rgba.blue "\nfeather > 0 ? rgba.blue * (1 - (mask.a * feather * parent.mix)) : rgba.blue"
+  rgba.alpha "\nfeather > 0 ? rgba.alpha * (1 - (mask.a * feather * parent.mix)) : rgba.alpha"
+  name DeepExpression9
+  label "multiply rgba by inverted mask\nand depth feather\n(stencil)"
+  xpos -527
+  ypos 522
+  addUserKnob {20 User}
+  addUserKnob {6 limit_z +STARTLINE}
+  limit_z {{parent.limit_z}}
+  addUserKnob {7 A1}
+  A1 {{Keyer1.range.A}}
+  addUserKnob {7 B1}
+  B1 {{Keyer1.range.B}}
+  addUserKnob {7 C1}
+  C1 {{Keyer1.range.C}}
+  addUserKnob {7 D1}
+  D1 {{Keyer1.range.D}}
+ }
+push $N613c400
+ DeepExpression {
+  temp_name0 feather
+  temp_expr0 "limit_z ? ((deep.front < A1 || deep.front > D1) ? 0 : (deep.front >= A1 && deep.front <= B1) ? (deep.front - A1) / (B1 - A1) : (deep.front >= C1 && deep.front <= D1) ? 1 - (deep.front - C1) / (D1 - C1) : 1) : 1"
+  chans1 deep
+  rgba.red "rgba.red * ((((mask.a * feather) -1) * parent.mix) +1)"
+  rgba.green "rgba.green * ((((mask.a * feather) -1) * parent.mix) +1)"
+  rgba.blue "rgba.blue * ((((mask.a * feather) -1) * parent.mix) +1)"
+  rgba.alpha "rgba.alpha * ((((mask.a * feather) -1) * parent.mix) +1)"
+  name DeepExpression2
+  label "multiply rgba by mask\nand depth feather\n(mask)"
+  xpos -381
+  ypos 506
+  addUserKnob {20 User}
+  addUserKnob {6 limit_z +STARTLINE}
+  limit_z {{parent.limit_z}}
+  addUserKnob {7 A1}
+  A1 {{Keyer1.range.A}}
+  addUserKnob {7 B1}
+  B1 {{Keyer1.range.B}}
+  addUserKnob {7 C1}
+  C1 {{Keyer1.range.C}}
+  addUserKnob {7 D1}
+  D1 {{Keyer1.range.D}}
+ }
+ Switch {
+  inputs 2
+  which {{parent.operation}}
+  name Switch1
+  label "between mask or stencil"
+  xpos -500
+  ypos 602
+ }
+ DeepExpression {
+  temp_name0 opCheck
+  temp_expr0 "rgba.alpha <= 0"
+  chans1 deep
+  deep.front "opCheck ? -1 : deep.front"
+  deep.back "opCheck ? -1 : deep.back"
+  name DeepExpression10
+  label "push zero opacity samples behind camera"
+  xpos -514
+  ypos 659
+  disable {{"parent.deleteZero ? 0 : 1"}}
+ }
+ DeepCrop {
+  znear 0
+  use_zfar false
+  bbox {192 108 768 432}
+  use_bbox false
+  name DeepCrop3
+  label "delete samples behind camera"
+  xpos -514
+  ypos 735
+  disable {{"parent.deleteZero ? 0 : 1" x24 1}}
+ }
+ Output {
+  name Output1
+  xpos -514
+  ypos 809
+ }
+ Keyer {
+  inputs 0
+  operation "luminance key"
+  range {10 20 30 40}
+  name Keyer1
+  xpos -663
+  ypos 509
+ }
+end_group

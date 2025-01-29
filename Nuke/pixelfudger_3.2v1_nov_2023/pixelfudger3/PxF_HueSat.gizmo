@@ -1,0 +1,168 @@
+
+Group {
+ name PxF_HueSat
+ help "Simple hue and saturation adjustment by adding constants to pixel values in HSL colorspace."
+ tile_color 0x733520ff
+ addUserKnob {20 PxF_HueSat}
+ addUserKnob {4 colorspace t "Intermediate colorspace where the hue/saturation is modified.\n\nHSV: Hue, saturation, value.\nHSL: Hue, saturation, luminance. \nCIE-LCH: Lightness, Chrominance, Hue." M {HSV HSL CIE-LCH "" "" "" "" "" "" "" ""}}
+ colorspace HSL
+ addUserKnob {7 vHue l Hue t "Hue adjustment in degrees." R -360 360}
+ addUserKnob {7 vSat l Saturation t "Amount of saturation." R 0 4}
+ vSat 1
+ addUserKnob {6 filternan l "Blackout inf and nan" t "Converting from HSL back to RGB sometimes generates 'inf' and 'nan' pixels. Turning this on turns these pixels black." +STARTLINE}
+ filternan true
+ addUserKnob {7 mix t "Dissolve between the original (0) and the full effect (1)."}
+ mix 1
+ addUserKnob {26 ""}
+ addUserKnob {26 Credits l "" t "PxF_HueSat 2.2.1 - &copy; 2012-2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_HueSat 2.2.1 - &copy; 2012-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_HueSat.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+}
+ Input {
+  inputs 0
+  name mask
+  xpos 385
+  ypos 186
+  number 1
+ }
+ Input {
+  inputs 0
+  name img
+  xpos 231
+  ypos -371
+ }
+set N717dfc00 [stack 0]
+ Dot {
+  name Dot2
+  note_font_size 22
+  xpos -177
+  ypos -314
+ }
+ Dot {
+  name Dot1
+  xpos -177
+  ypos -132
+ }
+set N71816400 [stack 0]
+push $N717dfc00
+ Colorspace {
+  colorspace_out CIE-LCH
+  name Colorspace4
+  label "\[value colorspace_out]\n"
+  xpos 357
+  ypos -286
+ }
+push $N717dfc00
+ Colorspace {
+  colorspace_out HSL
+  name Colorspace2
+  label "\[value colorspace_out]\n"
+  xpos 231
+  ypos -291
+ }
+push $N717dfc00
+ Colorspace {
+  colorspace_out HSV
+  name Colorspace1
+  label "\[value colorspace_out]\n"
+  xpos 120
+  ypos -290
+ }
+ Switch {
+  inputs 3
+  which {{parent.colorspace}}
+  name Switch1
+  xpos 231
+  ypos -219
+ }
+set N71817400 [stack 0]
+ Add {
+  channels {-rgba.red -rgba.green rgba.blue none}
+  value {{vHue/360}}
+  name Add2
+  selected true
+  xpos 329
+  ypos -134
+ }
+ Multiply {
+  channels {-rgba.red rgba.green -rgba.blue none}
+  value {{vSat}}
+  name Multiply2
+  xpos 329
+  ypos -100
+ }
+ Colorspace {
+  colorspace_in CIE-LCH
+  name Colorspace6
+  label "\[value colorspace_in]"
+  xpos 329
+  ypos 8
+ }
+push $N71817400
+ Add {
+  channels {rgba.red -rgba.green -rgba.blue none}
+  value {{vHue/360}}
+  name Add1
+  xpos 188
+  ypos -146
+ }
+ Multiply {
+  channels {-rgba.red rgba.green -rgba.blue none}
+  value {{vSat i}}
+  name Multiply1
+  xpos 188
+  ypos -112
+ }
+set N6e550800 [stack 0]
+ Colorspace {
+  colorspace_in HSL
+  name Colorspace3
+  label "\[value colorspace_in]"
+  xpos 231
+  ypos 7
+ }
+push $N6e550800
+ Colorspace {
+  colorspace_in HSV
+  name Colorspace5
+  label "\[value colorspace_in]"
+  xpos 132
+  ypos 3
+ }
+ Switch {
+  inputs 3
+  which {{parent.colorspace}}
+  name Switch2
+  xpos 231
+  ypos 100
+ }
+ Expression {
+  expr0 "isinf(r) || isnan(r) ? 0 : r"
+  expr1 "isinf(g) || isnan(g) ? 0 : g"
+  expr2 "isinf(b) || isnan(b) ? 0 : b"
+  name Expression1
+  xpos 231
+  ypos 213
+  disable {{"parent.filternan ? 0 : 1" i}}
+ }
+ Keymix {
+  inputs 3
+  invertMask true
+  bbox B
+  name Keymix1
+  xpos 231
+  ypos 290
+  disable {{"\[exists parent.input1] ? 0 : 1" x1 0}}
+ }
+push $N71816400
+ Dissolve {
+  inputs 2
+  which {{parent.mix}}
+  name Dissolve1
+  xpos 228
+  ypos 366
+ }
+ Output {
+  name Output1
+  xpos 231
+  ypos 435
+ }
+end_group

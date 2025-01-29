@@ -1,0 +1,280 @@
+
+Group {
+ inputs 2
+ name PxF_MergeWrap
+ help "An 'over' with front and back edge wrap built-in."
+ knobChanged "m = nuke.thisNode()\nkc = nuke.thisKnob()\n\n#if kc.name() in \[\"rows\", \"columns\", \"inputChange\", \"sampleLights\", \"falloff\", \"directional\"]:\n#if True:\n  \nif kc.name() == \"backMerge\":  \n  ba = nuke.toNode(\"backMergeA\")\n  if m\['backMerge'].value() == \"Over\":\n    ba\['operation'].setValue(\"over\")\n  elif m\['backMerge'].value() == \"Plus\":\n    ba\['operation'].setValue(\"plus\")\n    \nif kc.name() == \"backMerge2\":\n  bb = nuke.toNode(\"backMergeB\")\n  if m\['backMerge2'].value() == \"Over\":\n    bb\['operation'].setValue(\"over\")\n  elif m\['backMerge2'].value() == \"Plus\":\n    bb\['operation'].setValue(\"plus\")\n    \nif kc.name() == \"frontMerge\":  \n  fa = nuke.toNode(\"frontMergeA\")\n  if m\['frontMerge'].value() == \"Over\":\n    fa\['operation'].setValue(\"over\")\n  elif m\['frontMerge'].value() == \"Plus\":\n    fa\['operation'].setValue(\"plus\")\n    \nif kc.name() == \"frontMerge2\":  \n  fb = nuke.toNode(\"frontMergeB\")\n  if m\['frontMerge2'].value() == \"Over\":\n    fb\['operation'].setValue(\"over\")\n  elif m\['frontMerge2'].value() == \"Plus\":\n    fb\['operation'].setValue(\"plus\")"
+ tile_color 0x733520ff
+ addUserKnob {20 PxF_MergeWrap}
+ addUserKnob {4 backMerge t "This blend mode is used to merge the back wrap on top of the background." M {Over Plus "" "" "" ""}}
+ addUserKnob {6 backDisable l disable t "Disable the back wrap." -STARTLINE}
+ addUserKnob {7 backBlur t "Size of the blur used to create the back wrap." R 0 300}
+ backBlur 50
+ addUserKnob {7 backMix t "Opacity of the back wrap."}
+ backMix 1
+ addUserKnob {4 frontMerge t "This blend mode is used to merge the front wrap on top of the foreground." M {Over Plus "" ""}}
+ frontMerge Plus
+ addUserKnob {6 frontDisable l disable t "Disable the front wrap." -STARTLINE}
+ addUserKnob {7 frontBlur t "Size of the blur used to create the front wrap." R 0 300}
+ frontBlur 50
+ addUserKnob {7 frontMix t "Opacity of the front wrap."}
+ frontMix 1
+ addUserKnob {4 maskMode t "Behaviour of the mask input.\n\nWrap+over: The mask input will behave like a normal Merge node (i.e. mask the FG and the wrap).\n\nWrap only: The mask input will mask the wrap effect only and will not affect the Merge/Over." M {wrap+over "wrap only" "" ""}}
+ maskMode "wrap only"
+ addUserKnob {26 ""}
+ addUserKnob {26 Credits l "" t "PxF_MergeWrap 1.5.1 - &copy; 2012-2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_MergeWrap 1.5.1 - &copy; 2012-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_MergeWrap.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+ addUserKnob {20 Double_Wrap l "Double Wrap"}
+ addUserKnob {4 backMerge2 l backMerge t "This blend mode is used to merge the secondary back wrap on top of the background." M {Over Plus "" "" "" "" ""}}
+ addUserKnob {6 backDisable2 l disable t "Disable the secondary back wrap." -STARTLINE}
+ backDisable2 true
+ addUserKnob {7 backBlur2 l backBlur t "Size of the blur used to create the secondary back wrap." R 0 300}
+ backBlur2 100
+ addUserKnob {7 backMix2 l backMix t "Opacity of the secondary back wrap."}
+ backMix2 1
+ addUserKnob {4 frontMerge2 l frontMerge t "This blend mode is used to merge the secondary front wrap on top of the foreground." M {Over Plus "" "" ""}}
+ frontMerge2 Plus
+ addUserKnob {6 frontDisable2 l disable t "Disable the secondary front wrap." -STARTLINE}
+ frontDisable2 true
+ addUserKnob {7 frontBlur2 l frontBlur t "Size of the blur used to create the secondary front wrap." R 0 300}
+ frontBlur2 100
+ addUserKnob {7 frontMix2 l frontMix t "Opacity of the secondary front wrap."}
+ frontMix2 1
+}
+ Input {
+  inputs 0
+  name mask
+  xpos 550
+  ypos -734
+  number 2
+ }
+set N6ec1f000 [stack 0]
+ Dot {
+  name Dot8
+  note_font_size 22
+  xpos 671
+  ypos -689
+ }
+ Dot {
+  name Dot4
+  note_font_size 22
+  xpos 671
+  ypos 8
+ }
+ Input {
+  inputs 0
+  name B
+  xpos 784
+  ypos -761
+ }
+set N6ec1fc00 [stack 0]
+ Dot {
+  name Dot7
+  note_font_size 22
+  xpos 1017
+  ypos -587
+ }
+ Dot {
+  name Dot6
+  note_font_size 22
+  xpos 1017
+  ypos -76
+ }
+push $N6ec1f000
+ Input {
+  inputs 0
+  name A
+  xpos 305
+  ypos -763
+  number 1
+ }
+ Dot {
+  name Dot3
+  xpos 339
+  ypos -628
+ }
+set N6ec4ac00 [stack 0]
+ Dot {
+  name Dot2
+  note_font_size 22
+  xpos 339
+  ypos -495
+ }
+set N6ec4b000 [stack 0]
+push $N6ec4ac00
+ Dot {
+  name Dot10
+  note_font_size 22
+  xpos 435
+  ypos -522
+ }
+push $N6ec4b000
+push $N6ec1f000
+push $N6ec4ac00
+ Blur {
+  size {{parent.backBlur i}}
+  name Blur22
+  xpos 410
+  ypos -606
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge3
+  xpos 550
+  ypos -600
+  disable {{"\[exists parent.input2] && parent.maskMode == 1 ? 0 : 1"}}
+ }
+push $N6ec1f000
+push $N6ec4ac00
+ Blur {
+  size {{parent.backBlur2}}
+  name Blur1
+  xpos 407
+  ypos -670
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge1
+  xpos 550
+  ypos -664
+  disable {{"\[exists parent.input2] && parent.maskMode == 1 ? 0 : 1"}}
+ }
+push $N6ec1fc00
+ Dot {
+  name Dot1
+  xpos 818
+  ypos -708
+ }
+ Merge2 {
+  inputs 2
+  mix {{parent.backMix2}}
+  name backMergeB
+  label "secondary back wrap"
+  xpos 784
+  ypos -670
+  disable {{parent.backDisable2}}
+ }
+ Merge2 {
+  inputs 2
+  mix {{parent.backMix}}
+  name backMergeA
+  label "primary back wrap"
+  xpos 784
+  ypos -606
+  disable {{parent.backDisable}}
+ }
+ Merge2 {
+  inputs 2
+  name Merge96
+  xpos 784
+  ypos -499
+ }
+set N6ec6d400 [stack 0]
+ Shuffle {
+  alpha white
+  name Shuffle2
+  xpos 736
+  ypos -400
+ }
+ Merge2 {
+  inputs 2
+  operation stencil
+  name Merge97
+  xpos 401
+  ypos -400
+ }
+set N6ec6dc00 [stack 0]
+ Dot {
+  name Dot5
+  note_font_size 22
+  xpos 461
+  ypos -347
+ }
+ Blur {
+  size {{parent.frontBlur2}}
+  name Blur2
+  xpos 427
+  ypos -183
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge2
+  xpos 305
+  ypos -110
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge5
+  xpos 550
+  ypos -110
+  disable {{"\[exists parent.input2] && parent.maskMode == 1 ? 0 : 1"}}
+ }
+push $N6ec1f000
+push $N6ec4b000
+push $N6ec6dc00
+ Dot {
+  name Dot9
+  note_font_size 22
+  xpos 401
+  ypos -348
+ }
+ Blur {
+  size {{parent.frontBlur}}
+  name Blur23
+  xpos 367
+  ypos -318
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge98
+  xpos 305
+  ypos -234
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge4
+  xpos 550
+  ypos -234
+  disable {{"\[exists parent.input2] && parent.maskMode == 1 ? 0 : 1"}}
+ }
+push $N6ec6d400
+ Merge2 {
+  inputs 2
+  operation plus
+  mix {{parent.frontMix}}
+  name frontMergeA
+  label "primary front wrap"
+  xpos 784
+  ypos -234
+  disable {{parent.frontDisable}}
+ }
+ Merge2 {
+  inputs 2
+  operation plus
+  mix {{parent.frontMix2}}
+  name frontMergeB
+  label "secondary front wrap"
+  xpos 784
+  ypos -110
+  disable {{parent.frontDisable2 x87 1}}
+ }
+ Keymix {
+  inputs 3
+  invertMask true
+  bbox B
+  name Keymix2
+  xpos 784
+  ypos 99
+  disable {{"\[exists parent.input2] && parent.maskMode == 0 ? 0 : 1" x1 1}}
+ }
+ Output {
+  name Output1
+  xpos 784
+  ypos 215
+ }
+end_group

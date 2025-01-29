@@ -1,0 +1,57 @@
+
+RotoPaint {
+cliptype none
+curves {{{v x3f99999a}
+  {f 0}
+  {n
+   {layer Root
+    {f 2097664}
+    {t x44838000 x44140000}
+    {a}
+    {cubiccurve Brush1 512 catmullrom
+     {cc
+      {f 2080}
+      {p
+       {x43c8c000 x43c80000
+        {{f 36864}  x3f00c5fc}}
+       {x4447e000 x43c80000
+        {{f 36864}  x3f000000}}}}
+     {t x448ad6b8 x43f0c3b6}
+     {a go x3ec000c0 bo 0 h x3e800000 dt 0 spx x44838000 spy x44140000 sb 1 ltn x4482a000 ltm x4482a000 tt x41600000}}}}}}
+toolbox {selectAll {
+  { selectAll str 1 ssx 1 ssy 1 sf 1 }
+  { selectCurves str 1 ssx 1 ssy 1 sf 1 tt 1 }
+  { createBezier str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createBezierCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createBSpline str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createEllipse str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createRectangle str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createRectangleCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { brush str 1 ssx 1 ssy 1 sf 1 sb 1 ltn 1045 ltm 1045 tt 14 }
+  { eraser src 2 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { clone src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { reveal src 3 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { dodge src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { burn src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { blur src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { sharpen src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { smear src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+} }
+toolbar_show_paint_selection true
+toolbar_brush_hardness 0.200000003
+toolbar_source_transform_scale {1 1}
+toolbar_source_transform_center {320 240}
+colorOverlay {1 0.375005722 0 1}
+lifetime_type "all frames"
+lifetime_start 1045
+lifetime_end 1045
+motionblur_on true
+brush_spacing 0.05000000075
+brush_hardness 0.25
+dynamic_transparency false
+buildup false
+source_translate_round false
+source_black_outside true
+name PxF_Line
+tile_color 0x733520ff
+}

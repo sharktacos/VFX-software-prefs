@@ -1,0 +1,75 @@
+#### CREDITS ##################
+Pixelfudger 3.2 - November 2023
+(c) 2011-2023 - Xavier Bourque - www.pixelfudger.com
+
+
+##### LICENSE #################
+Pixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files.
+
+
+##### VIDEO INSTALL GUIDE #####
+You can watch a detailed install guide here:
+http://www.pixelfudger.com/userguides/PxF_InstallGuide.html
+
+
+##### QUICK START #############
+1) Copy the pixelfudger3 directory to your $HOME/.nuke directory.
+2) In your init.py, add pixelfudger3 to your Nuke plugin path.
+
+       nuke.pluginAddPath('pixelfudger3')
+
+3) If you have an old install of Pixelfudger, remove relevant lines from your init.py and menu.py.
+4) Restart nuke and enjoy your new tools.
+
+
+###################################################
+DETAILED INSTRUCTIONS - HOW TO INSTALL PIXELFUDGER:
+###################################################
+
+1- Locate and open your $HOME/.nuke directory:
+
+	WINDOWS:
+	Open the 'Run' dialog (Win+R)
+	Open the following directory:  %userprofile%\.nuke
+	A file explorer should appear and show the contents of your $HOME/.nuke folder.
+
+	MAC:
+	In Finder, Go -> Go To Folder... (Cmd+Shift+G)
+	Go to the folder:  ~/.nuke
+	A Finder window should appear and show the contents of your $HOME/.nuke folder.
+
+	LINUX:
+	Open a terminal.
+	Type: xdg-open ~/.nuke
+	A File manager (i.e. Nautilus) window should appear and show the contents of your $HOME/.nuke folder.
+
+
+2- Copy the pixelfudger3 directory into your $HOME/.nuke directory.
+    - You may want to rename your previous pixelfudger3 directory to something like pixelfudger3_bak
+      before copying if you want to keep it in case of new bugs.
+
+3a- If you DO NOT have an init.py file in your $HOME/.nuke directory already:
+    - Copy the provided init.py to your $HOME/.nuke directory.
+    - Relaunch Nuke and enjoy your new tools!
+
+
+3b- IF you DO have an init.py file currently in your $HOME/.nuke directory:
+    - Edit your init.py in a text editor
+    - Add the following lines to it:
+
+       import nuke
+       nuke.pluginAddPath('pixelfudger3')
+
+
+4- If you had a previous Pixelfudger installation:
+  - Remove "nuke.pluginAddPath('pixelfudger')" from your init.py
+  - Remove "import pixelfudger" from your menu.py
+  - Remove the old "pixelfudger" directory from your $HOME/.nuke directory.
+  - Pixelfudger3 doesn't require an 'import' command in your menu.py anymore
+    just the nuke.pluginAddPath('pixelfudger3') line in your init.py.
+
+5- Relaunch Nuke and enjoy your new tools!
+
+   
+
+

@@ -1,0 +1,617 @@
+
+Group {
+ name PxF_DeepDefocus
+ help "Defocus a deep image by cutting it into multiple depth slices and defocusing each slice separately.\n\nThis enables background objects to be revealed properly when foreground objects become transparent from the defocus.\n\nRequires a Deep image on input.\n\nOutputs a non-Deep RGBA image."
+ onCreate "m = nuke.thisNode\nfl = nuke.toNode('Flare1')\n\nfl\['position'].setEnabled(False)"
+ knobChanged "m = nuke.thisNode()\nkc = nuke.thisKnob()\n\n#Check if running in Non Commercial\nncCheck = False\nif nuke.env\['nc'] or nuke.env\['indie']:\n  ncCheck = True\n\n\n#Autofocus picker\nif kc.name() in \['autofocus']:\n  mp = nuke.toNode('Shuffle1')\n  px = m\['autofocus'].value(0)\n  py = m\['autofocus'].value(1)\n  dp = mp.sample(\"red\", px, py)\n  m\['focalDistance'].setValue(dp)\n\n\n#Auto deep slices\n\nif kc.name() in \['auto_deep_slices']:                                                         #If Auto Slices changed...\n  autoSlices = m\['auto_deep_slices'].value()                                                  #... et the value of Auto Slices\n  toggleKnobs = \['deepSlices', 'znear', 'zfar', 'nearPick', 'farPick', 'inclNear', 'inclFar'] #... list of knobs\n  if ncCheck:\n    for kb in toggleKnobs:\n      m\[kb].setEnabled(False)\n  else: # not in NC mode\n    for kb in toggleKnobs:\n      if autoSlices:\n        m\[kb].setEnabled(False)\n      else:\n        m\[kb].setEnabled(True)\n        \n            \n#DeepSlices near picker \nif kc.name() in \['nearPick']:\n  mp = nuke.toNode('Shuffle1')\n  px = m\['nearPick'].value(0)\n  py = m\['nearPick'].value(1)\n  dp = mp.sample(\"red\", px, py)\n  m\['znear'].setValue(dp)\n\n#DeepSlices far picker\nif kc.name() in \['farPick']:\n  mp = nuke.toNode('Shuffle1')\n  px = m\['farPick'].value(0)\n  py = m\['farPick'].value(1)\n  dp = mp.sample(\"red\", px, py)\n  m\['zfar'].setValue(dp)\n\n\n\n#Convert resolution to integer for expression to pick up   \nif kc.name() in \['resolution']:\n  rz = int(m\['resolution'].getValue())\n  m\['truescale'].setValue(rz)\n  \n  \n#Disable layer knobs if autoLayerSpacing is on\nif kc.name() in \['auto_layer_spacing']:\n  autoLayerSpacing = m\['auto_layer_spacing'].value()\n  if autoLayerSpacing:\n    m\['depth_layers'].setEnabled(False)\n    m\['layer_curve'].setEnabled(False)\n  else:\n    m\['depth_layers'].setEnabled(True)\n    m\['layer_curve'].setEnabled(True)\n\n\n#Prevent user from having less than 1 layer and more than 256 (Foundry limit)\nif kc.name() in \['depth_layers']:\n  depthLayers = m\['depth_layers'].value()\n  if depthLayers < 1:\n    m\['depth_layers'].setValue(1)\n  if depthLayers > 256:\n    m\['depth_layers'].setValue(256)\n\n\n\n\n\n#Switch unit multiplier\nif kc.name() in \['units']:\n  no = nuke.toNode('NoOp1')\n  conv = \[10.0,1.0,0.1,0.01,0.00001,1/2.54,1/30.48,1/91.44,1.0]\n  unit = m\['units'].getValue()\n  no\['unitMult'].setValue(conv\[int(unit)])\n\n\n\n#Turn on/off lensSim knobs when enableSim is toggled    \nif kc.name() in \['enableSim']:\n  kl = \['units', 'filmBack', 'focalLength','fStop', 'pickCamera', 'inclFStop']  \n  if m\['enableSim'].value() == 1:\n    m\['size'].setEnabled(False)\n    for x in kl:\n      m\[x].setEnabled(True)       \n  else:\n    m\['size'].setEnabled(True)\n    for x in kl:\n      m\[x].setEnabled(False)\n\n\n    \n    \n#Loop through all ZDefocus nodes and switch filter modes\nif kc.name() in \['filter']:\n  ft = m\['filter'].value()\n  for zd in nuke.allNodes():\n    if zd.Class() == 'ZDefocus2':  \n      if ft == 'gaussian':\n        zd\['filter_type'].setValue('disc')\n        zd\['shape'].setValue(0)\n      elif ft == 'defocus':\n        zd\['filter_type'].setValue('disc')\n        zd\['shape'].setValue(1)\n      elif ft == 'bokeh':\n        zd\['filter_type'].setValue('image')\n        \n\n\n\n  \n\n \n#Prevent users from having less than 2 slices\nif kc.name() == 'deepSlices':\n  if m\['deepSlices'].value() < 2:\n    m\['deepSlices'].setValue(2)\n    \n    \n#Prevent users from going out of bounds with single slice\nif kc.name() == 'singleSliceIdx':\n  singleVal = m\['singleSliceIdx'].value()\n  if m\['auto_deep_slices'].value() == 1:\n    deepSlices = 2\n  else:\n    deepSlices = m\['deepSlices'].value()\n  if singleVal < 1:\n    m\['singleSliceIdx'].setValue(1)\n  if singleVal > deepSlices:\n    m\['singleSliceIdx'].setValue(deepSlices)\n\n#Turn off the warning message once the user touches anything in the deepSlices    \n#if kc.name() in \['deepSlices', 'znear', 'zfar','nearPick', 'farPick']:\n#   m\['warn'].setVisible(False)\n   \n#Get merge node operation knob index when user picks mergeOperation\nif kc.name() == 'mergeOperation':\n  mergeOps = \{'conjoint-over':4, 'disjoint-over':7, 'min':18, 'max':17, 'over':22, 'plus':24, 'screen':25\}\n  m\['mergeOpIndex'].setValue(mergeOps\[m\['mergeOperation'].value()])\n  \nif kc.name() == 'doubleMergeOperation':\n  mergeOps = \{'conjoint-over':4, 'disjoint-over':7, 'min':18, 'max':17, 'over':22, 'plus':24, 'screen':25\}\n  m\['doubleMergeOpIndex'].setValue(mergeOps\[m\['doubleMergeOperation'].value()])\n\n    \n#MAIN LOOP\n#Check which knob was touched\n\n\n\nif ncCheck == False:\n  if kc.name() in \['auto_deep_slices', 'deepSlices', 'inclNear', 'inclFar','doubleSlices']:\n    i = nuke.toNode('DeepReformat1')\n    o = nuke.toNode('Switch5')\n    noOp = nuke.toNode('NoOp1')\n    swSingle = nuke.toNode('switchSingle')\n    near = noOp\['znear'].value()\n    far = noOp\['zfar'].value()  \n    slices = int(noOp\['deepSlices'].value())\n    doubleSlices = m\['doubleSlices'].value()\n    mergeOp = m\['mergeOperation'].value()\n  \n    def hex2float(h,i):\n      return float(int(h\[i*2:(i*2)+2],16))/255\n        \n    palette = \['1a5fb4','e01b24','33d17a','9141ac','f6d32d','986a44','deddda','ff7800',] \n    p = 0\n    lenp = len(palette)\n  \n    \n    \n    #Delete old nodes\n    for n in nuke.allNodes():\n        if \"static\" not in n\['label'].getValue():\n            nuke.delete(n)\n            \n    #Disconnect all inputs on switchSingle node        \n    for ipt in range(0, swSingle.maxInputs()):\n\t     swSingle.setInput(ipt, None)\n    \n    #Create new nodes\n    \n    for x in range(1,slices+1,1):\n  \n      #If doubleSlices is turned on, do the loop twice\n      for offset in range(0,doubleSlices+1,1):\n        \n        #Create crops with DeepExpressions\n        dc = nuke.nodes.DeepExpression()\n        dc\['selected'].setValue(False)\n        dc.addKnob(nuke.Double_Knob('znear','znear'))\n        dc.addKnob(nuke.Double_Knob('zfar','zfar'))\n        if offset == 0:\n          dc\['zfar'].setExpression(\"NoOp1.zfar-(((NoOp1.zfar-NoOp1.znear)/NoOp1.deepSlices)*\"+str(x-1)+\")\")\n          dc\['label'].setValue(\"\[value zfar] to \[value znear]\")\n        if offset == 1:\n          dc\['zfar'].setExpression(\"NoOp1.zfar-(((NoOp1.zfar-NoOp1.znear)/NoOp1.deepSlices)*\"+str(x-1)+\")+((NoOp1.zfar-NoOp1.znear)/NoOp1.deepSlices/2)\")\n          dc\['label'].setValue(\"\[value zfar] to \[value znear]\\noffset slice\")\n        dc\['znear'].setExpression(\"zfar - ((NoOp1.zfar-NoOp1.znear)/NoOp1.deepSlices)\")      \n        dc\['temp_name0'].setValue(\"dpcheck\")\n        incnear = noOp\['inclNear'].getValue()\n        incfar = noOp\['inclFar'].getValue()\n        if x == 1 and incfar:\n          dc\['temp_expr0'].setValue(\"deep.front >= znear\")\n        elif x == slices and incnear:\n          dc\['temp_expr0'].setValue(\"deep.front < zfar\")\n        else:\n          dc\['temp_expr0'].setValue(\"deep.front >= znear && deep.front < zfar\")\n        for y in \['rgba.red','rgba.green','rgba.blue','rgba.alpha','deep.front','deep.back']:\n          dc\[y].setValue(\"dpcheck ? \"+y+\":0\")\n        dc.setInput(0,i)\n    \n        #Create DeeptoImage\n        dt = nuke.nodes.DeepToImage()\n        dt\['selected'].setValue(False)\n        dt.setInput(0,dc)\n        if offset == 1:\n          dt\['label'].setValue('offset slice')\n          \n        #Premult deep layer\n        pm = nuke.nodes.Premult()\n        pm.setInput(0, dt)\n        pm\['channels'].setValue('deep')\n        pm\['disable'].setExpression('parent.inpaint ? 0 : 1')\n        \n        up = nuke.nodes.Unpremult()\n        up.setInput(0, pm)\n        up\['channels'].setValue('deep')\n        up\['disable'].setExpression('parent.inpaint ? 0 : 1')\n        \n        ip = nuke.nodes.Inpaint2()\n        ip.setInput(0, up)\n        ip\['channels'].setValue('deep')\n        ip\['fillRegion'].setValue(\"Source Inverted Alpha\")\n        ip\['disable'].setExpression('parent.inpaint ? 0 : 1')\n    \n        #Create ZDefocus    \n        zd = nuke.nodes.ZDefocus2()\n        zd\['selected'].setValue(False)\n        zd.setInput(0,ip)\n        zd.setInput(1,nuke.toNode('Reformat32'))\n        zd\['useGPUIfAvailable'].setExpression('parent.useGPU')\n        zd\['z_channel'].setValue('deep.front')\n        zd\['math'].setValue('depth')\n        zd\['center'].setExpression('parent.focalDistance')\n        zd\['size'].setExpression('parent.enableSim ? NoOp1.defoAtInfinity * \[value parent.truescale] : parent.size * \[value parent.truescale]')\n        zd\['legacy_resize_mode'].setValue(0)\n        zd\['blur_dof'].setValue(False)\n        zd\['max_size'].setExpression('parent.maxSize * \[value parent.truescale]')\n        zd\['autoLayerSpacing'].setExpression('parent.auto_layer_spacing')\n        zd\['layers'].setExpression('parent.auto_layer_spacing ? 50 : parent.depth_layers')\n        zd\['layerCurve'].setExpression('parent.auto_layer_spacing ? 1 : parent.layer_curve')\n        zd\['aspect'].setExpression('parent.aspect')\n        zd\['disable'].setExpression('NoOp1.disableDefocus')\n        zd\['use_input_channels'].setExpression('parent.filterChannel')\n        if offset == 1:\n          zd\['label'].setValue('offset slice')\n        filter = m\['filter'].getValue()\n        if filter == 0:\n          zd\['filter_type'].setValue('disc')\n          zd\['shape'].setValue(0)\n        elif filter == 1:\n          zd\['filter_type'].setValue('disc')\n          zd\['shape'].setValue(1)\n        elif filter == 2:\n          zd\['filter_type'].setValue('image')\n  \n  \n        #Create copy/premult for missing alpha for ZDefocus layers / focal plane\n        cp = nuke.nodes.Copy()\n        cp.setInput(0,zd)\n        cp.setInput(1,ip)\n        cp\['from0'].setValue(\"rgba.alpha\")\n        cp\['to0'].setValue(\"rgba.alpha\")\n        cp\['disable'].setExpression(\"parent.view_type == 2 || parent.view_type == 3 ? 0 : 1\")\n        \n        pm2 = nuke.nodes.Premult()\n        pm2.setInput(0,cp)\n        pm2\['disable'].setExpression(\"parent.view_type == 2 || parent.view_type == 3 ? 0 : 1\")\n        \n        #Create random slice colors\n        cc = nuke.nodes.ColorCorrect()\n        cc\['selected'].setValue(False)\n        cc.setInput(0,pm2)\n        cc\['saturation'].setValue(0)\n        cc\['gain'].setSingleValue(False)\n        cc\['disable'].setExpression(\"parent.view_type == 1 ? 0 : 1\")  #Enable CC if 'Deep Slices' is selected\n        for c in range(0,3,1):\n          cc\['gain'].setValue(hex2float(palette\[p%lenp],c),c)\n\n\n        swSingle.setInput(x,cc)\n  \n        if offset == 0:\n          p = p+1\n  \n        \n        \n        if x == 1.0:\n          if offset == 0:\n            prevMg = cc\n          if offset == 1:\n            prevMgOffset = cc\n          \n          \n        #Create Merges\n        if x > 1:\n          mg = nuke.nodes.Merge2()\n          mg\['selected'].setValue(False)\n          mg\['operation'].setExpression('parent.mergeOpIndex')\n          mg.setInput(1,cc)\n          if offset == 0:\n            mg.setInput(0,prevMg)\n            prevMg = mg\n          if offset == 1:\n            mg.setInput(0,prevMgOffset)\n            prevMgOffset = mg\n      \n  \n  \n        \n      #Connect last merge to output      \n      if x == slices:\n        \n        if offset == 1:\n          mg2 = nuke.nodes.Merge2()\n          mg2\['selected'].setValue(False)\n          mg2\['operation'].setExpression('parent.doubleMergeOpIndex')\n          mg2.setInput(0,prevMg)\n          mg2.setInput(1,prevMgOffset)\n          o.setInput(0,mg2)\n        if offset == 0:\n          o.setInput(0,mg)\n        \n    \n      \n#Loop through all ZDefocus nodes and switch output mode\nif kc.name() in \['view_type', 'auto_deep_slices', 'deepSlices', 'inclNear', 'inclFar', 'doubleSlices']:\n  viewType = m\['view_type'].value()\n  for zd in nuke.allNodes():\n    if zd.Class() == 'ZDefocus2':\n      if viewType == 'ZDefocus layers':\n        zd\['output'].setValue('layer setup')\n      elif viewType == 'Focal plane':\n        zd\['output'].setValue('focal plane setup')\n      else:\n        zd\['output'].setValue('result')   \n  \n    \n    \n      \n    \n    \n\n    "
+ updateUI "tn = nuke.thisNode()\n\nncCheck = False\nif nuke.env\['nc'] or nuke.env\['indie']:\n  ncCheck = True\n  \ntoggleKnobs = \['auto_deep_slices', 'deepSlices', 'inclNear', 'inclFar','doubleSlices', 'doubleMergeOperation']\nautoSlices = tn\['auto_deep_slices'].value()\n\nif ncCheck:                                     #If in NC mode...\n  tn\['nc_warning'].setVisible(True)             # ... warn user\n  for kb in toggleKnobs:                        #... For every knob in list...\n    tn\[kb].setEnabled(False)                    #... disable them.\nelse:                                           #If NOT in NC mode...\n  tn\['nc_warning'].setVisible(False)            #... turn off warning\n  if autoSlices:                                #... If autoSlices is ON...\n    tn\['auto_deep_slices'].setEnabled(True)     #... enable Auto Slices\n  else:                                         #If autoSlices is OFF and NOT in NC mode...\n    for kb in toggleKnobs:                      #... for every knob in the list...\n      tn\[kb].setEnabled(True)                   #... turn them on.\n\n\n\n"
+ tile_color 0x733520ff
+ addUserKnob {20 PxF_DeepDefocus}
+ addUserKnob {26 warn l "" t "Make sure to adjust the number of Deep Slices and the znear and zfar parameters in the DeepSlices tab." +STARTLINE +HIDDEN T "<font color='red'>Please adjust DeepSlices!</font>"}
+ addUserKnob {4 filter t "Which kind of kernel to apply.\n\nGaussian: Gaussian blur, similar to \"Blur\" node. (Does not simulate \"real\" defocus).\n\nDefocus: Similar to Defocus node. Simulates a lens with a perfectly round aperture.\n\nBokeh: Similar to Convolve node. Use knobs in the Bokeh tab to customize the shape of the aperture (bokeh) or provide your own custom bokeh image with the 'bokeh' input. \n\nFor best results make sure to reformat your bokeh image to 255x255 pixels." M {gaussian defocus bokeh "" "" "" "" "" "" "" "" "" "" "" "" "" ""}}
+ filter bokeh
+ addUserKnob {6 useGPU l "use GPU if available" t "Enable GPU rendering on the built-in ZDefocus nodes." +STARTLINE}
+ useGPU true
+ addUserKnob {4 resolution t "Use lower resolutions for faster rendering." M {1:1 1:2 1:4 1:8 "" "" "" ""}}
+ addUserKnob {4 truescale l "" -STARTLINE +INVISIBLE M {1.0 0.5 0.25 0.125 ""}}
+ addUserKnob {12 autofocus t "Use the autofocus widget in the Viewer to pick the focus plane (i.e. which area is sharp/in focus).\n\n(Make sure your Viewer resolution is set to 1:1.)"}
+ autofocus {100 100}
+ addUserKnob {7 focalDistance l "focus plane" t "How far, in front of the camera, is the sharp/'in focus' area. (In real world units).\n\nUse the 'autofocus' widget to pick this value automatically in the Viewer." R 0 10000}
+ focalDistance 5
+ addUserKnob {7 size t "The 'amount' of defocus at infinity (in pixels).\n\nObjects close to camera might be more defocused than this.\n\nNot used if lens simulation is 'on'." R 1 300}
+ size 10
+ addUserKnob {7 maxSize l "max size" t "Maximum size of defocus, in pixels.\nUse this to prevent huge defocus values when objects are really close to camera." R 0 500}
+ maxSize 100
+ addUserKnob {7 aspect t "Aspect ratio of the bokeh. Use this to simulate 'oval' bokeh from an anamorphic lens." R 0 4}
+ aspect 1
+ addUserKnob {7 mix t "Dissolve between the original (0) and the full effect (1)."}
+ mix 1
+ addUserKnob {6 preserve_bbox l "preserve bounding box" t "Preserve the bounding box of the original image.\n\nIf this is off, the image will be cropped to it's width/height to make processing faster." +STARTLINE}
+ addUserKnob {26 ""}
+ addUserKnob {26 nc_warning l "" +STARTLINE +HIDDEN T "<font size=2 color=#f7931e>Nuke Non-Commercial / Indie detected. Some features disabled due to Python limits.</font>"}
+ addUserKnob {26 Credits l "" t "PxF_DeepDefocus 1.1 - &copy; 2022-2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_DeepDefocus 1.1 - &copy; 2022-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_DeepDefocus.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+ addUserKnob {20 DeepSlices}
+ addUserKnob {4 view_type l "view type" t "Result: the result of the defocus operation.\n\nDeep slices: Visualize deep slices by assigning a random color to each slice.\n\nZDefocus layers: Visualize the layers of the internal ZDefocus nodes.\n\nFocal plane: Visualize the focal plane of the internal ZDefocus nodes.\n\nGreen = sharp area.\nRed = out of focus area in front of the focus plane.\nBlue = out of focus area behind the focus plane.\n" M {Result "Deep slices" "ZDefocus layers" "Focal plane"}}
+ addUserKnob {6 singleSlice t "Visualize deep slices one at a time for troubleshooting." +STARTLINE}
+ addUserKnob {3 singleSliceIdx l "" t "Select which deep slice to visualize. Slice 1 is the farthest and higher numbers are closer to camera." -STARTLINE}
+ singleSliceIdx 1
+ addUserKnob {6 disableDefocus l "disable defocus" t "Turn off defocus to increase interactivity." +STARTLINE}
+ addUserKnob {26 ""}
+ addUserKnob {6 auto_deep_slices l "automatic deep slices" t "Mimic the behaviour of the Bokeh node by creating 2 deep slices. One slice starts at camera up to the focal plane, the other starts at the focal plane to infinity." +STARTLINE}
+ auto_deep_slices true
+ addUserKnob {3 deepSlices l "deep slices" t "How many deep crops to apply to the image before going through separate ZDefocus nodes.\n\nFor example, 10 slices will generate 10 deep crops and 10 defocus nodes internally (14 if 'fix artefacts' is turned on)." +DISABLED}
+ deepSlices 5
+ addUserKnob {7 znear t "Starting point of the slices (how close to camera is the starting point).\n\nUse the nearPick widget in the Viewer to pick znear automatically." +DISABLED R 0 100}
+ addUserKnob {12 nearPick l "znear picker" t "Move the nearPick widget in the Viewer to pick the depth of znear.\n\n(Make sure your Viewer resolution set to 1:1)" +DISABLED}
+ nearPick {100 100}
+ addUserKnob {7 zfar t "Ending point of the slices (how far from camera is the end point).\n\nUse the farPick widget in the Viewer to pick zfar automatically." +DISABLED R 0 100}
+ zfar 100
+ addUserKnob {12 farPick l "zfar picker" t "Move the farPick widget in the Viewer to pick the depth of zfar.\n\n(Make sure your Viewer resolution is set to 1:1)" +DISABLED}
+ farPick {200 100}
+ addUserKnob {6 inclNear l "include zero to znear" t "Force the first slice to start at zero distance from the camera." +DISABLED +STARTLINE}
+ inclNear true
+ addUserKnob {6 inclFar l "include zfar to infinity" t "Force the last slice to go to infinity." +DISABLED +STARTLINE}
+ inclFar true
+ addUserKnob {26 ""}
+ addUserKnob {4 mergeOperation t "Which merge operation to use when combining all the defocused slices together.\n\n'disjoint-over' is the default.\n\nYou can try alternative merge operations to minimize artefacts at joints between slices." M {conjoint-over disjoint-over min max over plus screen "" "" "" "" "" "" "" "" ""}}
+ mergeOperation disjoint-over
+ addUserKnob {3 mergeOpIndex -STARTLINE +INVISIBLE}
+ mergeOpIndex 7
+ addUserKnob {4 doubleMergeOperation l doubleMerge t "Use 'max' to get rid of dark edges at junctions between slices.\n\nUse 'min' to get rid of bright edges at junctions between slices." M {min max "" "" "" "" "" "" "" ""}}
+ doubleMergeOperation max
+ addUserKnob {3 doubleMergeOpIndex l "" -STARTLINE +INVISIBLE}
+ doubleMergeOpIndex 17
+ addUserKnob {6 doubleSlices l "fix artefacts (double slices)" t "Fix artefacts by rendering 2 sets of slices, offset by half a slice, then merging both sets together with a min or a max.\n\nTurn this on if you see dark/bright edges at the edge of slices.\n\nThis doubles the number of slices (slow!) so you may want to reduce the number of total slices." -STARTLINE}
+ addUserKnob {26 ""}
+ addUserKnob {6 auto_layer_spacing l "automatic layer spacing" t "Use the default layer spacing (layers=50, layer curve=1) for the internal ZDefocus nodes." +STARTLINE}
+ auto_layer_spacing true
+ addUserKnob {6 inpaint l "inpaint depth channel" t "Enables internal Inpaint nodes to extend the depth layers beyond the edges of objects to avoid edge artefacts in the defocus." -STARTLINE}
+ inpaint true
+ addUserKnob {3 depth_layers l "depth layers" t "Adjusts the amount of layers used by the internal ZDefocus nodes.\n\nLower values are faster to render but less precise. \n\nHigher values are slower to render but more precise.\n\nTry increasing this value if you see areas 'jump' from one layer to the other when animating a rack focus or moving the camera in/out.\n\nMaximum 256 layers." +DISABLED}
+ depth_layers 50
+ addUserKnob {7 layer_curve l "layer curve" t "0 = Even distribution of the slices.\n1 = More slices are concentrated near the focus plane." +DISABLED}
+ layer_curve 1
+ addUserKnob {20 lensSim l "Lens Simulation"}
+ addUserKnob {6 enableSim l "Enable Lens Simulation" t "Compute the amount of defocus using real world lens information. " -STARTLINE}
+ addUserKnob {4 units l "world scale" t "Specifies which real-world units are used in the deep image.\n\nThe values in the deep.front buffer of your deep image should represent how far each sample is from the camera in real world units." +DISABLED M {mm cm dm m km inch feet yards "" "" "" "" "" "" "" "" "" "" ""}}
+ units m
+ addUserKnob {7 focalLength l "focal length" t "Focal length of the lens in mm." +DISABLED R 0 300}
+ focalLength 50
+ addUserKnob {7 fStop t "Aperture of the lens in fStop." +DISABLED R 0 22}
+ fStop 1.4
+ addUserKnob {7 filmBack l "filmback width" t "Width of camera sensor in mm." +DISABLED R 0 70}
+ filmBack 36
+ addUserKnob {22 pickCamera l "pick camera" t "Get the focal length and filmback width from the currently selected camera." +DISABLED T "import nuke\n\ndef pickCamera():\n  tn = nuke.thisNode()\n  with nuke.root():\n    nds = nuke.selectedNodes()\n\n  if nds == \[]:\n    nuke.message('No nodes selected. Please select a Camera node.')\n    return\n  \n  for nd in nds:\n    if 'Camera' in nd.Class():\n      tn\['focalLength'].setValue(nd\['focal'].value())\n      tn\['filmBack'].setValue(nd\['haperture'].value())\n      if tn\['inclFStop'].value() == True:\n        tn\['fStop'].setValue(nd\['fstop'].value())\n      return\n    else:\n      nuke.message('Could not find a Camera in the selection.')\n      return\n    \npickCamera()" +STARTLINE}
+ addUserKnob {6 inclFStop l "include fStop" t "Use the value of the FStop knob when using 'pick camera'." -STARTLINE +DISABLED}
+ addUserKnob {20 Bokeh}
+ addUserKnob {6 viewKernel l viewBokeh t "View the image being used as the kernel when the filter mode is set to 'Bokeh'. Use this to see what you're doing when adjusting the kernel shape.\n\nDon't forget to turn it off when you're done!" +STARTLINE}
+ addUserKnob {26 "" l "@b;Colors"}
+ addUserKnob {7 ringWidth t "Thickness of the 'donut' around the edge of the kernel."}
+ ringWidth 0.25
+ addUserKnob {41 ring_color l "ring color" t "Color of the 'donut' around the edge of the kernel." T Flare1.ring_color}
+ addUserKnob {41 inner_color l "inner color" t "Color of the center of the kernel." T Flare1.inner_color}
+ addUserKnob {41 outer_falloff l "outer falloff" t "Falloff on the outer edge of the 'donut'." T Flare1.outer_falloff}
+ addUserKnob {41 inner_falloff l "inner falloff" t "Falloff on the inner edge of the 'donut'." T Flare1.inner_falloff}
+ addUserKnob {26 _1 l "@b;Shape"}
+ addUserKnob {41 corners t "How many 'blades' are in the iris." T Flare1.corners}
+ addUserKnob {41 flattening l "edge flattening" t "0 = round aperture (no blades).\n1 = flat edges between corners." T Flare1.flattening}
+ addUserKnob {41 sharpness l "corner sharpness" T Flare1.sharpness}
+ addUserKnob {41 corners_angle l angle t "Rotate the aperture." T Flare1.corners_angle}
+ addUserKnob {26 Noise l "@b;Noise"}
+ addUserKnob {6 enableNoise l enable t "Add noise to the bokeh." +STARTLINE}
+ enableNoise true
+ addUserKnob {7 noiseSize l size t "Size of the noise." R 0 50}
+ noiseSize 35
+ addUserKnob {7 noiseGain l gain t "Gain of the noise."}
+ noiseGain 0.85
+ addUserKnob {7 noiseGamma l gamma t "Gamma of the noise."}
+ noiseGamma 0.85
+ addUserKnob {7 noiseMix l mix t "Adjusts how much noise is present in the bokeh."}
+ noiseMix 0.33
+ addUserKnob {26 ChromaAb l "@b;Chroma Aberration"}
+ addUserKnob {6 chromaAbEnable l enable t "Enable chroma aberration on the bokeh.\n\nMake sure to set filter channels to rgb colour." +STARTLINE}
+ chromaAbEnable true
+ addUserKnob {7 chromaAbScale l scale t "Amount of chroma aberration on the bokeh. 1.0 = no chroma aberration."}
+ chromaAbScale 1.02
+ addUserKnob {26 ""}
+ addUserKnob {4 filterChannel l "filter channel" t "When using Bokeh mode, which channels to use from the bokeh image.\n\nrgb luma: Use the RGB luminance of the bokeh input to defocus all channels.\n\nrgb colour: Use the RGB channels to defocus RGB and RGB luminance to defocus the alpha." M {"rgb luminance" "rgb colour" "" "" "" "" "" ""}}
+ filterChannel "rgb colour"
+}
+ Input {
+  inputs 0
+  name mask
+  label static
+  xpos 5550
+  ypos 1119
+  number 2
+ }
+ Input {
+  inputs 0
+  name deep
+  label static
+  xpos 2930
+  ypos -1885
+ }
+set Nd66e4400 [stack 0]
+ DeepToImage2 {
+  name DeepToImage7
+  label static
+  xpos 2710
+  ypos -1703
+ }
+set Nd66e4800 [stack 0]
+ Dot {
+  name Dot1
+  label static
+  note_font_size 22
+  xpos 2744
+  ypos 499
+ }
+set Nd66e4c00 [stack 0]
+ Input {
+  inputs 0
+  name bokeh
+  label static
+  xpos 4030
+  ypos -1435
+  number 1
+ }
+ Keyer {
+  operation "luminance key"
+  name Keyer4
+  label static
+  xpos 4030
+  ypos -1333
+ }
+ Reformat {
+  type "to box"
+  box_width 255
+  box_height 255
+  box_fixed true
+  name Reformat3
+  label static
+  xpos 4030
+  ypos -1250
+ }
+ Reformat {
+  inputs 0
+  type "to box"
+  box_width 501
+  box_height 501
+  box_fixed true
+  name Reformat4
+  label static
+  xpos 4315
+  ypos -1476
+ }
+set N48b4000 [stack 0]
+ Noise {
+  size {{parent.noiseSize i}}
+  gain {{parent.noiseGain i}}
+  gamma {{parent.noiseGamma i}}
+  center {1440 810}
+  name Noise1
+  label static
+  xpos 4386
+  ypos -1430
+ }
+push $N48b4000
+ Flare {
+  position {{"250 * 1"} {"250 * 1"}}
+  radius {0 {"249 - (parent.ringWidth*249)"} 249}
+  inner_color 0.75
+  outer_falloff 0.35
+  inner_falloff 10
+  vis_in 0
+  vis_out 1
+  vis_mask_size 0
+  corners 8
+  flattening 0.9
+  sharpness 0.99
+  name Flare1
+  label static
+  xpos 4242
+  ypos -1418
+ }
+ Merge2 {
+  inputs 2
+  operation multiply
+  mix {{parent.noiseMix i}}
+  name Merge1
+  label static
+  xpos 4323
+  ypos -1351
+  disable {{parent.enableNoise?0:1 i}}
+ }
+ Shuffle {
+  alpha red
+  name Shuffle2
+  label static
+  xpos 4323
+  ypos -1306
+ }
+ TransformMasked {
+  channels {rgba.red -rgba.green -rgba.blue none}
+  scale {{parent.chromaAbScale}}
+  center {250.5 250.5}
+  name Transform1
+  label static
+  xpos 4323
+  ypos -1268
+  disable {{"parent.chromaAbEnable ? 0 : 1"}}
+ }
+ TransformMasked {
+  channels {-rgba.red -rgba.green rgba.blue none}
+  scale {{"1 / parent.chromaAbScale"}}
+  center {250.5 250.5}
+  name Transform2
+  label static
+  xpos 4323
+  ypos -1205
+  disable {{"parent.chromaAbEnable ? 0 : 1"}}
+ }
+ Reformat {
+  type "to box"
+  box_width 255
+  box_height 255
+  box_fixed true
+  scale 0.5
+  name Reformat1
+  label static
+  xpos 4323
+  ypos -1151
+ }
+ Switch {
+  inputs 2
+  which {{"\[exists parent.input1]"}}
+  name Switch3
+  label static
+  xpos 4232
+  ypos -1082
+ }
+set N5c22c00 [stack 0]
+ Dot {
+  name Dot4
+  label static
+  note_font_size 22
+  xpos 4284
+  ypos 764
+ }
+push $Nd66e4400
+ DeepReformat {
+  type scale
+  scale {{"\[value parent.truescale]"}}
+  pbb {{parent.preserve_bbox}}
+  name DeepReformat1
+  label static
+  xpos 2930
+  ypos -1822
+ }
+set N5c23400 [stack 0]
+ DeepExpression {
+  temp_name0 dpcheck
+  temp_expr0 "deep.front < zfar"
+  chans1 deep
+  rgba.red "dpcheck ? rgba.red:0"
+  rgba.green "dpcheck ? rgba.green:0"
+  rgba.blue "dpcheck ? rgba.blue:0"
+  rgba.alpha "dpcheck ? rgba.alpha:0"
+  deep.front "dpcheck ? deep.front:0"
+  deep.back "dpcheck ? deep.back:0"
+  name DeepExpression2
+  label "\[value zfar] to \[value znear]"
+  xpos 3040
+  ypos -1700
+  addUserKnob {20 User}
+  addUserKnob {7 znear}
+  znear {{"zfar - ((NoOp1.zfar-NoOp1.znear)/NoOp1.deepSlices)"}}
+  addUserKnob {7 zfar}
+  zfar {{NoOp1.zfar-(((NoOp1.zfar-NoOp1.znear)/NoOp1.deepSlices)*1)}}
+ }
+ DeepToImage {
+  name DeepToImage2
+  xpos 3040
+  ypos -1590
+ }
+ Premult {
+  channels deep
+  name Premult3
+  selected true
+  xpos 3040
+  ypos -1480
+  disable {{"parent.inpaint ? 0 : 1"}}
+ }
+ Unpremult {
+  channels deep
+  name Unpremult2
+  selected true
+  xpos 3040
+  ypos -1370
+  disable {{"parent.inpaint ? 0 : 1"}}
+ }
+ Inpaint2 {
+  channels deep
+  fillRegion "Source Inverted Alpha"
+  name Inpaint2
+  selected true
+  xpos 3040
+  ypos -553
+  disable {{"parent.inpaint ? 0 : 1"}}
+ }
+set Nfe1a2800 [stack 0]
+push $N5c22c00
+ Reformat {
+  type scale
+  scale {{parent.aspect} 1}
+  resize distort
+  name Reformat32
+  label static
+  xpos 4340
+  ypos -675
+ }
+set Nfe1a3000 [stack 0]
+push $Nfe1a2800
+ ZDefocus2 {
+  inputs 2
+  useGPUIfAvailable {{parent.useGPU}}
+  z_channel deep.front
+  math depth
+  center {{parent.focalDistance}}
+  blur_dof false
+  size {{"parent.enableSim ? NoOp1.defoAtInfinity * \[value parent.truescale] : parent.size * \[value parent.truescale]"}}
+  max_size {{"parent.maxSize * \[value parent.truescale]"}}
+  autoLayerSpacing {{parent.auto_layer_spacing}}
+  layers {{"parent.auto_layer_spacing ? 50 : parent.depth_layers"}}
+  layerCurve {{"parent.auto_layer_spacing ? 1 : parent.layer_curve"}}
+  filter_type image
+  legacy_resize_mode false
+  use_input_channels {{parent.filterChannel}}
+  aspect {{parent.aspect}}
+  name ZDefocus2
+  xpos 4450
+  ypos -553
+  disable {{NoOp1.disableDefocus}}
+ }
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy2
+  xpos 4450
+  ypos -443
+  disable {{"parent.view_type == 2 || parent.view_type == 3 ? 0 : 1"}}
+ }
+ Premult {
+  name Premult4
+  xpos 4450
+  ypos -333
+  disable {{"parent.view_type == 2 || parent.view_type == 3 ? 0 : 1"}}
+ }
+ ColorCorrect {
+  saturation 0
+  gain {0.8784313725 0.1058823529 0.1411764706 1}
+  name ColorCorrect2
+  xpos 4450
+  ypos -223
+  disable {{"parent.view_type == 1 ? 0 : 1"}}
+ }
+set N498a400 [stack 0]
+push $N5c23400
+ DeepExpression {
+  temp_name0 dpcheck
+  temp_expr0 "deep.front >= znear"
+  chans1 deep
+  rgba.red "dpcheck ? rgba.red:0"
+  rgba.green "dpcheck ? rgba.green:0"
+  rgba.blue "dpcheck ? rgba.blue:0"
+  rgba.alpha "dpcheck ? rgba.alpha:0"
+  deep.front "dpcheck ? deep.front:0"
+  deep.back "dpcheck ? deep.back:0"
+  name DeepExpression1
+  label "\[value zfar] to \[value znear]"
+  xpos 2930
+  ypos -1700
+  addUserKnob {20 User}
+  addUserKnob {7 znear}
+  znear {{"zfar - ((NoOp1.zfar-NoOp1.znear)/NoOp1.deepSlices)"}}
+  addUserKnob {7 zfar}
+  zfar {{NoOp1.zfar-(((NoOp1.zfar-NoOp1.znear)/NoOp1.deepSlices)*0)}}
+ }
+ DeepToImage {
+  name DeepToImage1
+  xpos 2930
+  ypos -1590
+ }
+ Premult {
+  channels deep
+  name Premult1
+  xpos 2930
+  ypos -1480
+  disable {{"parent.inpaint ? 0 : 1"}}
+ }
+ Unpremult {
+  channels deep
+  name Unpremult1
+  xpos 2930
+  ypos -1370
+  disable {{"parent.inpaint ? 0 : 1"}}
+ }
+ Inpaint2 {
+  channels deep
+  fillRegion "Source Inverted Alpha"
+  name Inpaint1
+  xpos 2930
+  ypos -553
+  disable {{"parent.inpaint ? 0 : 1"}}
+ }
+set N498b800 [stack 0]
+push $Nfe1a3000
+push $N498b800
+ ZDefocus2 {
+  inputs 2
+  useGPUIfAvailable {{parent.useGPU}}
+  z_channel deep.front
+  math depth
+  center {{parent.focalDistance}}
+  blur_dof false
+  size {{"parent.enableSim ? NoOp1.defoAtInfinity * \[value parent.truescale] : parent.size * \[value parent.truescale]"}}
+  max_size {{"parent.maxSize * \[value parent.truescale]"}}
+  autoLayerSpacing {{parent.auto_layer_spacing}}
+  layers {{"parent.auto_layer_spacing ? 50 : parent.depth_layers"}}
+  layerCurve {{"parent.auto_layer_spacing ? 1 : parent.layer_curve"}}
+  filter_type image
+  legacy_resize_mode false
+  use_input_channels {{parent.filterChannel}}
+  aspect {{parent.aspect}}
+  name ZDefocus1
+  xpos 4340
+  ypos -553
+  disable {{NoOp1.disableDefocus}}
+ }
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy1
+  xpos 4340
+  ypos -443
+  disable {{"parent.view_type == 2 || parent.view_type == 3 ? 0 : 1"}}
+ }
+ Premult {
+  name Premult2
+  xpos 4340
+  ypos -333
+  disable {{"parent.view_type == 2 || parent.view_type == 3 ? 0 : 1"}}
+ }
+ ColorCorrect {
+  saturation 0
+  gain {0.1019607843 0.3725490196 0.7058823529 1}
+  name ColorCorrect1
+  xpos 4340
+  ypos -113
+  disable {{"parent.view_type == 1 ? 0 : 1"}}
+ }
+set N3bc06c00 [stack 0]
+push 0
+ Switch {
+  inputs 3
+  which {{parent.singleSliceIdx}}
+  name switchSingle
+  label static
+  xpos 4728
+  ypos 289
+ }
+push $N498a400
+push $N3bc06c00
+ Merge2 {
+  inputs 2
+  operation {{parent.mergeOpIndex}}
+  name Merge2
+  xpos 4450
+  ypos -113
+ }
+ Switch {
+  inputs 2
+  which {{parent.singleSlice}}
+  name Switch5
+  label "static\nsingleSlices"
+  xpos 5330
+  ypos 624
+ }
+ Reformat {
+  type scale
+  scale {{"1 / \[value parent.truescale]"}}
+  pbb {{parent.preserve_bbox}}
+  name Reformat2
+  label static
+  xpos 5330
+  ypos 865
+ }
+ Switch {
+  inputs 2
+  which {{parent.viewKernel}}
+  name Switch2
+  label "static\nviewKernel"
+  xpos 5330
+  ypos 949
+ }
+ Keymix {
+  inputs 3
+  invertMask true
+  bbox B
+  name Keymix1
+  label static
+  xpos 5330
+  ypos 1172
+  disable {{"\[exists parent.input2] ? 0 : 1" x1 0}}
+ }
+push $Nd66e4c00
+ Dissolve {
+  inputs 2
+  which {{parent.mix}}
+  name Dissolve1
+  label static
+  xpos 5330
+  ypos 1319
+ }
+ Output {
+  name Output1
+  label static
+  xpos 5330
+  ypos 1446
+ }
+push $N5c23400
+ DeepToImage2 {
+  name DeepToImage12
+  label static
+  xpos 2820
+  ypos -1665
+ }
+ Dot {
+  name Dot2
+  label static
+  note_font_size 22
+  xpos 2854
+  ypos 434
+ }
+push $Nd66e4800
+ Shuffle {
+  in deep
+  green black
+  blue black
+  alpha black
+  name Shuffle1
+  label "static\nfor autofocus picker"
+  xpos 2533
+  ypos -1595
+ }
+ NoOp {
+  name NoOp1
+  label static
+  xpos 2533
+  ypos -1518
+  addUserKnob {20 User}
+  addUserKnob {7 unitMult}
+  unitMult 0.01
+  addUserKnob {7 focalDistanceCM}
+  focalDistanceCM {{"parent.focalDistance / unitMult"}}
+  addUserKnob {7 reallyFar}
+  reallyFar 10000000
+  addUserKnob {7 defoAtInfinity}
+  defoAtInfinity {{"((fabs((parent.focalLength/parent.fStop)*(((reallyFar-(focalDistanceCM*10))/reallyFar)*(parent.focalLength/((focalDistanceCM*10)-parent.focalLength))))) * (width/parent.filmBack) / 2)"}}
+  addUserKnob {6 autoSlices +STARTLINE}
+  autoSlices {{parent.auto_deep_slices}}
+  addUserKnob {3 deepSlices}
+  deepSlices {{"autoSlices ? 2 : parent.deepSlices"}}
+  addUserKnob {7 znear}
+  znear {{"autoSlices ? 0 : parent.znear"}}
+  addUserKnob {7 zfar}
+  zfar {{"autoSlices ? focalDistance * 2 : parent.zfar"}}
+  addUserKnob {6 inclNear +STARTLINE}
+  inclNear {{"autoSlices ? 1 : parent.inclNear"}}
+  addUserKnob {6 inclFar +STARTLINE}
+  inclFar {{"autoSlices ? 1 : parent.inclFar"}}
+  addUserKnob {6 disableDefocus +STARTLINE}
+  disableDefocus {{"parent.view_type == 1 ? 1 : parent.disableDefocus"}}
+ }
+end_group

@@ -1,0 +1,297 @@
+
+Group {
+ name PxF_GeoLight
+ help "Generates a Geo Light rig.\n\nPoint lights are positioned at every vertex of the geometry in the \"geo\" input.\n\nThe \"axis\" input is used to scale and position the light rig in the scene.\n\nPxF_GeoLight is meant to be used to light geometry rendered via Nuke's RayRender node. Make sure to apply shader nodes to your geometry (usually \"diffuse\" and \"reflection\")."
+ knobChanged "m = nuke.thisNode()\nkc = nuke.thisKnob()\n\nncCheck = False\nif nuke.env\['nc'] or nuke.env\['indie']:\n  ncCheck = True\n\nif ncCheck == False:\n  if kc.name() in \[\"inputChange\", \"sample\", \"falloff\", \"nth_vertex\"]:\n  \n  \n      for n in nuke.allNodes():\n        if \"lightrig\" in n\['label'].getValue():\n          nuke.delete(n)\n  \n      n = int(m\['nth_vertex'].value())\n      if n < 1:\n        n = 1\n      a = nuke.toNode(\"axis\")\n      s = nuke.nodes.Scene()\n      s\['label'].setValue('lightrig')\n      s.setInput(0, nuke.toNode(\"shadowOverride\"))\n      \n      nuke.toNode(\"Output1\").setInput(0,s)\n  \n      t = nuke.toNode(\"TransformGeo1\")\n      t.setInput(0, nuke.toNode(\"dot_geo\"))\n      t.setInput(1, nuke.toNode(\"dot_axis\"))\n  \n      \n  \n      #get all the points from our card\n      pythonGeoNode = nuke.toNode('PythonGeo1')\n      \n      cs = pythonGeoNode.knob('geo').getGeometry()\[0].points()\n      \n      lp = int(len(cs)/3)\n      ps = \[\[] for i in range(lp)]\n   \n  \n      for i, z in enumerate(cs):\n          ps\[int(i/3)].append(z)\n  \n      \n      \n      i = int(1)\n      for p in ps\[0::n]:\n          t = nuke.nodes.Light2()\n          t\['label'].setValue(\"lightrig\")\n          t\['display'].setExpression(\"parent.displayLights\")\n          t\['disable'].setExpression(\"parent.lightsEnable?0:1\")\n          t\['uniform_scale'].setExpression(\"parent.scale\")\n          t\['cast_shadows'].setExpression(\"parent.shadows\")\n          t\['shadow_mode'].setExpression(\"parent.shadow_mode\")\n          t\['intensity'].setExpression(\"parent.intensity\")\n          t\['falloff_type'].setValue(m\['falloff'].value())\n          t\['translate'].setValue(p)\n          t\['color'].setSingleValue(False)\n          t\['color'].setExpression(\"parent.color.r * parent.intensity / parent.lights * 25\", 0)\n          t\['color'].setExpression(\"parent.color.g * parent.intensity / parent.lights * 25\", 1)\n          t\['color'].setExpression(\"parent.color.b * parent.intensity / parent.lights * 25\", 2)\n          t.setInput(0,a)\n          s.setInput(i, t)\n          i = i + 1\n      m\['lights'].setValue(i-1)"
+ updateUI "tn = nuke.thisNode()\nncCheck = False\nif nuke.env\['nc'] or nuke.env\['indie']:\n  ncCheck = True\n  \nfor kb in  \[\"sample\", \"falloff\", \"nth_vertex\"]:\n  if ncCheck:\n    tn\[kb].setEnabled(False)\n    tn\['nc_warning'].setVisible(True)\n  else:\n    tn\[kb].setEnabled(True)\n    tn\['nc_warning'].setVisible(False)\n  "
+ tile_color 0x733520ff
+ addUserKnob {20 Light_Rig l "Light Rig"}
+ addUserKnob {22 sample l "Sample Geometry" t "Use this button to re-create lights when the input geometry has changed." T "dummy=\"dummy line to trigger knobChanged\"" +STARTLINE}
+ addUserKnob {3 nth_vertex l "every Nth vertex" t "Sample every Nth vertex of the geometry.\n\nIncrease this value to lower the amount of lights to speed up rendering/interactivity on dense models.\n\nFor example, setting this value to 5 will sample 1 light for 5 vertices on the geometry."}
+ nth_vertex 1
+ addUserKnob {3 lights t "How many lights are in the rig. PxF_GeoLight creates 1 point light per vertex, so make sure that you feed it low resolution geometry.\n\nMore lights add precision (especially in the shadows), but render times will be longer." +DISABLED}
+ lights 9
+ addUserKnob {6 lightsEnable l enable t "Enable lights in the light rig." -STARTLINE}
+ lightsEnable true
+ addUserKnob {6 displayLights l display t "Display lights in the 3D viewer. Does not affect the rendered image." -STARTLINE}
+ displayLights true
+ addUserKnob {6 gain_panelDropped l "panel dropped state" +HIDDEN +STARTLINE}
+ addUserKnob {7 scale t "Scale of the lights in the 3D view. Has no effect on the final render."}
+ scale 0.1
+ addUserKnob {6 shadows t "Enable shadows for every light in the rig." +STARTLINE}
+ shadows true
+ addUserKnob {4 shadow_mode l "shadow mode" t "Shadow casting modes that affect shadows cast by objects, based on the objects’ opacity: \n• solid - objects that cast shadows are considered to be completely solid. This option can be used with both ScanlineRender and RayRender. Fastest mode. \n• clipped alpha - objects that cast shadows are considered to be transparent if the object’s alpha is below the light’s clipping threshold control in the Shadows tab. This option is only relevant if you are using ScanlineRender to render your shadows. \n• full alpha - shadows are calculated based on how light is reduced when it passes through non-opaque occluders. This option is relevant if you are using ScanlineRender or RayRender to render your shadows. Slowest Mode." M {solid "clipped alpha" "full alpha" ""}}
+ addUserKnob {26 ""}
+ addUserKnob {26 nc_warning l "" +STARTLINE +HIDDEN T "<font size=2 color=#f7931e>Nuke Non-Commercial / Indie detected. Some features disabled due to Python limits.</font>"}
+ addUserKnob {26 Credits l "" t "PxF_GeoLight 1.1.1 - &copy; 2022-2023 - Xavier Bourque - pixelfudger.com\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_GeoLight 1.1.1 - &copy; 2022-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_GeoLight.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+ addUserKnob {20 ColorTab l Color}
+ addUserKnob {18 color t "Adjust the color of the light rig."}
+ color {1 1 1}
+ addUserKnob {6 color_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {7 intensity t "Adjusts the intensity of the light rig.\n\nUse this to adjust the overall \"brightness\" of your light rig."}
+ intensity 100
+ addUserKnob {6 gamma_panelDropped l "panel dropped state" +HIDDEN +STARTLINE}
+ addUserKnob {4 falloff t "No falloff - light does not diminish with distance. \nLinear - diminish the light at a fixed rate as it travels from the object. \nQuadratic and Cubic - diminish the light at an exponential rate." M {"No Falloff" Linear Quadratic Cubic "" ""}}
+ falloff Cubic
+ addUserKnob {6 color_rgb_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {20 Emissive_Object l "Emissive Object"}
+ addUserKnob {6 cardEnable l enable t "Enable the emissive object.\n\nFor a GeoLight, the emissive object is the geometry from the 'geo' input.\n\nUse the emissive object to see the reflection of the light source on reflective objects.\n\nLights in the light rig will still be active even if the emission object is disabled." +STARTLINE}
+ cardEnable true
+ addUserKnob {6 cardVisible l transparent t "Make the emissive object transparent.\n\nTo keep the emissive object visible to reflections but invisible to the camera (i.e. the beauty/rgba pass):\n\n1) Enable the emissive object.\n\n2) Make the emissive object transparent.\n\n3) In your RayRender, under AOVs, turn on \"output AOV\" and \"remove AOV from beauty pass\".\n\n4) Send \"emissive\" to any layer except \"rgba\". " +STARTLINE}
+ cardVisible true
+ addUserKnob {18 ref_gain l color t "Adjust the gain of the emissive object.\n\nBy default the emissive object will inherit the overall gain of the light rig.\n\nUse this to adjust the gain of the emissive object without affecting the light rig."}
+ ref_gain {1 1 1}
+ addUserKnob {6 ref_gain_panelDropped l "panel dropped state" +HIDDEN +STARTLINE}
+ addUserKnob {7 ref_intensity l intensity t "Adjust the intensity of the emissive object.\n\nBy default the emissive object will inherit the overall intensity of the light rig.\n\nUse this to adjust the intensity of the emissive object without affecting the light rig."}
+ ref_intensity 1
+}
+ Input {
+  inputs 0
+  name axis
+  xpos 2538
+  ypos -423
+ }
+set N7e37c000 [stack 0]
+ Light2 {
+  color {{"parent.color.r * parent.intensity / parent.lights * 25"} {"parent.color.g * parent.intensity / parent.lights * 25"} {"parent.color.b * parent.intensity / parent.lights * 25"}}
+  intensity {{parent.intensity}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.5 0.263671875 0}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light9
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+ }
+push $N7e37c000
+ Light2 {
+  color {{"parent.color.r * parent.intensity / parent.lights * 25"} {"parent.color.g * parent.intensity / parent.lights * 25"} {"parent.color.b * parent.intensity / parent.lights * 25"}}
+  intensity {{parent.intensity}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0 0.263671875 0}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light8
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+ }
+push $N7e37c000
+ Light2 {
+  color {{"parent.color.r * parent.intensity / parent.lights * 25"} {"parent.color.g * parent.intensity / parent.lights * 25"} {"parent.color.b * parent.intensity / parent.lights * 25"}}
+  intensity {{parent.intensity}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.5 0.263671875 0}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light7
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+ }
+push $N7e37c000
+ Light2 {
+  color {{"parent.color.r * parent.intensity / parent.lights * 25"} {"parent.color.g * parent.intensity / parent.lights * 25"} {"parent.color.b * parent.intensity / parent.lights * 25"}}
+  intensity {{parent.intensity}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.5 0 0}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light6
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+ }
+push $N7e37c000
+ Light2 {
+  color {{"parent.color.r * parent.intensity / parent.lights * 25"} {"parent.color.g * parent.intensity / parent.lights * 25"} {"parent.color.b * parent.intensity / parent.lights * 25"}}
+  intensity {{parent.intensity}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light5
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+ }
+push $N7e37c000
+ Light2 {
+  color {{"parent.color.r * parent.intensity / parent.lights * 25"} {"parent.color.g * parent.intensity / parent.lights * 25"} {"parent.color.b * parent.intensity / parent.lights * 25"}}
+  intensity {{parent.intensity}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.5 0 0}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light4
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+ }
+push $N7e37c000
+ Light2 {
+  color {{"parent.color.r * parent.intensity / parent.lights * 25"} {"parent.color.g * parent.intensity / parent.lights * 25"} {"parent.color.b * parent.intensity / parent.lights * 25"}}
+  intensity {{parent.intensity}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0.5 -0.263671875 0}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light3
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+ }
+push $N7e37c000
+ Light2 {
+  color {{"parent.color.r * parent.intensity / parent.lights * 25"} {"parent.color.g * parent.intensity / parent.lights * 25"} {"parent.color.b * parent.intensity / parent.lights * 25"}}
+  intensity {{parent.intensity}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {0 -0.263671875 0}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light2
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+ }
+push $N7e37c000
+ Light2 {
+  color {{"parent.color.r * parent.intensity / parent.lights * 25"} {"parent.color.g * parent.intensity / parent.lights * 25"} {"parent.color.b * parent.intensity / parent.lights * 25"}}
+  intensity {{parent.intensity}}
+  falloff_type Cubic
+  display {{parent.displayLights}}
+  translate {-0.5 -0.263671875 0}
+  uniform_scale {{parent.scale}}
+  cast_shadows {{parent.shadows}}
+  shadow_mode {{parent.shadow_mode}}
+  name Light1
+  label lightrig
+  disable {{parent.lightsEnable?0:1}}
+ }
+push $N7e37c000
+ Dot {
+  name dot_axis
+  xpos -37
+  ypos 689
+ }
+ Constant {
+  inputs 0
+  color {0 0 0 0}
+  format "256 256 0 0 256 256 1 square_256"
+  name Constant2
+  label STATIC
+  xpos -115
+  ypos 26
+ }
+ Constant {
+  inputs 0
+  color {0 0 0 1}
+  format "256 256 0 0 256 256 1 square_256"
+  name Constant4
+  label STATIC
+  xpos -275
+  ypos 39
+ }
+ Switch {
+  inputs 2
+  which {{parent.cardVisible}}
+  name Switch2
+  label STATIC
+  xpos -210
+  ypos 144
+ }
+ Emission {
+  emission {{parent.color.r*parent.ref_intensity*parent.ref_gain.r} {parent.color.g*parent.ref_intensity*parent.ref_gain.g} {parent.color.b*parent.ref_intensity*parent.ref_gain.b}}
+  name Emission1
+  label STATIC
+  xpos -210
+  ypos 213
+ }
+ Input {
+  inputs 0
+  name geo
+  xpos 116
+  ypos 136
+  number 1
+ }
+ ApplyMaterial {
+  inputs 2
+  name ApplyMaterial1
+  xpos -210
+  ypos 326
+ }
+set N783e2000 [stack 0]
+ Card2 {
+  inputs 0
+  rows 1
+  columns 1
+  control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
+1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
+1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
+1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
+1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
+1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
+1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
+1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
+1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
+  name Card1
+  xpos -291
+  ypos 420
+  disable true
+ }
+ Switch {
+  inputs 2
+  which {{parent.cardEnable}}
+  name Switch1
+  xpos -210
+  ypos 492
+ }
+ Dot {
+  name dot_geo
+  xpos -176
+  ypos 701
+ }
+ TransformGeo {
+  inputs 2
+  name TransformGeo1
+  label STATIC
+  xpos -210
+  ypos 819
+ }
+ Scene {
+  shadow_override "override inputs"
+  cast_shadow false
+  receive_shadow false
+  name shadowOverride
+  xpos -200
+  ypos 898
+ }
+ Scene {
+  inputs 10
+  name Scene1
+  label lightrig
+ }
+ Output {
+  name Output1
+  label STATIC
+  xpos 4518
+  ypos 1720
+ }
+push $N783e2000
+ PythonGeo {
+  name PythonGeo1
+  selected true
+  xpos -38
+  ypos 387
+ }
+end_group

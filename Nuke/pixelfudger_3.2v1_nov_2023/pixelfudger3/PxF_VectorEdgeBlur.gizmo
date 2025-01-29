@@ -1,0 +1,257 @@
+
+Group {
+ name PxF_VectorEdgeBlur
+ help "Use motion vectors to add motion blur an RGBA image.\n\nUseful to recreate motion blur when rotoscoping fast moving subjects."
+ knobChanged "m = nuke.thisNode()\nkc = nuke.thisKnob()\n\nif kc.name() == \"method\":\n  if m\['method'].getValue() == 0:\n    m\['shutter_samples'].setEnabled(True)\n  else:\n    m\['shutter_samples'].setEnabled(False)"
+ tile_color 0x733500ff
+ addUserKnob {20 PxF_VectorEdgeBlur}
+ addUserKnob {4 analyzeChannels t "Which channels to analyze for motion. \n" M {alpha rgba "" "" "" ""}}
+ addUserKnob {4 method t "MotionBlur: Use the \"MotionBlur\" node to create motion blur.\n\nVectorGenerator+VectorBlur: Use a VectorGenerator to create motion vectors and use a VectorBlur2 to create motion blur.\n\nVectorGenerator+VectorBlur (old): Use a VectorGenerator to create motion vectors and use a VectorBlur (legacy version without GPU acceleration) to create motion blur.\n\n" M {MotionBlur VectorGenerator+VectorBlur2 "VectorGenerator+VectorBlur (old)" ""}}
+ method VectorGenerator+VectorBlur2
+ addUserKnob {6 use_gpu l "Use GPU if available" t "Turn on GPU acceleration for MotionBlur, VectorGenerator and VectorBlur." +STARTLINE}
+ use_gpu true
+ addUserKnob {3 shutter_samples l "shutter samples" t "How many samples to render in the MotionBlur node. Increase this value if you see \"steps\" in your motion blur. The higher this value, the slower the render.\n\nThis setting has no effect when the method is VectorGenerator+MotionBlur." +DISABLED}
+ shutter_samples 10
+ addUserKnob {7 shutter_time l "shutter time" t "Shutter Time of the motion blur.\n\nHigher value = more motion blur.\n\n0.5 = 180 degrees shutter (for example 1/48s @ 24fps)"}
+ shutter_time 0.5
+ addUserKnob {7 AdjustBBox l adjustBBox t "Increase the size of the bounding box (in pixels).\n\nIncrease this value if the edge of the motion blur touches the edge of the bounding box and creates \"streaks\"." R 0 250}
+ AdjustBBox 100
+ addUserKnob {7 edge_offset l "edge offset" t "Move the 'hard edge' of the motion blur outwards."}
+ addUserKnob {7 edge_mix l "edge mix" t "This adjusts the transition between the original 'hard' image and the motion blurred image.\n\nSmall values = less original image is visible on the edge.\n\nHigh values = more original image is visible on the edge." R 0 2}
+ edge_mix 0.15
+ addUserKnob {6 edgesOnly l "original image on top" t "Comp the original image on top of the motion blurred image." +STARTLINE}
+ edgesOnly true
+ addUserKnob {7 mix t "Dissolve between the original (0) and the full effect (1)."}
+ mix 1
+ addUserKnob {26 ""}
+ addUserKnob {26 Credits l "" t "PxF_VectorEdgeBlur 2.0 - &copy; 2019-2023 - Xavier Bourque - pixelfudger.com \n\nPixelfudger gizmos are free to use for personal and commercial use as long as you leave the credit text intact in the gizmo's knobs and in the source files. " +STARTLINE T "<font size=2>PxF_VectorEdgeBlur 2.0 - &copy; 2019-2023 - </font><a href=\"http://www.xavierbourque.com\"><font color=\"#bbbbbb\" size=2>Xavier Bourque</a></font> - <a href=\"http://www.pixelfudger.com\"><font color=\"#bbbbbb\" size=2>pixelfudger.com</a></font> - <a href=\"http://www.pixelfudger.com/userguides/PxF_VectorEdgeBlur2.html\"><font color=\"#bbbbbb\" size=2>Video Tutorial</a></font>"}
+}
+ Input {
+  inputs 0
+  name mask
+  xpos 501
+  ypos 961
+  number 1
+ }
+ Input {
+  inputs 0
+  name img
+  xpos 327
+  ypos -13
+ }
+ AdjBBox {
+  numpixels {{parent.AdjustBBox}}
+  name AdjBBox1
+  xpos 327
+  ypos 43
+ }
+set N8d851c00 [stack 0]
+ Dot {
+  name Dot7
+  note_font_size 22
+  xpos 199
+  ypos 787
+ }
+ Dot {
+  name Dot8
+  note_font_size 22
+  xpos 199
+  ypos 910
+ }
+set Nd5a86800 [stack 0]
+push $N8d851c00
+ Dot {
+  name Dot5
+  xpos 361
+  ypos 98
+ }
+set Nd40d8800 [stack 0]
+ Dot {
+  name Dot3
+  xpos 608
+  ypos 302
+ }
+set Nd673b000 [stack 0]
+ Dot {
+  name Dot10
+  note_font_size 22
+  xpos 537
+  ypos 398
+ }
+push $Nd40d8800
+ Shuffle {
+  red alpha
+  green alpha
+  blue alpha
+  name Shuffle1
+  label aaaa
+  xpos 682
+  ypos 150
+  disable {{parent.analyzeChannels}}
+ }
+ Crop {
+  box {0 0 {width} {height}}
+  name Crop1
+  label "kill bbox\nworkaround\nbuggy VectorGenerator"
+  xpos 682
+  ypos 226
+ }
+ VectorGenerator {
+  useGPUIfAvailable {{parent.use_gpu}}
+  motionEstimation Regularized
+  name VectorGenerator1
+  xpos 682
+  ypos 307
+ }
+push $Nd673b000
+ ShuffleCopy {
+  inputs 2
+  in motion
+  alpha alpha2
+  black red
+  white green
+  red2 blue
+  green2 alpha
+  out2 motion
+  name ShuffleCopy1
+  xpos 574
+  ypos 395
+ }
+ CopyBBox {
+  inputs 2
+  name CopyBBox1
+  xpos 574
+  ypos 436
+ }
+set Nd5c81400 [stack 0]
+ VectorBlur {
+  channels rgba
+  uv forward
+  scale {{"parent.shutter_time * (parent.edge_offset + 1)"}}
+  method forward
+  alpha rgba.alpha
+  name VectorBlur1
+  label old
+  xpos 691
+  ypos 496
+ }
+push $Nd5c81400
+ VectorBlur2 {
+  channels rgba
+  useGPUIfAvailable {{parent.use_gpu}}
+  uv forward
+  blur_type uniform
+  scale {{"parent.shutter_time * (parent.edge_offset + 1)"}}
+  name VectorBlur2
+  label new
+  xpos 580
+  ypos 489
+ }
+push $Nd40d8800
+ Dot {
+  name Dot6
+  note_font_size 44
+  xpos 491
+  ypos 325
+ }
+ MotionBlur {
+  useGPUIfAvailable {{parent.use_gpu}}
+  shutterSamples {{parent.shutter_samples}}
+  shutterTime {{"parent.shutter_time * (parent.edge_offset + 1)"}}
+  motionEstimation Regularized
+  name MotionBlur1
+  xpos 457
+  ypos 504
+ }
+ Switch {
+  inputs 3
+  which {{parent.method}}
+  name Switch3
+  xpos 580
+  ypos 555
+ }
+set Nd5c71400 [stack 0]
+ Unpremult {
+  name Unpremult1
+  xpos 580
+  ypos 586
+ }
+ Multiply {
+  channels alpha
+  value {{"parent.edge_offset + 1"}}
+  name Multiply1
+  selected true
+  xpos 580
+  ypos 626
+ }
+ Clamp {
+  name Clamp1
+  xpos 580
+  ypos 671
+ }
+ Premult {
+  name Premult1
+  xpos 580
+  ypos 726
+ }
+set Nd43cd800 [stack 0]
+push $Nd5c71400
+ Gamma {
+  channels alpha
+  value {{parent.edge_mix}}
+  name Gamma1
+  xpos 434
+  ypos 612
+ }
+push $Nd40d8800
+ Merge2 {
+  inputs 2
+  operation mask
+  name Merge2
+  xpos 327
+  ypos 668
+ }
+ Merge2 {
+  inputs 2
+  operation under
+  name Merge1
+  xpos 327
+  ypos 760
+ }
+push $Nd43cd800
+ Dot {
+  name Dot9
+  note_font_size 22
+  xpos 614
+  ypos 867
+ }
+ Switch {
+  inputs 2
+  which {{parent.edgesOnly}}
+  name Switch1
+  xpos 327
+  ypos 900
+ }
+ Keymix {
+  inputs 3
+  invertMask true
+  bbox B
+  name Keymix2
+  xpos 327
+  ypos 961
+  disable {{"\[exists parent.input1] ? 0 : 1" x1 0}}
+ }
+push $Nd5a86800
+ Dissolve {
+  inputs 2
+  which {{parent.mix}}
+  name Dissolve1
+  xpos 327
+  ypos 1024
+ }
+ Output {
+  name Output1
+  xpos 327
+  ypos 1096
+ }
+end_group
