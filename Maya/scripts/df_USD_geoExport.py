@@ -6,9 +6,10 @@
  - Custom metadata with originating Maya file “exported_from”
  - variant switch to display high res mesh in viewport
  - switch to "_geo" naming convention for mesh file in crate binary.
- - Look file with overs for MaterialX references.
+ - look file with overs for MaterialX references
+ - Support for complex hierarchy under render purpose
  
- v5 Export payloaded USD asset with MaterialX reference
+ v5.1 Export payloaded USD asset with MaterialX reference
  (c) Derek Flood, 2025
 
  call with: 
@@ -19,6 +20,10 @@ python calls:
 import dfUSD_CreateAsset
 dfUSD_CreateAsset.payload_stage(fileName)
 dfUSD_CreateAsset.asset_stage(fileName, render_value, proxy_value)
+
+testing:
+from importlib import reload
+reload(df_USD_geoExport) 
  
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -71,31 +76,43 @@ def add_ext_reference(prim: Usd.Prim, ref_asset_path: str, ref_target_path: Sdf.
         primPath=ref_target_path # OPTIONAL: Reference a specific target prim. Otherwise, uses the referenced layer's defaultPrim.
     )
     
+#########
+
 def find_mtlx_file(directory, mtlx_name):
-    """
-    Search recursively for a MaterialX file within a given directory.
-    Returns the relative path combined with the file name if found, otherwise None.
-    """
+    # Function to find the MaterialX file in the directory
     for root, dirs, files in os.walk(directory):
         for file in files:
             if file == f"{mtlx_name}.mtlx":
                 relative_path = os.path.relpath(root, directory)
-                # Combine relative path and file name
                 if relative_path == ".":
                     return file
                 else:
                     return os.path.join(relative_path, file)
     return None
 
-def get_mesh_and_material_info(render_value, fileName):
-    """
-    Get mesh and material information for all meshes under a given transform.
-    Returns a list of tuples containing meshName and mtlx_name.
-    """
-    # Determine the directory where the USD file is being written
-    usd_directory = os.path.dirname(os.path.abspath(fileName))
+
+def get_all_mesh_shapes(render_purp):
+    # Function to get all mesh shapes under the given transform
+    shapes = mc.listRelatives(render_purp, ad=True, type='mesh', fullPath=True)
+    return shapes if shapes else []    
+
+def get_relative_path(meshName, render_purp):
+    # Get the full path of the mesh
+    full_path = mc.ls(meshName, long=True)
+    if not full_path:
+        raise ValueError(f"Unable to get full path for mesh: {meshName}")
+    full_path = full_path[0]
     
-    # Get the child group names under selected to populate purpose fields
+    # Get the relative path by removing the render_purp and meshName from the full path
+    relative_path = full_path.split(render_purp)[-1]
+    relative_path = relative_path.replace(f'|{meshName}', '').strip('|')
+    return relative_path
+
+
+
+def get_mesh_and_material_info(render_value, fileName):
+    # Function to get mesh and material information for all meshes under a given transform
+    usd_directory = os.path.dirname(os.path.abspath(fileName))
     long_sel = mc.ls(sl=True, long=True)
     geoGrpPath = mc.listRelatives(long_sel, path=True, fullPath=True)
     find_groups = mc.listRelatives(geoGrpPath, path=True, fullPath=True)
@@ -103,10 +120,65 @@ def get_mesh_and_material_info(render_value, fileName):
     
     mesh_info = []
     error_messages = []
-    print("")
+
+    shapes = get_all_mesh_shapes(found_render)
+    if not shapes:
+        return mesh_info
+
+    for shape in shapes:
+        try:
+            meshName = mc.listRelatives(shape, p=True, type='transform')[0]
+            relative_path = get_relative_path(shape, found_render)
+            Maya_SG = mc.listConnections(shape + '.instObjGroups', d=True, s=False)[0]
+            mtlX_SG = mc.listConnections(Maya_SG + '.surfaceShader', d=False, s=True)[0]
+            SG_ufePath = mc.getAttr(mtlX_SG + '.ufePath')
+            mtlx_docPath = re.sub(r"%[^%]*$", "", SG_ufePath)
+            mtlx_name_match = re.search(r"%([^%]*)$", mtlx_docPath)
+            if not mtlx_name_match:
+                continue
+            mtlx_name = mtlx_name_match.group(1)
+            mtlx_file = find_mtlx_file(usd_directory, mtlx_name)
+            if not mtlx_file:
+                warning_message = (f"Warning: The MaterialX file {mtlx_name}.mtlx for render mesh {meshName} does not exist in\n"
+                                   f"directory: {usd_directory}.\n"
+                                   f"Please save it either with Export MaterialX Document or Export Documents in MaterialX Stack.")
+                error_messages.append(warning_message)
+                continue
+            mesh_info.append((meshName, relative_path, mtlx_file, mtlx_name))
+        except Exception as e:
+            warning_message = f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file. Error: {e}"
+            error_messages.append(warning_message)
+            continue
+            
+    if error_messages:
+        mc.confirmDialog(
+            title='Missing some MaterialX materials or bindings',
+            message='Process completed with errors. See Script Editor for details.',
+            button=['Oh My!'],
+            defaultButton='Oh My!',
+            cancelButton='Oh My!',
+            dismissString='Oh My!'
+        )
+
+    return mesh_info
+
+
+
+def get_mesh_and_material_info(render_value, fileName):
+    # Get mesh and material information for all meshes under a given transform.
+
+
+    usd_directory = os.path.dirname(os.path.abspath(fileName))
+    long_sel = mc.ls(sl=True, long=True)
+    geoGrpPath = mc.listRelatives(long_sel, path=True, fullPath=True)
+    find_groups = mc.listRelatives(geoGrpPath, path=True, fullPath=True)
+    found_render = find_groups[0]
     
-    # Get all shapes under the transform
-    shapes = mc.listRelatives(found_render, ad=True, type='mesh', fullPath=True)
+    mesh_info = []
+    error_messages = []
+
+    # Get all mesh shapes under the transform recursively
+    shapes = get_all_mesh_shapes(found_render)
     if not shapes:
         return mesh_info
 
@@ -114,36 +186,40 @@ def get_mesh_and_material_info(render_value, fileName):
         try:
             # Get the parent transform of the shape
             meshName = mc.listRelatives(shape, p=True, type='transform')[0]
-
+            
+            # Get the relative path of the shape
+            relative_path = get_relative_path(meshName, found_render)
+            
             # Get the material shading group connected to the shape
             Maya_SG = mc.listConnections(shape + '.instObjGroups', d=True, s=False)[0]
-        
+            
             # Get the material connected to the shading group
             mtlX_SG = mc.listConnections(Maya_SG + '.surfaceShader', d=False, s=True)[0]
-        
+            
             # Extract the ufePath attribute
             SG_ufePath = mc.getAttr(mtlX_SG + '.ufePath')
-        
+            
             # Extract the material name from the ufePath
             mtlx_docPath = re.sub(r"%[^%]*$", "", SG_ufePath)
-            mtlx_name = re.search(r"%([^%]*)$", mtlx_docPath).group(1)
-        
+            mtlx_name_match = re.search(r"%([^%]*)$", mtlx_docPath)
+            if not mtlx_name_match:
+                continue
+            mtlx_name = mtlx_name_match.group(1)
+            
             # Search recursively for the MaterialX file in the USD directory
             mtlx_file = find_mtlx_file(usd_directory, mtlx_name)
             if not mtlx_file:
                 warning_message = (f"Warning: The MaterialX file {mtlx_name}.mtlx for render mesh {meshName} does not exist in\n"
                                    f"directory: {usd_directory}.\n"
                                    f"Please save it either with Export MaterialX Document or Export Documents in MaterialX Stack.")
-                print(warning_message)
                 error_messages.append(warning_message)
                 continue
             
-            # Append the meshName and the full path of the MaterialX file
-            mesh_info.append((meshName, mtlx_file, mtlx_name))
+            # Append the meshName, relative path, full path of the MaterialX file, and material name to the list
+            mesh_info.append((meshName, relative_path, mtlx_file, mtlx_name))
         
         except Exception as e:
-            warning_message = f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file."
-            print(warning_message)
+            warning_message = f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file. Error: {e}"
             error_messages.append(warning_message)
             continue
             
@@ -156,9 +232,12 @@ def get_mesh_and_material_info(render_value, fileName):
             defaultButton='Oh My!',
             cancelButton='Oh My!',
             dismissString='Oh My!'
-        )  
+        )
+
     return mesh_info
 
+
+########
 
     
 def get_proxy_mesh_and_material_info(proxy_value, fileName):
@@ -407,9 +486,6 @@ def asset_stage(fileName, render_value, proxy_value, root_asset):
     # save to file
     stage.GetRootLayer().Save()
 
-
-
-
 def look_stage(fileName, root_asset, render_value, proxy_value):
     # Strip the file extension from fileName and create new filename with '_look.usda'
     stripExtension = os.path.splitext(fileName)[0]
@@ -417,7 +493,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value):
 
     # Create USD "look" stage
     look_layer = Sdf.Layer.CreateNew(look_file, args={'format': 'usda'})
-    stage: Usd.Stage = Usd.Stage.Open(look_layer)
+    stage = Usd.Stage.Open(look_layer)
     
     # Set stage metadata
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
@@ -431,41 +507,51 @@ def look_stage(fileName, root_asset, render_value, proxy_value):
     root_prim.SetSpecifier(Sdf.SpecifierOver)
     stage.SetDefaultPrim(root_prim)
     
-    # Define the 'Materials' scope under the root asset as an over
+    # Make 'Materials' scope defined as a def and scope under the 'over' root asset
     materials_scope_path = f'{root_asset}/mtl'
     materials_scope = stage.OverridePrim(materials_scope_path)
-    
-    # Ensure the 'Materials' scope is defined as a def and scope under the 'over' root asset
     materials_scope.SetSpecifier(Sdf.SpecifierDef)
     materials_scope.GetPrim().SetTypeName('Scope')
     
-    # Process all meshes and materials under the given render_value
+    # Track created paths to avoid redundancies
+    created_paths = set()
+
+    # Process all meshes and materials under the given render purpose
     mesh_material_info = get_mesh_and_material_info(render_value, fileName)
     
-    #for meshName, mtlx_name in mesh_material_info:
-    for meshName, mtlx_file, mtlx_name in mesh_material_info:
-        
+    for meshName, relative_path, mtlx_file, mtlx_name in mesh_material_info:
         # Add a reference to the MaterialX file in the 'Materials' scope
         materials_scope.GetReferences().AddReference(f'./{mtlx_file}', '/MaterialX/Materials')
         
-        # Define the 'render' over under the root asset
-        render_path = f'{root_asset}/geo/{render_value}'
-        render_prim = stage.OverridePrim(render_path)
-        render_prim.SetSpecifier(Sdf.SpecifierOver)
+        # Split the relative path by '|' and create a list of path parts
+        path_parts = relative_path.strip('|').split('|')
         
-        # Define the 'meshName' over under the 'render' over
-        mesh_name_path = f'{render_path}/{meshName}'
-        mesh_name_prim = stage.OverridePrim(mesh_name_path)
-        mesh_name_prim.SetSpecifier(Sdf.SpecifierOver)
-
-        # Apply the MaterialBindingAPI schema on the 'meshName' prim
-        UsdShade.MaterialBindingAPI.Apply(mesh_name_prim)
+        # Initialize the current path with the root asset, 'geo', and the render value
+        current_path = f'{root_asset}/geo/{render_value}'
         
-        # Define the material binding relationship
-        material_binding_rel = mesh_name_prim.CreateRelationship('material:binding', False)
-        material_binding_rel.SetTargets([f'{root_asset}/mtl/{mtlx_name}_SG'])
+        # Iterate through each part in the path parts list to build the hierarchy
+        for part in path_parts:
+            # Update the current path by appending the current part
+            current_path = f'{current_path}/{part}'
+            # Create the current path in the USD stage if it hasn't been created yet
+            if current_path not in created_paths:
+                stage.OverridePrim(current_path)
+                created_paths.add(current_path)
+        
+        # Define the 'meshName' over under the constructed hierarchy
+        mesh_name_path = f'{current_path}/{meshName}'
 
-
+        if mesh_name_path not in created_paths:
+            mesh_name_prim = stage.OverridePrim(mesh_name_path)
+            mesh_name_prim.SetSpecifier(Sdf.SpecifierOver)
+            
+            # Apply the MaterialBindingAPI schema on the 'meshName' prim
+            UsdShade.MaterialBindingAPI.Apply(mesh_name_prim)
+            
+            # Define the material binding relationship
+            material_binding_rel = mesh_name_prim.CreateRelationship('material:binding', False)
+            material_binding_rel.SetTargets([f'{root_asset}/mtl/{mtlx_name}_SG'])
+            created_paths.add(mesh_name_path)
     
     # Process all proxy meshes and materials under the given proxy_value
     proxy_material_info = get_proxy_mesh_and_material_info(proxy_value, fileName)
@@ -477,44 +563,36 @@ def look_stage(fileName, root_asset, render_value, proxy_value):
         
             # Define the 'proxy' over under the root asset
             proxy_path = f'{root_asset}/geo/{proxy_value}'
-            proxy_prim = stage.OverridePrim(proxy_path)
-            proxy_prim.SetSpecifier(Sdf.SpecifierOver)
+            if proxy_path not in created_paths:
+                proxy_prim = stage.OverridePrim(proxy_path)
+                proxy_prim.SetSpecifier(Sdf.SpecifierOver)
+                created_paths.add(proxy_path)
         
             # Define the 'proxyMesh' over under the 'proxy' over
             mesh_proxy_path = f'{proxy_path}/{proxyMesh}'
-            mesh_proxy_prim = stage.OverridePrim(mesh_proxy_path)
-            mesh_proxy_prim.SetSpecifier(Sdf.SpecifierOver)
+            if mesh_proxy_path not in created_paths:
+                mesh_proxy_prim = stage.OverridePrim(mesh_proxy_path)
+                mesh_proxy_prim.SetSpecifier(Sdf.SpecifierOver)
 
-            # Apply the MaterialBindingAPI schema on the 'proxyMesh' prim
-            UsdShade.MaterialBindingAPI.Apply(mesh_proxy_prim)
-        
-            # Define the material binding relationship
-            material_binding_rel = mesh_proxy_prim.CreateRelationship('material:binding', False)
-            material_binding_rel.SetTargets([f'{root_asset}/mtl/{px_mtlx_name}_SG'])
+                # Apply the MaterialBindingAPI schema on the 'proxyMesh' prim
+                UsdShade.MaterialBindingAPI.Apply(mesh_proxy_prim)
+            
+                # Define the material binding relationship
+                material_binding_rel = mesh_proxy_prim.CreateRelationship('material:binding', False)
+                material_binding_rel.SetTargets([f'{root_asset}/mtl/{px_mtlx_name}_SG'])
+                created_paths.add(mesh_proxy_path)
         except Exception as e:
             print(f"Warning: Skipping proxy mesh {proxyMesh} due to error: {e}")
             continue
             
     # Save the stage
     stage.GetRootLayer().Save()
-    
-    '''
-    # Check for orphaned overs
-    print("Checking for orphaned overs...")
-    orphaned_overs = list(prim for prim in stage.TraverseAll() if not prim.IsDefined())
-    if orphaned_overs:
-        print("Found orphaned overs:")
-        for orphan in orphaned_overs:
-            print(orphan.GetPath())
-    else:
-        print("No orphaned overs found.")
-    '''
-    
+
     # Diagnostic
     print_asset = stage.GetRootLayer().ExportToString()
     #print("===============LOOK FILE ======================================")
-    #print(print_asset)   
-    
+    #print(print_asset)
+
 
 def arnold_subdiv():
 
