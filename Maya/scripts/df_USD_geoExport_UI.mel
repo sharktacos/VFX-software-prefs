@@ -7,6 +7,7 @@
  - Variant switch to display high res mesh in viewport
  - Switch to "_geo" naming convention for mesh file in crate binary.
  - Look file with overs for MaterialX references.
+ - Relative texture file paths for MaterialX docs
  
  v5 Export payloaded USD asset with MaterialX reference
  (c) Derek Flood, 2025
@@ -33,8 +34,6 @@
 */
 //---------------------------------------------------------
 
-
-
 proc setOptionVars()
 {
     //Get the child group names under selected to populate purpose fields
@@ -57,6 +56,10 @@ proc setOptionVars()
     if (!`optionVar -exists optVar_proxy`) {
         optionVar -stringValue optVar_proxy $found_proxy;
     }
+
+    if (!`optionVar -exists optVar_relativePaths`) {
+        optionVar -intValue optVar_relativePaths 0; // Default to selected
+    }
 }
 
 // creates the options of the File dialog
@@ -74,7 +77,9 @@ global proc string df_UISetup(string $parent)
     textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label "Render Purpose:" -ann "Derived from children of selected root node."  render_field;
     textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label "Proxy Purpose:" -ann "Derived from children of selected root node."  proxy_field;
     
-    
+    // Add the checkbox for MaterialX relative texture file paths
+    checkBox -label "Convert MaterialX docs to relative texture file paths" -value 1 materialXRelativePathsChkBox;
+
     return $layout;
 }
 
@@ -86,12 +91,13 @@ global proc df_UIInit(string $parent, string $filterType)
     string $xpath = `optionVar -q optVar_root`;
     string $rpath = `optionVar -q optVar_render`;
     string $ppath = `optionVar -q optVar_proxy`;
+    int $relativePathsEnabled = `optionVar -q optVar_relativePaths`;
 
     setParent $parent;
     textFieldGrp -e -text $xpath root_field;
     textFieldGrp -e -text $rpath render_field;
     textFieldGrp -e -text $ppath proxy_field;
-
+    checkBox -e -value $relativePathsEnabled materialXRelativePathsChkBox;
 }
 
 global proc df_UICommit(string $parent)
@@ -99,20 +105,18 @@ global proc df_UICommit(string $parent)
     setParent $parent;
 
     // fetch values
-    optionVar -stringValue optVar_root
-        (`textFieldGrp -q -text  root_field`);
-    optionVar -stringValue optVar_render
-        (`textFieldGrp -q -text  render_field`);
-    optionVar -stringValue optVar_proxy
-        (`textFieldGrp -q -text  proxy_field`);
+    optionVar -stringValue optVar_root (`textFieldGrp -q -text  root_field`);
+    optionVar -stringValue optVar_render (`textFieldGrp -q -text  render_field`);
+    optionVar -stringValue optVar_proxy (`textFieldGrp -q -text  proxy_field`);
+    optionVar -intValue optVar_relativePaths (`checkBox -q -value materialXRelativePathsChkBox`);
 }
 
 global proc mayaUsd_exportGeo()
 {
-
     optionVar -remove optVar_root;
     optionVar -remove optVar_render;
     optionVar -remove optVar_proxy;
+    optionVar -remove optVar_relativePaths;
 
     $sel = `ls -sl`;
     $isSel = `size($sel)`;
@@ -147,10 +151,11 @@ global proc mayaUsd_exportGeo()
 
         $render_value = `optionVar -q optVar_render`; //pass this value to python
         $proxy_value = `optionVar -q optVar_proxy`; //pass this value to python
+        $relativePathsEnabled = `optionVar -q optVar_relativePaths`; //pass this value to python
         $fileName = $filepath[0];
         
         if (size($fileName) > 0){
-            python("import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "')");
+            python("import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "', '" + $relativePathsEnabled + "')");
         }
 
     } else {
@@ -159,4 +164,3 @@ global proc mayaUsd_exportGeo()
 }
 
 //mayaUsd_exportGeo()
-

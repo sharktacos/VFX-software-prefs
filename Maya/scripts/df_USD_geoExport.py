@@ -8,8 +8,9 @@
  - switch to "_geo" naming convention for mesh file in crate binary.
  - look file with overs for MaterialX references
  - Support for complex hierarchy under render purpose
+ - Relative texture file paths for MaterialX docs
  
- v5.1 Export payloaded USD asset with MaterialX reference
+ v5.2 Export payloaded USD asset with MaterialX reference
  (c) Derek Flood, 2025
 
  call with: 
@@ -42,6 +43,7 @@ import maya.cmds as mc
 import os
 from pxr import Usd, UsdGeom, UsdShade, Sdf, Gf, Kind, Vt
 import re
+import MaterialX as mx
 
 
 
@@ -78,6 +80,40 @@ def add_ext_reference(prim: Usd.Prim, ref_asset_path: str, ref_target_path: Sdf.
     
 #########
 
+
+def convert_texture_paths_to_relative(mtlx_file_path):
+    """Convert absolute texture file paths to relative paths in a MaterialX document."""
+    try:
+        # Read the MaterialX document from the file
+        doc = mx.createDocument()
+        mx.readFromXmlFile(doc, mtlx_file_path)
+        
+        # Get the directory of the .mtlx file
+        mtlx_directory = os.path.dirname(mtlx_file_path)
+        
+        # Function to convert absolute paths to relative paths with ../ prefix
+        def make_relative_path(absolute_path):
+            if os.path.isabs(absolute_path):
+                relative_path = os.path.relpath(absolute_path, mtlx_directory)
+                return os.path.join('..', relative_path)
+            return absolute_path
+        
+        # Traverse the document to find all texture file paths
+        for elem in doc.traverseTree():
+            if elem.getType() == 'filename':
+                absolute_path = elem.getValueString()
+                relative_path = make_relative_path(absolute_path)
+                elem.setValueString(relative_path)
+        
+        # Write the updated MaterialX document back to the file
+        mx.writeToXmlFile(doc, mtlx_file_path)
+        print(f"Updated MaterialX document with relative texture paths for: {mtlx_file_path}")
+    
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+################
 def find_mtlx_file(directory, mtlx_name):
     # Function to find the MaterialX file in the directory
     for root, dirs, files in os.walk(directory):
@@ -113,6 +149,8 @@ def get_relative_path(meshName, render_purp):
 def get_mesh_and_material_info(render_value, fileName):
     # Function to get mesh and material information for all meshes under a given transform
     usd_directory = os.path.dirname(os.path.abspath(fileName))
+    print(f'usd_directory: {usd_directory}')
+
     long_sel = mc.ls(sl=True, long=True)
     geoGrpPath = mc.listRelatives(long_sel, path=True, fullPath=True)
     find_groups = mc.listRelatives(geoGrpPath, path=True, fullPath=True)
@@ -214,9 +252,10 @@ def get_mesh_and_material_info(render_value, fileName):
                                    f"Please save it either with Export MaterialX Document or Export Documents in MaterialX Stack.")
                 error_messages.append(warning_message)
                 continue
+            mtlx_absolute_path = os.path.join(usd_directory, mtlx_file)
             
             # Append the meshName, relative path, full path of the MaterialX file, and material name to the list
-            mesh_info.append((meshName, relative_path, mtlx_file, mtlx_name))
+            mesh_info.append((meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path))
         
         except Exception as e:
             warning_message = f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file. Error: {e}"
@@ -486,7 +525,7 @@ def asset_stage(fileName, render_value, proxy_value, root_asset):
     # save to file
     stage.GetRootLayer().Save()
 
-def look_stage(fileName, root_asset, render_value, proxy_value):
+def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEnabled):
     # Strip the file extension from fileName and create new filename with '_look.usda'
     stripExtension = os.path.splitext(fileName)[0]
     look_file = stripExtension + '_look.usda'
@@ -519,7 +558,12 @@ def look_stage(fileName, root_asset, render_value, proxy_value):
     # Process all meshes and materials under the given render purpose
     mesh_material_info = get_mesh_and_material_info(render_value, fileName)
     
-    for meshName, relative_path, mtlx_file, mtlx_name in mesh_material_info:
+    for meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path in mesh_material_info:
+
+        # convert texture paths to relative in mtlx docs.
+        if relativePathsEnabled:
+            convert_texture_paths_to_relative(mtlx_absolute_path)
+        
         # Add a reference to the MaterialX file in the 'Materials' scope
         materials_scope.GetReferences().AddReference(f'./{mtlx_file}', '/MaterialX/Materials')
         
@@ -611,7 +655,7 @@ def arnold_subdiv():
 
 
 
-def main(fileName, render_value, proxy_value):
+def main(fileName, render_value, proxy_value, relativePathsEnabled):
 
     sel=mc.ls(sl=True)
     dag_root = sel[0].replace("|", "")
@@ -619,7 +663,7 @@ def main(fileName, render_value, proxy_value):
     
     arnold_subdiv()
     geom_stage(fileName, root_asset, render_value, proxy_value)
-    look_stage(fileName, root_asset, render_value, proxy_value)
+    look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEnabled)
     payload_stage(fileName, root_asset)
     asset_stage(fileName, render_value, proxy_value, root_asset)
 
