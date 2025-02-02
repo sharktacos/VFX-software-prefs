@@ -92,19 +92,23 @@ def convert_texture_paths_to_relative(mtlx_file_path):
         
         # Get the directory of the .mtlx file
         mtlx_directory = os.path.dirname(mtlx_file_path)
-        
-        # Function to convert absolute paths to relative paths with ../ prefix
-        def make_relative_path(absolute_path):
-            if os.path.isabs(absolute_path):
-                relative_path = os.path.relpath(absolute_path, mtlx_directory)
-                return os.path.join('..', relative_path)
-            return absolute_path
-        
+
+        # Function to convert absolute paths to relative paths
+        def make_relative_path(path):
+            if os.path.isabs(path):
+                return os.path.relpath(path, mtlx_directory)
+            return path
+
         # Traverse the document to find all texture file paths
         for elem in doc.traverseTree():
             if elem.getType() == 'filename':
-                absolute_path = elem.getValueString()
-                relative_path = make_relative_path(absolute_path)
+                original_path = elem.getValueString()
+
+                # Check if the path is already relative
+                if not os.path.isabs(original_path):
+                    #print(f"Path is already relative: {original_path}")
+                    continue
+                relative_path = make_relative_path(original_path)
                 elem.setValueString(relative_path)
         
         # Write the updated MaterialX document back to the file
@@ -113,6 +117,9 @@ def convert_texture_paths_to_relative(mtlx_file_path):
     
     except Exception as e:
         print(f"An error occurred: {e}")
+
+
+
 
 def find_mtlx_file(directory, mtlx_name):
     # Function to find the MaterialX file in the directory
@@ -146,7 +153,7 @@ def get_relative_path(meshName, render_purp):
     return relative_path
 
     
-def export_materialX_doc(mtlx_absolute_path, mtlx_docPath):
+def export_materialX_doc(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled):
 
     # Normalize the mtlx_absolute_path to ensure compatibility across different operating systems
     mtlx_absolute_path = os.path.normpath(mtlx_absolute_path)
@@ -157,10 +164,14 @@ def export_materialX_doc(mtlx_absolute_path, mtlx_docPath):
 
     # Perform the Export Operation
     operation_result = contextOps.doOp(['MxExportDocument', mtlx_absolute_path])
-
+    
+    # convert texture paths to relative in mtlx docs.
+    relativePathsEnabled = int(relativePathsEnabled)
+    if relativePathsEnabled:
+        convert_texture_paths_to_relative(mtlx_absolute_path)
 
             
-def get_mesh_and_material_info(render_value, fileName):
+def get_mesh_and_material_info(render_value, fileName, relativePathsEnabled):
     # Get mesh and material information for all meshes under a given transform.
 
     usd_directory = os.path.dirname(os.path.abspath(fileName))
@@ -211,7 +222,7 @@ def get_mesh_and_material_info(render_value, fileName):
             # Check if the MaterialX file exists on disk
             if not os.path.exists(mtlx_absolute_path):
                 # Export MaterialX Document if it doesn't exist
-                export_materialX_doc(mtlx_absolute_path, mtlx_docPath)
+                export_materialX_doc(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled)
             
             # Append the meshName, relative path, full path of the MaterialX file, and material name to the list
             mesh_info.append((meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path))
@@ -234,22 +245,19 @@ def get_mesh_and_material_info(render_value, fileName):
 
     return mesh_info
 
-########
+
 
     
-def get_proxy_mesh_and_material_info(proxy_value, fileName):
-    """
-    Get mesh and material information for all meshes under a given transform.
-    Returns a list of tuples containing proxyMesh and px_mtlx_name.
-    """
-    # Determine the directory where the USD file is being written
+def get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled):
+    # Get mesh and material information for all proxy meshes under a given transform.
+
     usd_directory = os.path.dirname(os.path.abspath(fileName))
+    mat_directory = os.path.join(usd_directory, "mat")
+    os.makedirs(mat_directory, exist_ok=True)
     
-    # Get the child group names under selected to populate purpose fields
     long_sel = mc.ls(sl=True, long=True)
     geoGrpPath = mc.listRelatives(long_sel, path=True, fullPath=True)
     find_groups = mc.listRelatives(geoGrpPath, path=True, fullPath=True)
-    #found_render = find_groups[0]
     found_proxy = find_groups[1]
     
     proxy_info = []
@@ -260,8 +268,12 @@ def get_proxy_mesh_and_material_info(proxy_value, fileName):
         return proxy_info
 
     for proxyShape in proxyShapes:
+    
         # Get the parent transform of the proxyShape
         proxyMesh = mc.listRelatives(proxyShape, p=True, type='transform')[0]
+        
+        # Get the relative path of the shape
+        px_relative_path = get_relative_path(proxyMesh, found_proxy)
 
         # Get the material shading group connected to the proxyShape
         pxMaya_SG = mc.listConnections(proxyShape + '.instObjGroups', d=True, s=False)[0]
@@ -275,19 +287,22 @@ def get_proxy_mesh_and_material_info(proxy_value, fileName):
 
             # Extract the material name from the ufePath
             px_mtlx_docPath = re.sub(r"%[^%]*$", "", px_SG_ufePath)
-            px_mtlx_name = re.search(r"%([^%]*)$", px_mtlx_docPath).group(1)
-
-
-            # Search recursively for the MaterialX file in the USD directory
-            px_mtlx_file = find_mtlx_file(usd_directory, px_mtlx_name)
-            if not px_mtlx_file:
-                warning_message = (f"Warning: The MaterialX file {px_mtlx_name}.mtlx for proxy mesh {proxyMesh} does not exist in\n"
-                                   f"directory: {usd_directory}.\n"
-                                   f"Please save it either with Export MaterialX Document or Export Documents in MaterialX Stack.")
-                print(warning_message)
+            px_mtlx_name_match = re.search(r"%([^%]*)$", px_mtlx_docPath)
+            if not px_mtlx_name_match:
                 continue
+            px_mtlx_name = px_mtlx_name_match.group(1)
             
-            proxy_info.append((proxyMesh, px_mtlx_file, px_mtlx_name))  # Append the tuple with mesh name and combined path
+            # Construct the absolute path for the MaterialX file
+            px_mtlx_file = os.path.join("mat", f"{px_mtlx_name}.mtlx")
+            px_mtlx_absolute_path = os.path.join(usd_directory, px_mtlx_file)
+            
+            # Check if the MaterialX file exists on disk
+            if not os.path.exists(px_mtlx_absolute_path):
+                # Export MaterialX Document if it doesn't exist
+                export_materialX_doc(px_mtlx_absolute_path, px_mtlx_docPath, relativePathsEnabled)
+
+            # Append the meshName, relative path, full path of the MaterialX file, and material name to the list
+            proxy_info.append((proxyMesh, px_mtlx_file, px_mtlx_name, px_mtlx_absolute_path))
             
         except Exception as e:
             print(f"Warning: The proxy mesh {proxyMesh} is not assigned to a MaterialX material.")
@@ -513,15 +528,11 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
     # Track created paths to avoid redundancies
     created_paths = set()
 
+    # -------- Mesh --------------
     # Process all meshes and materials under the given render purpose
-    mesh_material_info = get_mesh_and_material_info(render_value, fileName)
+    mesh_material_info = get_mesh_and_material_info(render_value, fileName, relativePathsEnabled)
     
     for meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path in mesh_material_info:
-
-        # convert texture paths to relative in mtlx docs.
-        relativePathsEnabled = int(relativePathsEnabled)
-        if relativePathsEnabled:
-            convert_texture_paths_to_relative(mtlx_absolute_path)
         
         # Add a reference to the MaterialX file in the 'Materials' scope
         materials_scope.GetReferences().AddReference(f'./{mtlx_file}', '/MaterialX/Materials')
@@ -556,10 +567,12 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
             material_binding_rel.SetTargets([f'{root_asset}/mtl/{mtlx_name}_SG'])
             created_paths.add(mesh_name_path)
     
+    # ----------- Proxy ----
     # Process all proxy meshes and materials under the given proxy_value
-    proxy_material_info = get_proxy_mesh_and_material_info(proxy_value, fileName)
+    proxy_material_info = get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled)
     
-    for proxyMesh, px_mtlx_file, px_mtlx_name in proxy_material_info:
+    for proxyMesh, px_mtlx_file, px_mtlx_name, px_mtlx_absolute_path in proxy_material_info:
+            
         try:
             # Add a reference to the MaterialX file in the 'Materials' scope
             materials_scope.GetReferences().AddReference(f'./{px_mtlx_file}', '/MaterialX/Materials')
@@ -573,6 +586,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
         
             # Define the 'proxyMesh' over under the 'proxy' over
             mesh_proxy_path = f'{proxy_path}/{proxyMesh}'
+            
             if mesh_proxy_path not in created_paths:
                 mesh_proxy_prim = stage.OverridePrim(mesh_proxy_path)
                 mesh_proxy_prim.SetSpecifier(Sdf.SpecifierOver)

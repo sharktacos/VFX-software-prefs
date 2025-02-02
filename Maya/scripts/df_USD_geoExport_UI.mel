@@ -58,7 +58,7 @@ proc setOptionVars()
     }
 
     if (!`optionVar -exists optVar_relativePaths`) {
-        optionVar -intValue optVar_relativePaths 0; // Default to selected
+        optionVar -intValue optVar_relativePaths 1; // Default to selected
     }
 }
 
