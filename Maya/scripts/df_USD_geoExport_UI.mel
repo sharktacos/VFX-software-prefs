@@ -118,30 +118,41 @@ global proc mayaUsd_exportGeo()
     optionVar -remove optVar_proxy;
     optionVar -remove optVar_relativePaths;
 
-    $sel = `ls -sl`;
-    $isSel = `size($sel)`;
-    $workspace = `workspace -rootDirectory -query`;
-    $geoGrp = `listRelatives $sel`;
-    $geoGrpPath = `listRelatives -path $sel`;
-    $GroupCount = `listRelatives -path $geoGrpPath`;
-    $justTwo = `size $GroupCount`;
+    string $sel[] = `ls -sl`;
+    int $isSel = `size($sel)`;
+    string $workspace = `workspace -rootDirectory -query`;
+    string $geoGrp[] = `listRelatives $sel`;
+    string $geoGrpPath[] = `listRelatives -path $sel`;
+    string $GroupCount[] = `listRelatives -path $geoGrpPath`;
+    int $justTwo = `size $GroupCount`;
+    
+    // Check if nothing is selected
+    if (!$isSel) {
+        confirmDialog -message "Nothing Selected. Select the root node of your asset." -button "Derp";
+        return;
+    }
 
-    if ($isSel){
-        
-        if ($geoGrp[0] != "geo"){
-            confirmDialog -message "Missing \"geo\" group. Structure must be \n\nroot/ (asset name)\n   geo/\n      render/ \n      proxy/\n\nNote that \"geo\" must be the exact name for the geometry scope. The render and proxy purpose scopes can be named as desired based on your studio naming conventions. The root prim is typically given the name of the asset. For example \"fruitBowl\" " -button "Got it";
-            return;
-        }
+    // Check if a MaterialX stack shape is selected
+    string $selType = `nodeType $sel[0]`;
+    if ($selType == "materialXStackShape") {
+        confirmDialog -message "A MaterialX stack shape is selected. Please select the root node of your asset." -button "Got it";
+        return;
+    }
 
-        if ($justTwo != 2) {
-            confirmDialog -message "Just two child groups under \"geo\" please. Render and Proxy, in that order" -button "Sorry";
-            return;
-        }
+    if ($geoGrp[0] != "geo") {
+        confirmDialog -message "Missing \"geo\" group. Structure must be \n\nroot/ (asset name)\n   geo/\n      render/ \n      proxy/\n\nNote that \"geo\" must be the exact name for the geometry scope. The render and proxy purpose scopes can be named as desired based on your studio naming conventions. The root prim is typically given the name of the asset. For example \"fruitBowl\" " -button "Got it";
+        return;
+    }
 
-        string $filepath[] = `fileDialog2 
+    if ($justTwo != 2) {
+        confirmDialog -message "Just two child groups under \"geo\" please. Render and Proxy, in that order" -button "Sorry";
+        return;
+    }
+
+    string $filepath[] = `fileDialog2 
                       -dialogStyle 2
                       -fileMode 0
-                      -caption "Export selected to USD with geometry payloaded into asset file and referenced MaterialX" 
+                      -caption "Export selected to USD lookdev asset with referenced MaterialX docs." 
                       -fileFilter "USD Export (*.usd *.usdc *.usda)" 
                       -okCaption "Export" 
                       -dir $workspace 
@@ -149,17 +160,13 @@ global proc mayaUsd_exportGeo()
                       -optionsUIInit "df_UIInit" 
                       -optionsUICommit "df_UICommit"`;
 
-        $render_value = `optionVar -q optVar_render`; //pass this value to python
-        $proxy_value = `optionVar -q optVar_proxy`; //pass this value to python
-        $relativePathsEnabled = `optionVar -q optVar_relativePaths`; //pass this value to python
-        $fileName = $filepath[0];
+    $render_value = `optionVar -q optVar_render`; //pass this value to python
+    $proxy_value = `optionVar -q optVar_proxy`; //pass this value to python
+    $relativePathsEnabled = `optionVar -q optVar_relativePaths`; //pass this value to python
+    $fileName = $filepath[0];
         
-        if (size($fileName) > 0){
-            python("import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "', '" + $relativePathsEnabled + "')");
-        }
-
-    } else {
-        confirmDialog -message "Nothing Selected. Select the root node of your asset." -button "Derp";
+    if (size($fileName) > 0){
+        python("import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "', '" + $relativePathsEnabled + "')");
     }
 }
 

@@ -9,8 +9,9 @@
  - look file with overs for MaterialX references
  - Support for complex hierarchy under render purpose
  - Relative texture file paths for MaterialX docs
+ - Export bound MaterialX documents to file.
  
- v5.2 Export payloaded USD asset with MaterialX reference
+ v5.3 Export payloaded USD asset with MaterialX reference
  (c) Derek Flood, 2025
 
  call with: 
@@ -40,10 +41,13 @@ reload(df_USD_geoExport)
 #---------------------------------------------------------
 
 import maya.cmds as mc
+import maya.mel as mel
 import os
 from pxr import Usd, UsdGeom, UsdShade, Sdf, Gf, Kind, Vt
+import ufe
 import re
 import MaterialX as mx
+from pathlib import Path
 
 
 
@@ -77,8 +81,6 @@ def add_ext_reference(prim: Usd.Prim, ref_asset_path: str, ref_target_path: Sdf.
         assetPath=ref_asset_path,
         primPath=ref_target_path # OPTIONAL: Reference a specific target prim. Otherwise, uses the referenced layer's defaultPrim.
     )
-    
-#########
 
 
 def convert_texture_paths_to_relative(mtlx_file_path):
@@ -112,8 +114,6 @@ def convert_texture_paths_to_relative(mtlx_file_path):
     except Exception as e:
         print(f"An error occurred: {e}")
 
-
-################
 def find_mtlx_file(directory, mtlx_name):
     # Function to find the MaterialX file in the directory
     for root, dirs, files in os.walk(directory):
@@ -132,6 +132,7 @@ def get_all_mesh_shapes(render_purp):
     shapes = mc.listRelatives(render_purp, ad=True, type='mesh', fullPath=True)
     return shapes if shapes else []    
 
+
 def get_relative_path(meshName, render_purp):
     # Get the full path of the mesh
     full_path = mc.ls(meshName, long=True)
@@ -144,69 +145,28 @@ def get_relative_path(meshName, render_purp):
     relative_path = relative_path.replace(f'|{meshName}', '').strip('|')
     return relative_path
 
-
-
-def get_mesh_and_material_info(render_value, fileName):
-    # Function to get mesh and material information for all meshes under a given transform
-    usd_directory = os.path.dirname(os.path.abspath(fileName))
-    print(f'usd_directory: {usd_directory}')
-
-    long_sel = mc.ls(sl=True, long=True)
-    geoGrpPath = mc.listRelatives(long_sel, path=True, fullPath=True)
-    find_groups = mc.listRelatives(geoGrpPath, path=True, fullPath=True)
-    found_render = find_groups[0]
     
-    mesh_info = []
-    error_messages = []
+def export_materialX_doc(mtlx_absolute_path, mtlx_docPath):
 
-    shapes = get_all_mesh_shapes(found_render)
-    if not shapes:
-        return mesh_info
+    # Normalize the mtlx_absolute_path to ensure compatibility across different operating systems
+    mtlx_absolute_path = os.path.normpath(mtlx_absolute_path)
+    
+    # Create UFE item and get Context Ops
+    docItem = ufe.Hierarchy.createItem(ufe.PathString.path(mtlx_docPath))
+    contextOps = ufe.ContextOps.contextOps(docItem)
 
-    for shape in shapes:
-        try:
-            meshName = mc.listRelatives(shape, p=True, type='transform')[0]
-            relative_path = get_relative_path(shape, found_render)
-            Maya_SG = mc.listConnections(shape + '.instObjGroups', d=True, s=False)[0]
-            mtlX_SG = mc.listConnections(Maya_SG + '.surfaceShader', d=False, s=True)[0]
-            SG_ufePath = mc.getAttr(mtlX_SG + '.ufePath')
-            mtlx_docPath = re.sub(r"%[^%]*$", "", SG_ufePath)
-            mtlx_name_match = re.search(r"%([^%]*)$", mtlx_docPath)
-            if not mtlx_name_match:
-                continue
-            mtlx_name = mtlx_name_match.group(1)
-            mtlx_file = find_mtlx_file(usd_directory, mtlx_name)
-            if not mtlx_file:
-                warning_message = (f"Warning: The MaterialX file {mtlx_name}.mtlx for render mesh {meshName} does not exist in\n"
-                                   f"directory: {usd_directory}.\n"
-                                   f"Please save it either with Export MaterialX Document or Export Documents in MaterialX Stack.")
-                error_messages.append(warning_message)
-                continue
-            mesh_info.append((meshName, relative_path, mtlx_file, mtlx_name))
-        except Exception as e:
-            warning_message = f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file. Error: {e}"
-            error_messages.append(warning_message)
-            continue
+    # Perform the Export Operation
+    operation_result = contextOps.doOp(['MxExportDocument', mtlx_absolute_path])
+
+
             
-    if error_messages:
-        mc.confirmDialog(
-            title='Missing some MaterialX materials or bindings',
-            message='Process completed with errors. See Script Editor for details.',
-            button=['Oh My!'],
-            defaultButton='Oh My!',
-            cancelButton='Oh My!',
-            dismissString='Oh My!'
-        )
-
-    return mesh_info
-
-
-
 def get_mesh_and_material_info(render_value, fileName):
     # Get mesh and material information for all meshes under a given transform.
 
-
     usd_directory = os.path.dirname(os.path.abspath(fileName))
+    mat_directory = os.path.join(usd_directory, "mat")
+    os.makedirs(mat_directory, exist_ok=True)
+
     long_sel = mc.ls(sl=True, long=True)
     geoGrpPath = mc.listRelatives(long_sel, path=True, fullPath=True)
     find_groups = mc.listRelatives(geoGrpPath, path=True, fullPath=True)
@@ -243,26 +203,25 @@ def get_mesh_and_material_info(render_value, fileName):
             if not mtlx_name_match:
                 continue
             mtlx_name = mtlx_name_match.group(1)
-            
-            # Search recursively for the MaterialX file in the USD directory
-            mtlx_file = find_mtlx_file(usd_directory, mtlx_name)
-            if not mtlx_file:
-                warning_message = (f"Warning: The MaterialX file {mtlx_name}.mtlx for render mesh {meshName} does not exist in\n"
-                                   f"directory: {usd_directory}.\n"
-                                   f"Please save it either with Export MaterialX Document or Export Documents in MaterialX Stack.")
-                error_messages.append(warning_message)
-                continue
+
+            # Construct the absolute path for the MaterialX file
+            mtlx_file = os.path.join("mat", f"{mtlx_name}.mtlx")
             mtlx_absolute_path = os.path.join(usd_directory, mtlx_file)
+
+            # Check if the MaterialX file exists on disk
+            if not os.path.exists(mtlx_absolute_path):
+                # Export MaterialX Document if it doesn't exist
+                export_materialX_doc(mtlx_absolute_path, mtlx_docPath)
             
             # Append the meshName, relative path, full path of the MaterialX file, and material name to the list
             mesh_info.append((meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path))
-        
+            
         except Exception as e:
             warning_message = f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file. Error: {e}"
             error_messages.append(warning_message)
             continue
-            
-    # Check if there were any errors and show a single dialog if so
+
+    # Display any errors collected during the process
     if error_messages:
         mc.confirmDialog(
             title='Missing some MaterialX materials or bindings',
@@ -274,7 +233,6 @@ def get_mesh_and_material_info(render_value, fileName):
         )
 
     return mesh_info
-
 
 ########
 
@@ -561,6 +519,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
     for meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path in mesh_material_info:
 
         # convert texture paths to relative in mtlx docs.
+        relativePathsEnabled = int(relativePathsEnabled)
         if relativePathsEnabled:
             convert_texture_paths_to_relative(mtlx_absolute_path)
         
@@ -656,7 +615,6 @@ def arnold_subdiv():
 
 
 def main(fileName, render_value, proxy_value, relativePathsEnabled):
-
     sel=mc.ls(sl=True)
     dag_root = sel[0].replace("|", "")
     root_asset = "/" + dag_root
