@@ -10,9 +10,8 @@
  - Support for complex hierarchy under render purpose
  - Relative texture file paths for MaterialX docs
  - Export bound MaterialX documents to file.
- - Inherit from class primitive
  
- v5.4 Export payloaded USD asset with MaterialX reference
+ v5.3 Export payloaded USD asset with MaterialX reference
  (c) Derek Flood, 2025
 
  call with: 
@@ -49,6 +48,7 @@ import ufe
 import re
 from pathlib import Path
 import xml.etree.ElementTree as ET
+
 
 
 def compute_bbox(prim: Usd.Prim) -> Gf.Range3d:
@@ -427,23 +427,12 @@ def asset_stage(fileName, render_value, proxy_value, root_asset):
     asset_name = os.path.splitext(asset_baseName)[0]
     
     payName = stripExtension + '_payload.usda'
+    #payName = stripExtension + '_geo.usd'
     payfile_root = "./" + os.path.basename(payName)
 
-    # Create USD "asset" stage, 
+    # Create USD "asset" stage, then create and define default prim
     asset_layer = Sdf.Layer.CreateNew(asset_file, args = {'format':'usda'})
     stage: Usd.Stage = Usd.Stage.Open(asset_layer)
-
-    
-    # Add class primitive using CreateClassPrim
-    class_prim_path = Sdf.Path("/__class__")
-    class_prim = stage.CreateClassPrim(class_prim_path)
-    
-    # Add the default prim to the class
-    default_class_prim_path = Sdf.Path("/__class__" + root_asset)
-    stage.CreateClassPrim(default_class_prim_path)
-    
-    
-    # Create and define default prim
     default_prim = UsdGeom.Xform.Define(stage, Sdf.Path(root_asset))
     stage.SetDefaultPrim(default_prim.GetPrim())
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
