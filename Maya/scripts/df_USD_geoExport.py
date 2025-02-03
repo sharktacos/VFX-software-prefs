@@ -46,8 +46,9 @@ import os
 from pxr import Usd, UsdGeom, UsdShade, Sdf, Gf, Kind, Vt
 import ufe
 import re
-import MaterialX as mx
+#import MaterialX as mx
 from pathlib import Path
+import xml.etree.ElementTree as ET
 
 
 
@@ -83,7 +84,7 @@ def add_ext_reference(prim: Usd.Prim, ref_asset_path: str, ref_target_path: Sdf.
     )
 
 
-def convert_texture_paths_to_relative(mtlx_file_path):
+def convert_texture_paths_to_relativeMX(mtlx_file_path):
     """Convert absolute texture file paths to relative paths in a MaterialX document."""
     try:
         # Read the MaterialX document from the file
@@ -113,6 +114,45 @@ def convert_texture_paths_to_relative(mtlx_file_path):
         
         # Write the updated MaterialX document back to the file
         mx.writeToXmlFile(doc, mtlx_file_path)
+        print(f"Updated MaterialX document with relative texture paths for: {mtlx_file_path}")
+    
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+
+def convert_texture_paths_to_relative(mtlx_file_path):
+    """Convert absolute texture file paths to relative paths in a MaterialX document."""
+    try:
+        # Parse the MaterialX document from the file
+        tree = ET.parse(mtlx_file_path)
+        root = tree.getroot()
+        
+        # Get the directory of the .mtlx file
+        mtlx_directory = os.path.dirname(mtlx_file_path)
+        
+        # Function to convert absolute paths to relative paths
+        def make_relative_path(path):
+            if os.path.isabs(path):
+                return os.path.relpath(path, mtlx_directory)
+            return path
+        
+        # Traverse the XML tree to find all texture file paths
+        for elem in root.iter():
+            if elem.tag == 'input' and elem.get('type') == 'filename':
+                original_path = elem.get('value')
+                
+                # Check if the path is already relative
+                if not os.path.isabs(original_path):
+                    continue
+                
+                # Convert to relative path
+                relative_path = make_relative_path(original_path)
+                
+                elem.set('value', relative_path)
+        
+        # Write the updated MaterialX document back to the file
+        tree.write(mtlx_file_path, xml_declaration=True, encoding='utf-8')
         print(f"Updated MaterialX document with relative texture paths for: {mtlx_file_path}")
     
     except Exception as e:
