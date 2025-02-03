@@ -117,7 +117,7 @@ def convert_texture_paths_to_relative(mtlx_file_path):
         
         # Write the updated MaterialX document back to the file
         tree.write(mtlx_file_path, xml_declaration=True, encoding='utf-8')
-        print(f"Updated MaterialX document with relative texture paths for: {mtlx_file_path}")
+        print(f" # Updated MaterialX document with relative texture paths for: {mtlx_file_path}")
     
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -237,6 +237,7 @@ def get_mesh_and_material_info(render_value, fileName, relativePathsEnabled):
             continue
 
     # Display any errors collected during the process
+    '''
     if error_messages:
         mc.confirmDialog(
             title='Missing some MaterialX materials or bindings',
@@ -246,6 +247,7 @@ def get_mesh_and_material_info(render_value, fileName, relativePathsEnabled):
             cancelButton='Oh My!',
             dismissString='Oh My!'
         )
+    '''
 
     return mesh_info
 
@@ -273,19 +275,19 @@ def get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled
 
     for proxyShape in proxyShapes:
     
-        # Get the parent transform of the proxyShape
-        proxyMesh = mc.listRelatives(proxyShape, p=True, type='transform')[0]
-        
-        # Get the relative path of the shape
-        px_relative_path = get_relative_path(proxyMesh, found_proxy)
-
-        # Get the material shading group connected to the proxyShape
-        pxMaya_SG = mc.listConnections(proxyShape + '.instObjGroups', d=True, s=False)[0]
-        
-        # Get the material connected to the shading group
-        px_mtlX_SG = mc.listConnections(pxMaya_SG + '.surfaceShader', d=False, s=True)[0]
-        
         try:
+            # Get the parent transform of the proxyShape
+            proxyMesh = mc.listRelatives(proxyShape, p=True, type='transform')[0]
+        
+            # Get the relative path of the shape
+            px_relative_path = get_relative_path(proxyMesh, found_proxy)
+
+            # Get the material shading group connected to the proxyShape
+            pxMaya_SG = mc.listConnections(proxyShape + '.instObjGroups', d=True, s=False)[0]
+        
+            # Get the material connected to the shading group
+            px_mtlX_SG = mc.listConnections(pxMaya_SG + '.surfaceShader', d=False, s=True)[0]
+
             # Extract the ufePath attribute
             px_SG_ufePath = mc.getAttr(px_mtlX_SG + '.ufePath')
 
