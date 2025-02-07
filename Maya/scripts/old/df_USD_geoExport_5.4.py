@@ -11,9 +11,8 @@
  - Relative texture file paths for MaterialX docs
  - Export bound MaterialX documents to file.
  - Inherit from class primitive
- - meters to units in metadata (default centimeters)
  
- v5.5 Export payloaded USD asset with MaterialX reference
+ v5.4 Export payloaded USD asset with MaterialX reference
  (c) Derek Flood, 2025
 
  call with: 
@@ -233,17 +232,12 @@ def get_mesh_and_material_info(render_value, fileName, relativePathsEnabled):
             mesh_info.append((meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path))
             
         except Exception as e:
-            print(f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file. ")
-            continue
-            
-        '''
-        except Exception as e:
             warning_message = f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file. Error: {e}"
             error_messages.append(warning_message)
             continue
-        
+
     # Display any errors collected during the process
-    
+    '''
     if error_messages:
         mc.confirmDialog(
             title='Missing some MaterialX materials or bindings',
@@ -317,7 +311,7 @@ def get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled
             proxy_info.append((proxyMesh, px_mtlx_file, px_mtlx_name, px_mtlx_absolute_path))
             
         except Exception as e:
-            print(f"Warning: The proxy mesh {proxyMesh} is not assigned to a MaterialX material. Skipping in look file.")
+            print(f"Warning: The proxy mesh {proxyMesh} is not assigned to a MaterialX material.")
             continue
             
     return proxy_info
@@ -331,9 +325,6 @@ def geom_stage(fileName, root_asset, render_value, proxy_value):
     #mc.file(geom_name, options=";exportDisplayColor=1;exportColorSets=0;mergeTransformAndShape=1;exportComponentTags=0;defaultUSDFormat=usdc;jobContext=[None];materialsScopeName=mtl", typ="USD Export", pr=True, ch=True, chn=True, exportSelected=True, f=True)
     mc.file(geom_name, options=";exportDisplayColor=1;exportColorSets=0;mergeTransformAndShape=1;exportComponentTags=0;defaultUSDFormat=usdc;materialsScopeName=mtl", typ="USD Export", pr=True, ch=True, chn=True, exportSelected=True, f=True)
     
-
-
-
     # Replace xforms with scopes for purpose groups
     stage = Usd.Stage.Open(geom_name + '.usd')
     prim_geo = stage.GetPrimAtPath(root_asset + "/geo")
@@ -425,6 +416,8 @@ def payload_stage(fileName, root_asset):
 
 
 
+
+
 def asset_stage(fileName, render_value, proxy_value, root_asset):
 
     maya_scene = mc.file (q=True, sn=True, shn=True)
@@ -453,7 +446,6 @@ def asset_stage(fileName, render_value, proxy_value, root_asset):
     # Create and define default prim
     default_prim = UsdGeom.Xform.Define(stage, Sdf.Path(root_asset))
     stage.SetDefaultPrim(default_prim.GetPrim())
-    UsdGeom.SetStageMetersPerUnit(stage, UsdGeom.LinearUnits.centimeters)
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
     
     # asset idenitfiers
