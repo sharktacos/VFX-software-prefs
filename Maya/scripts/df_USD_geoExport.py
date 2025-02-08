@@ -204,7 +204,7 @@ def get_mesh_and_material_info(render_value, fileName, relativePathsEnabled):
     error_messages = []
 
     # Get all mesh shapes under the transform recursively
-    shapes = get_all_mesh_shapes(found_render)
+    shapes = mc.listRelatives(found_render, ad=True, type='mesh', fullPath=True)
     if not shapes:
         return mesh_info
 
@@ -247,7 +247,6 @@ def get_mesh_and_material_info(render_value, fileName, relativePathsEnabled):
         except Exception as e:
             print(f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file. ")
             continue
-            
 
     return mesh_info
 
