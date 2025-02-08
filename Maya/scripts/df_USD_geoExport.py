@@ -144,15 +144,16 @@ def get_all_mesh_shapes(render_purp):
     shapes = mc.listRelatives(render_purp, ad=True, type='mesh', fullPath=True)
     return shapes if shapes else []    
 
-def get_full_path_dict(fileName, relativePathsEnabled):
+def get_full_path_dict():
     """
     Helper function to get a dictionary of full paths from the Maya hierarchy.
     """
-    # This function should return a dictionary where keys are short names and values are full paths.
-    # Example: {"Beetle_suitcaseB_body": "|Beetle|geo|render|Beetle_Exterior|Beetle_LuggageRack|Beetle_Luggage|Beetle_suitcaseA_grp|Beetle_suitcaseB_body"}
     full_path_dict = {}
-    # Implementation to populate full_path_dict from the Maya hierarchy
-    # ...
+    # Get all meshes in the scene with their full paths
+    all_meshes = mc.ls(type='mesh', long=True)
+    for mesh in all_meshes:
+        short_name = mesh.split('|')[-1]
+        full_path_dict[short_name] = mesh
     return full_path_dict
 
 def get_relative_path(meshName, render_purp):
@@ -543,7 +544,6 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
     stage = Usd.Stage.Open(look_layer)
     
     # Set stage metadata
-    UsdGeom.SetStageMetersPerUnit(stage, UsdGeom.LinearUnits.centimeters)
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
     
     # Check if root_asset is valid
@@ -565,7 +565,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
     created_paths = set()
 
     # Get full path dictionary from Maya hierarchy
-    full_path_dict = get_full_path_dict(fileName, relativePathsEnabled)
+    full_path_dict = get_full_path_dict()
 
     # -------- Mesh --------------
     # Process all meshes and materials under the given render purpose
@@ -576,10 +576,13 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
         # Get the full path from the dictionary
         full_path = full_path_dict.get(meshName, relative_path)
         
+        # Diagnostic: Print the Maya full path
+        print(f"Maya full path for mesh {meshName}: {full_path}")
+        
         # Add a reference to the MaterialX file in the 'Materials' scope
         materials_scope.GetReferences().AddReference(f'./{mtlx_file}', '/MaterialX/Materials')
         
-        # Split the relative path by '|' and create a list of path parts
+        # Split the full path by '|' and create a list of path parts
         path_parts = full_path.strip('|').split('|')
         
         # Initialize the current path with the root asset, 'geo', and the render value
@@ -625,6 +628,9 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
             # Get the full path from the dictionary
             full_path = full_path_dict.get(proxyMesh, proxyMesh)
         
+            # Diagnostic: Print the Maya full path
+            print(f"Maya full path for proxy mesh {proxyMesh}: {full_path}")
+
             # Add a reference to the MaterialX file in the 'Materials' scope
             materials_scope.GetReferences().AddReference(f'./{px_mtlx_file}', '/MaterialX/Materials')
         
