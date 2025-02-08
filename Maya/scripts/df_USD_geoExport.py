@@ -247,24 +247,6 @@ def get_mesh_and_material_info(render_value, fileName, relativePathsEnabled):
             print(f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file. ")
             continue
             
-        '''
-        except Exception as e:
-            warning_message = f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file. Error: {e}"
-            error_messages.append(warning_message)
-            continue
-        
-    # Display any errors collected during the process
-    
-    if error_messages:
-        mc.confirmDialog(
-            title='Missing some MaterialX materials or bindings',
-            message='Process completed with errors. See Script Editor for details.',
-            button=['Oh My!'],
-            defaultButton='Oh My!',
-            cancelButton='Oh My!',
-            dismissString='Oh My!'
-        )
-    '''
 
     return mesh_info
 
@@ -341,9 +323,6 @@ def geom_stage(fileName, root_asset, render_value, proxy_value):
     # Export the geo file
     #mc.file(geom_name, options=";exportDisplayColor=1;exportColorSets=0;mergeTransformAndShape=1;exportComponentTags=0;defaultUSDFormat=usdc;jobContext=[None];materialsScopeName=mtl", typ="USD Export", pr=True, ch=True, chn=True, exportSelected=True, f=True)
     mc.file(geom_name, options=";exportDisplayColor=1;exportColorSets=0;mergeTransformAndShape=1;exportComponentTags=0;defaultUSDFormat=usdc;materialsScopeName=mtl;exportMaterials=0;sar=0", typ="USD Export", pr=True, ch=True, chn=True, exportSelected=True, f=True)
-    
-
-
 
     # Replace xforms with scopes for purpose groups
     stage = Usd.Stage.Open(geom_name + '.usd')
@@ -363,43 +342,6 @@ def geom_stage(fileName, root_asset, render_value, proxy_value):
 
     stage.Save()
 
-
-    
-def payload_stageOLD(fileName, root_asset):
-
-    stripExtension = os.path.splitext(fileName)[0]
-    asset_file = stripExtension + '.usda'
-    asset_baseName = os.path.basename(asset_file)
-    asset_name = os.path.splitext(asset_baseName)[0]
-
-    geom_name = stripExtension + '_geo'
-    payload_file = stripExtension + '_payload.usda'
-    geom_root = "./" + os.path.basename(geom_name + '.usd')
-    
-    # Create USD "payload" stage, then create and define default prim
-    pay_layer = Sdf.Layer.CreateNew(payload_file, args = {'format':'usda'})
-    stage: Usd.Stage = Usd.Stage.Open(pay_layer)
-    default_prim = UsdGeom.Xform.Define(stage, Sdf.Path(root_asset))
-    stage.SetDefaultPrim(default_prim.GetPrim())
-    UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
-    
-    # asset idenitfiers
-    prim_path = Sdf.Path(root_asset)
-    prim = stage.DefinePrim(prim_path, "Xform")
-    prim.SetMetadata("assetInfo", {"identifier": Sdf.AssetPath(asset_baseName)})
-    prim.SetAssetInfoByKey("name", asset_name)
-    
-    # Create an xform to hold geo file as a reference
-    ref_prim: Usd.Prim = UsdGeom.Xform.Define(stage, Sdf.Path(root_asset)).GetPrim()
-    add_ext_reference(ref_prim, geom_root, Sdf.Path(root_asset))
-    
-    # diagnositic
-    print_payload = stage.GetRootLayer().ExportToString()
-    #print("===============PAYLOAD FILE ======================================")
-    #print(print_payload)
-    
-    # save to file
-    stage.GetRootLayer().Save()
     
     
 def payload_stage(fileName, root_asset):
@@ -534,7 +476,102 @@ def asset_stage(fileName, render_value, proxy_value, root_asset):
     # save to file
     stage.GetRootLayer().Save()
 
+
 def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEnabled):
+    # Strip the file extension from fileName and create new filename with '_look.usda'
+    stripExtension = os.path.splitext(fileName)[0]
+    look_file = stripExtension + '_look.usda'
+
+    # Create USD "look" stage
+    look_layer = Sdf.Layer.CreateNew(look_file, args={'format': 'usda'})
+    stage = Usd.Stage.Open(look_layer)
+    
+    # Set stage metadata
+    UsdGeom.SetStageMetersPerUnit(stage, UsdGeom.LinearUnits.centimeters)
+    UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
+    
+    # Check if root_asset is valid
+    if not root_asset or not root_asset.startswith('/'):
+        raise ValueError("The root_asset path must be a non-empty absolute path starting with '/'.")
+    
+    # Override the root asset
+    root_prim = stage.OverridePrim(root_asset)
+    root_prim.SetSpecifier(Sdf.SpecifierOver)
+    stage.SetDefaultPrim(root_prim)
+    
+    # Make 'Materials' scope defined as a def and scope under the 'over' root asset
+    materials_scope_path = f'{root_asset}/mtl'
+    materials_scope = stage.OverridePrim(materials_scope_path)
+    materials_scope.SetSpecifier(Sdf.SpecifierDef)
+    materials_scope.GetPrim().SetTypeName('Scope')
+    
+    # Track created paths to avoid redundancies
+    created_paths = set()
+
+    # Get full path dictionary from Maya hierarchy
+    full_path_dict = get_full_path_dict()
+
+    # Process both render and proxy meshes and materials
+    for value, label in [(render_value, "render"), (proxy_value, "proxy")]:
+        mesh_material_info = get_mesh_and_material_info(value, fileName, relativePathsEnabled)
+        
+        for meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path in mesh_material_info:
+            
+            # Get the full path from the dictionary
+            full_path = full_path_dict.get(meshName, relative_path)
+            
+            # Diagnostic: Print the Maya full path
+            print(f"Maya full path for {label} mesh {meshName}: {full_path}")
+            
+            # Add a reference to the MaterialX file in the 'Materials' scope
+            materials_scope.GetReferences().AddReference(f'./{mtlx_file}', '/MaterialX/Materials')
+            
+            # Split the full path by '|' and create a list of path parts
+            path_parts = full_path.strip('|').split('|')
+            
+            # Initialize the current path with the root asset, 'geo', and the render or proxy value
+            current_path = f'{root_asset}/geo/{value}'
+            
+            # Iterate through each part in the path parts list to build the hierarchy
+            for part in path_parts:
+                # Update the current path by appending the current part
+                current_path = f'{current_path}/{part}'
+                # Create the current path in the USD stage if it hasn't been created yet
+                if current_path not in created_paths:
+                    stage.OverridePrim(current_path)
+                    created_paths.add(current_path)
+            
+            # Define the 'meshName' over under the constructed hierarchy
+            mesh_path = f'{current_path}/{meshName}'
+
+            # Diagnostic: Print the long name and short name of the mesh
+            print(f"Processing {label} mesh: {mesh_path} (short name: {meshName})")
+
+            if mesh_path not in created_paths:
+                mesh_prim = stage.OverridePrim(mesh_path)
+                mesh_prim.SetSpecifier(Sdf.SpecifierOver)
+                
+                # Apply the MaterialBindingAPI schema on the 'meshName' prim
+                UsdShade.MaterialBindingAPI.Apply(mesh_prim)
+                
+                # Define the material binding relationship
+                material_binding_rel = mesh_prim.CreateRelationship('material:binding', False)
+                material_binding_rel.SetTargets([f'{root_asset}/mtl/{mtlx_name}_SG'])
+                created_paths.add(mesh_path)
+            else:
+                # Diagnostic: Print a message if a duplicate mesh name is found
+                print(f"Skipping duplicate {label} mesh: {mesh_path}")
+    
+    # Save the stage
+    stage.GetRootLayer().Save()
+
+    # Diagnostic
+    print_asset = stage.GetRootLayer().ExportToString()
+    #print("===============LOOK FILE ======================================")
+    #print(print_asset)
+
+
+def look_stageX(fileName, root_asset, render_value, proxy_value, relativePathsEnabled):
     # Strip the file extension from fileName and create new filename with '_look.usda'
     stripExtension = os.path.splitext(fileName)[0]
     look_file = stripExtension + '_look.usda'
