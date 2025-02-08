@@ -533,6 +533,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
     stage = Usd.Stage.Open(look_layer)
     
     # Set stage metadata
+    UsdGeom.SetStageMetersPerUnit(stage, UsdGeom.LinearUnits.centimeters)
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
     
     # Check if root_asset is valid
@@ -579,6 +580,9 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
         
         # Define the 'meshName' over under the constructed hierarchy
         mesh_name_path = f'{current_path}/{meshName}'
+        
+        # Diagnostic: Print the long name and short name of the mesh
+        print(f"Processing mesh: {mesh_name_path} (short name: {meshName})")
 
         if mesh_name_path not in created_paths:
             mesh_name_prim = stage.OverridePrim(mesh_name_path)
@@ -591,6 +595,9 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
             material_binding_rel = mesh_name_prim.CreateRelationship('material:binding', False)
             material_binding_rel.SetTargets([f'{root_asset}/mtl/{mtlx_name}_SG'])
             created_paths.add(mesh_name_path)
+        else:
+            # Diagnostic: Print a message if a duplicate mesh name is found
+            print(f"Skipping duplicate mesh: {mesh_name_path}")
     
     # ----------- Proxy ----
     # Process all proxy meshes and materials under the given proxy_value
@@ -612,6 +619,9 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
             # Define the 'proxyMesh' over under the 'proxy' over
             mesh_proxy_path = f'{proxy_path}/{proxyMesh}'
             
+            # Diagnostic: Print the long name and short name of the proxy mesh
+            print(f"Processing proxy mesh: {mesh_proxy_path} (short name: {proxyMesh})")
+            
             if mesh_proxy_path not in created_paths:
                 mesh_proxy_prim = stage.OverridePrim(mesh_proxy_path)
                 mesh_proxy_prim.SetSpecifier(Sdf.SpecifierOver)
@@ -623,6 +633,10 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
                 material_binding_rel = mesh_proxy_prim.CreateRelationship('material:binding', False)
                 material_binding_rel.SetTargets([f'{root_asset}/mtl/{px_mtlx_name}_SG'])
                 created_paths.add(mesh_proxy_path)
+            else:
+                # Diagnostic: Print a message if a duplicate proxy mesh name is found
+                print(f"Skipping duplicate proxy mesh: {mesh_proxy_path}")
+
         except Exception as e:
             print(f"Warning: Skipping proxy mesh {proxyMesh} due to error: {e}")
             continue
