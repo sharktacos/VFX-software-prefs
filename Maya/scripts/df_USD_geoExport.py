@@ -144,6 +144,16 @@ def get_all_mesh_shapes(render_purp):
     shapes = mc.listRelatives(render_purp, ad=True, type='mesh', fullPath=True)
     return shapes if shapes else []    
 
+def get_full_path_dict(fileName, relativePathsEnabled):
+    """
+    Helper function to get a dictionary of full paths from the Maya hierarchy.
+    """
+    # This function should return a dictionary where keys are short names and values are full paths.
+    # Example: {"Beetle_suitcaseB_body": "|Beetle|geo|render|Beetle_Exterior|Beetle_LuggageRack|Beetle_Luggage|Beetle_suitcaseA_grp|Beetle_suitcaseB_body"}
+    full_path_dict = {}
+    # Implementation to populate full_path_dict from the Maya hierarchy
+    # ...
+    return full_path_dict
 
 def get_relative_path(meshName, render_purp):
     # Get the full path of the mesh
@@ -554,17 +564,23 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
     # Track created paths to avoid redundancies
     created_paths = set()
 
+    # Get full path dictionary from Maya hierarchy
+    full_path_dict = get_full_path_dict(fileName, relativePathsEnabled)
+
     # -------- Mesh --------------
     # Process all meshes and materials under the given render purpose
     mesh_material_info = get_mesh_and_material_info(render_value, fileName, relativePathsEnabled)
     
     for meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path in mesh_material_info:
         
+        # Get the full path from the dictionary
+        full_path = full_path_dict.get(meshName, relative_path)
+        
         # Add a reference to the MaterialX file in the 'Materials' scope
         materials_scope.GetReferences().AddReference(f'./{mtlx_file}', '/MaterialX/Materials')
         
         # Split the relative path by '|' and create a list of path parts
-        path_parts = relative_path.strip('|').split('|')
+        path_parts = full_path.strip('|').split('|')
         
         # Initialize the current path with the root asset, 'geo', and the render value
         current_path = f'{root_asset}/geo/{render_value}'
@@ -580,7 +596,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
         
         # Define the 'meshName' over under the constructed hierarchy
         mesh_name_path = f'{current_path}/{meshName}'
-        
+
         # Diagnostic: Print the long name and short name of the mesh
         print(f"Processing mesh: {mesh_name_path} (short name: {meshName})")
 
@@ -606,6 +622,9 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
     for proxyMesh, px_mtlx_file, px_mtlx_name, px_mtlx_absolute_path in proxy_material_info:
             
         try:
+            # Get the full path from the dictionary
+            full_path = full_path_dict.get(proxyMesh, proxyMesh)
+        
             # Add a reference to the MaterialX file in the 'Materials' scope
             materials_scope.GetReferences().AddReference(f'./{px_mtlx_file}', '/MaterialX/Materials')
         
@@ -621,7 +640,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
             
             # Diagnostic: Print the long name and short name of the proxy mesh
             print(f"Processing proxy mesh: {mesh_proxy_path} (short name: {proxyMesh})")
-            
+
             if mesh_proxy_path not in created_paths:
                 mesh_proxy_prim = stage.OverridePrim(mesh_proxy_path)
                 mesh_proxy_prim.SetSpecifier(Sdf.SpecifierOver)
@@ -636,7 +655,6 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
             else:
                 # Diagnostic: Print a message if a duplicate proxy mesh name is found
                 print(f"Skipping duplicate proxy mesh: {mesh_proxy_path}")
-
         except Exception as e:
             print(f"Warning: Skipping proxy mesh {proxyMesh} due to error: {e}")
             continue
