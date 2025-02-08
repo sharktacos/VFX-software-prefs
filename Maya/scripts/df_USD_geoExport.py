@@ -76,13 +76,14 @@ def add_payload(prim: Usd.Prim, payload_asset_path: str, payload_target_path: Sd
         primPath=payload_target_path # OPTIONAL: Payload a specific target prim. Otherwise, uses the payloadd layer's defaultPrim.
     )
 
+'''
 def add_ext_reference(prim: Usd.Prim, ref_asset_path: str, ref_target_path: Sdf.Path) -> None:
     references: Usd.References = prim.GetReferences()
     references.AddReference(
         assetPath=ref_asset_path,
         primPath=ref_target_path # OPTIONAL: Reference a specific target prim. Otherwise, uses the referenced layer's defaultPrim.
     )
-
+'''
 
 
 
@@ -125,7 +126,7 @@ def convert_texture_paths_to_relative(mtlx_file_path):
 
 
 
-
+'''
 def find_mtlx_file(directory, mtlx_name):
     # Function to find the MaterialX file in the directory
     for root, dirs, files in os.walk(directory):
@@ -137,7 +138,7 @@ def find_mtlx_file(directory, mtlx_name):
                 else:
                     return os.path.join(relative_path, file)
     return None
-
+'''
 
 def get_all_mesh_shapes(render_purp):
     # Function to get all mesh shapes under the given transform
@@ -252,7 +253,7 @@ def get_mesh_and_material_info(render_value, fileName, relativePathsEnabled):
 
 
 
-    
+''' 
 def get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled):
     # Get mesh and material information for all proxy meshes under a given transform.
 
@@ -314,6 +315,8 @@ def get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled
             continue
             
     return proxy_info
+'''
+
 
 def geom_stage(fileName, root_asset, render_value, proxy_value):
 
@@ -570,7 +573,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
     #print("===============LOOK FILE ======================================")
     #print(print_asset)
 
-
+'''
 def look_stageX(fileName, root_asset, render_value, proxy_value, relativePathsEnabled):
     # Strip the file extension from fileName and create new filename with '_look.usda'
     stripExtension = os.path.splitext(fileName)[0]
@@ -709,7 +712,7 @@ def look_stageX(fileName, root_asset, render_value, proxy_value, relativePathsEn
     print_asset = stage.GetRootLayer().ExportToString()
     #print("===============LOOK FILE ======================================")
     #print(print_asset)
-
+'''
 
 def arnold_subdiv():
 
