@@ -521,6 +521,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
     stage = Usd.Stage.Open(look_layer)
     
     # Set stage metadata
+    UsdGeom.SetStageMetersPerUnit(stage, UsdGeom.LinearUnits.centimeters)
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
     
     # Check if root_asset is valid
@@ -554,7 +555,8 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
         full_path = full_path_dict.get(meshName, relative_path)
         
         # Add a reference to the MaterialX file in the 'Materials' scope
-        materials_scope.GetReferences().AddReference(f'./{mtlx_file}', '/MaterialX/Materials')
+        #materials_scope.GetReferences().AddReference(f'./{mtlx_file}', '/MaterialX/Materials')
+        materials_scope.GetReferences().AddReference(f'./mat/{mtlx_name}.mtlx', '/MaterialX/Materials')
         
         # Split the full path by '|' and create a list of path parts
         path_parts = full_path.strip('|').split('|')
