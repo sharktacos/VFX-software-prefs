@@ -32,11 +32,13 @@
     <tiledimage name="MatName_dif" type="color3" nodedef="ND_tiledimage_color3">
       <input name="file" type="filename" colorspace="sRGB" value="" />
       <input name="default" type="color3" value="0.18, 0.18, 0.18" />
+      <input name="texcoord" type="vector2" nodename="MatName_UV_dif" />
     </tiledimage>
     
     <tiledimage name="MatName_nor" type="vector3" nodedef="ND_tiledimage_vector3">
       <input name="file" type="filename" colorspace="Raw" value="" />
       <input name="default" type="vector3" value="0.5, 0.5, 1.0" />
+      <input name="texcoord" type="vector2" nodename="MatName_UV_nor" />
     </tiledimage>
     
     <!-- Dual roughness sliders modulated by roughness mask -->
@@ -52,11 +54,34 @@
     
     <tiledimage name="MatName_met" type="float" nodedef="ND_tiledimage_float">
       <input name="file" type="filename" value="" colorspace="Raw" />
+      <input name="texcoord" type="vector2" nodename="MatName_UV_met" />
     </tiledimage>
     
     <tiledimage name="MatName_spc" type="float" nodedef="ND_tiledimage_float">
       <input name="file" type="filename" value="" colorspace="Raw" />
+      <input name="texcoord" type="vector2" nodename="MatName_UV_spc" />
     </tiledimage>
+    
+    <!-- UV coords set to ST for USD -->
+    <geompropvalue name="MatName_UV_met" type="vector2" nodedef="ND_geompropvalue_vector2">
+      <input name="geomprop" type="string" value="st" />
+      <input name="default" type="vector2" value="0, 0" />
+    </geompropvalue>
+    
+    <geompropvalue name="MatName_UV_nor" type="vector2" nodedef="ND_geompropvalue_vector2">
+      <input name="geomprop" type="string" value="st" />
+      <input name="default" type="vector2" value="0, 0" />
+    </geompropvalue>
+    
+    <geompropvalue name="MatName_UV_dif" type="vector2" nodedef="ND_geompropvalue_vector2">
+      <input name="geomprop" type="string" value="st" />
+      <input name="default" type="vector2" value="0, 0" />
+    </geompropvalue>
+    
+    <geompropvalue name="MatName_UV_spc" type="vector2" nodedef="ND_geompropvalue_vector2">
+      <input name="geomprop" type="string" value="st" />
+      <input name="default" type="vector2" value="0, 0" />
+    </geompropvalue>
     
   </nodegraph>
 </materialx>

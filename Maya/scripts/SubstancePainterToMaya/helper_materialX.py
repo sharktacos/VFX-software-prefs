@@ -32,10 +32,10 @@ def mtlxImportDoc (material, stackShapePath):
     mc.rename(grpPath + "%MatName_met", materialName + "_met")
     mc.rename(grpPath + "%MatName_roughness_lerp", materialName + "_roughness_lerp")
     mc.rename(grpPath + "%MatName_normalmap", materialName + "_normalmap")
-    mc.rename(grpPath + "%MatName_UV_dif", materialName + "_UV_dif")
-    mc.rename(grpPath + "%MatName_UV_nor", materialName + "_UV_nor")
-    mc.rename(grpPath + "%MatName_UV_spc", materialName + "_UV_spc")
-    mc.rename(grpPath + "%MatName_UV_met", materialName + "_UV_met")
+    #mc.rename(grpPath + "%MatName_UV_dif", materialName + "_UV_dif")
+    #mc.rename(grpPath + "%MatName_UV_nor", materialName + "_UV_nor")
+    #mc.rename(grpPath + "%MatName_UV_spc", materialName + "_UV_spc")
+    #mc.rename(grpPath + "%MatName_UV_met", materialName + "_UV_met")
     
 
 def mtlxAddMaps (texture, mapType, stackShapePath):
