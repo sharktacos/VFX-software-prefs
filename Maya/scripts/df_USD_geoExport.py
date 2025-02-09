@@ -12,8 +12,9 @@
  - Export bound MaterialX documents to file.
  - Inherit from class primitive
  - meters to units in metadata (default centimeters)
+ - fix mesh name clashes
  
- v5.5 Export payloaded USD asset with MaterialX reference
+ v5.6 Export payloaded USD asset with MaterialX reference
  (c) Derek Flood, 2025
 
  call with: 
@@ -50,6 +51,59 @@ import ufe
 import re
 from pathlib import Path
 import xml.etree.ElementTree as ET
+
+
+def make_unique_name(name, existing_names):
+    """Generate a unique name by appending a number if necessary."""
+    unique_name = name
+    suffix = 1
+    while unique_name in existing_names:
+        unique_name = f"{name}_{suffix}"
+        suffix += 1
+    return unique_name
+
+def ensure_unique_mesh_names():
+    # Get the selected hierarchy root
+    selected_roots = mc.ls(selection=True, long=True)
+    if not selected_roots:
+        mc.warning("No hierarchy selected.")
+        return
+    
+    # Dictionary to track unique names
+    existing_names = set()
+    
+    for root in selected_roots:
+        # Get all child transforms of the selected hierarchy
+        mesh_transforms = mc.listRelatives(root, allDescendents=True, type='transform', fullPath=True)
+        if not mesh_transforms:
+            continue
+
+        # Include the root itself in the list of transforms if it's a transform
+        if mc.objectType(root) == 'transform':
+            mesh_transforms.append(root)
+
+        for transform in mesh_transforms:
+            # Check if the transform has a mesh shape
+            children = mc.listRelatives(transform, children=True, shapes=True, fullPath=True)
+            if not children or not any(mc.objectType(child) == 'mesh' for child in children):
+                continue
+            
+            # Get the short name of the transform
+            short_name = transform.split('|')[-1]
+            
+            # Check if the name already exists
+            if short_name in existing_names:
+                # Generate a unique name
+                unique_name = make_unique_name(short_name, existing_names)
+                # Rename the transform
+                mc.rename(transform, unique_name)
+                print(f"Renamed {transform} to {unique_name}")
+            else:
+                unique_name = short_name
+            
+            # Add the name to the set of existing names
+            existing_names.add(unique_name)
+
 
 
 def compute_bbox(prim: Usd.Prim) -> Gf.Range3d:
@@ -115,12 +169,26 @@ def convert_texture_paths_to_relative(mtlx_file_path):
     except Exception as e:
         print(f"An error occurred: {e}")
 
-'''
+
+
+
+
 def get_all_mesh_shapes(render_purp):
     # Function to get all mesh shapes under the given transform
     shapes = mc.listRelatives(render_purp, ad=True, type='mesh', fullPath=True)
     return shapes if shapes else []    
-'''
+
+def get_full_path_dict():
+    """
+    Helper function to get a dictionary of full paths from the Maya hierarchy.
+    """
+    full_path_dict = {}
+    # Get all meshes in the scene with their full paths
+    all_meshes = mc.ls(type='mesh', long=True)
+    for mesh in all_meshes:
+        short_name = mesh.split('|')[-1]
+        full_path_dict[short_name] = mesh
+    return full_path_dict
 
 def get_relative_path(meshName, render_purp):
     # Get the full path of the mesh
@@ -167,18 +235,16 @@ def get_mesh_and_material_info(render_value, fileName, relativePathsEnabled):
     
     mesh_info = []
     error_messages = []
-    
+
     # Get all mesh shapes under the transform recursively
-    shapes = mc.listRelatives(found_render, ad=True, type='mesh', fullPath=True)
-    #shapes = get_all_mesh_shapes(found_render)
+    shapes = get_all_mesh_shapes(found_render)
     if not shapes:
         return mesh_info
 
     for shape in shapes:
         try:
             # Get the parent transform of the shape
-            meshName = mc.listRelatives(shape, p=True, type='transform', fullPath=True)[0]
-            #meshName = mc.listRelatives(shape, p=True, type='transform')[0]
+            meshName = mc.listRelatives(shape, p=True, type='transform')[0]
             
             # Get the relative path of the shape
             relative_path = get_relative_path(meshName, found_render)
@@ -214,12 +280,13 @@ def get_mesh_and_material_info(render_value, fileName, relativePathsEnabled):
         except Exception as e:
             print(f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file. ")
             continue
+            
 
     return mesh_info
 
 
 
-'''    
+    
 def get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled):
     # Get mesh and material information for all proxy meshes under a given transform.
 
@@ -281,7 +348,6 @@ def get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled
             continue
             
     return proxy_info
-'''
 
 def geom_stage(fileName, root_asset, render_value, proxy_value):
 
@@ -291,6 +357,7 @@ def geom_stage(fileName, root_asset, render_value, proxy_value):
     # Export the geo file
     #mc.file(geom_name, options=";exportDisplayColor=1;exportColorSets=0;mergeTransformAndShape=1;exportComponentTags=0;defaultUSDFormat=usdc;jobContext=[None];materialsScopeName=mtl", typ="USD Export", pr=True, ch=True, chn=True, exportSelected=True, f=True)
     mc.file(geom_name, options=";exportDisplayColor=1;exportColorSets=0;mergeTransformAndShape=1;exportComponentTags=0;defaultUSDFormat=usdc;materialsScopeName=mtl;exportMaterials=0;sar=0", typ="USD Export", pr=True, ch=True, chn=True, exportSelected=True, f=True)
+
 
     # Replace xforms with scopes for purpose groups
     stage = Usd.Stage.Open(geom_name + '.usd')
@@ -311,9 +378,7 @@ def geom_stage(fileName, root_asset, render_value, proxy_value):
     stage.Save()
 
 
-    
-    
-    
+
 def payload_stage(fileName, root_asset):
     stripExtension = os.path.splitext(fileName)[0]
     payload_file = stripExtension + '_payload.usda'
@@ -456,7 +521,6 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
     stage = Usd.Stage.Open(look_layer)
     
     # Set stage metadata
-    UsdGeom.SetStageMetersPerUnit(stage, UsdGeom.LinearUnits.centimeters)
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
     
     # Check if root_asset is valid
@@ -477,19 +541,23 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
     # Track created paths to avoid redundancies
     created_paths = set()
 
+    # Get full path dictionary from Maya hierarchy
+    full_path_dict = get_full_path_dict()
+
     # -------- Mesh --------------
     # Process all meshes and materials under the given render purpose
     mesh_material_info = get_mesh_and_material_info(render_value, fileName, relativePathsEnabled)
     
     for meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path in mesh_material_info:
         
-        short_name = meshName.split('|')[-1]
+        # Get the full path from the dictionary
+        full_path = full_path_dict.get(meshName, relative_path)
         
         # Add a reference to the MaterialX file in the 'Materials' scope
         materials_scope.GetReferences().AddReference(f'./{mtlx_file}', '/MaterialX/Materials')
         
-        # Split the relative path by '|' and create a list of path parts
-        path_parts = relative_path.strip('|').split('|')
+        # Split the full path by '|' and create a list of path parts
+        path_parts = full_path.strip('|').split('|')
         
         # Initialize the current path with the root asset, 'geo', and the render value
         current_path = f'{root_asset}/geo/{render_value}'
@@ -503,31 +571,34 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
                 stage.OverridePrim(current_path)
                 created_paths.add(current_path)
         
-        # Define the mesh name over under the constructed hierarchy
-        mesh_name_path = f'{current_path}/{short_name}'
-
+        # Define the 'meshName' over under the constructed hierarchy
+        mesh_name_path = f'{current_path}/{meshName}'
+        
         if mesh_name_path not in created_paths:
             mesh_name_prim = stage.OverridePrim(mesh_name_path)
             mesh_name_prim.SetSpecifier(Sdf.SpecifierOver)
             
-            # Apply the MaterialBindingAPI schema on the mesh name prim
+            # Apply the MaterialBindingAPI schema on the 'meshName' prim
             UsdShade.MaterialBindingAPI.Apply(mesh_name_prim)
             
             # Define the material binding relationship
             material_binding_rel = mesh_name_prim.CreateRelationship('material:binding', False)
             material_binding_rel.SetTargets([f'{root_asset}/mtl/{mtlx_name}_SG'])
             created_paths.add(mesh_name_path)
+        else:
+            # Diagnostic: Print a message if a duplicate mesh name is found
+            print(f"Skipping duplicate mesh: {mesh_name_path}")
     
     # ----------- Proxy ----
     # Process all proxy meshes and materials under the given proxy_value
-    #proxy_material_info = get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled)
-    proxy_material_info = get_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled)
+    proxy_material_info = get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled)
     
     for proxyMesh, px_mtlx_file, px_mtlx_name, px_mtlx_absolute_path in proxy_material_info:
-    
-        px_short_name = proxyMesh.split('|')[-1]
             
         try:
+            # Get the full path from the dictionary
+            full_path = full_path_dict.get(proxyMesh, proxyMesh)
+        
             # Add a reference to the MaterialX file in the 'Materials' scope
             materials_scope.GetReferences().AddReference(f'./{px_mtlx_file}', '/MaterialX/Materials')
         
@@ -538,22 +609,25 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
                 proxy_prim.SetSpecifier(Sdf.SpecifierOver)
                 created_paths.add(proxy_path)
         
-            # Define the proxy mesh over under the 'proxy' over
-            mesh_proxy_path = f'{proxy_path}/{px_short_name}'
+            # Define the 'proxyMesh' over under the 'proxy' over
+            mesh_proxy_path = f'{proxy_path}/{proxyMesh}'
             
             if mesh_proxy_path not in created_paths:
                 mesh_proxy_prim = stage.OverridePrim(mesh_proxy_path)
                 mesh_proxy_prim.SetSpecifier(Sdf.SpecifierOver)
 
-                # Apply the MaterialBindingAPI schema on the proxy Mesh prim
+                # Apply the MaterialBindingAPI schema on the 'proxyMesh' prim
                 UsdShade.MaterialBindingAPI.Apply(mesh_proxy_prim)
             
                 # Define the material binding relationship
                 material_binding_rel = mesh_proxy_prim.CreateRelationship('material:binding', False)
                 material_binding_rel.SetTargets([f'{root_asset}/mtl/{px_mtlx_name}_SG'])
                 created_paths.add(mesh_proxy_path)
+            else:
+                # Diagnostic: Print a message if a duplicate proxy mesh name is found
+                print(f"Skipping duplicate proxy mesh: {mesh_proxy_path}")
         except Exception as e:
-            print(f"Warning: Skipping proxy mesh {px_short_name} due to error: {e}")
+            print(f"Warning: Skipping proxy mesh {proxyMesh} due to error: {e}")
             continue
             
     # Save the stage
@@ -587,6 +661,8 @@ def main(fileName, render_value, proxy_value, relativePathsEnabled):
     dag_root = sel[0].replace("|", "")
     root_asset = "/" + dag_root
     
+    # Run the function to ensure unique names
+    ensure_unique_mesh_names()
     arnold_subdiv()
     geom_stage(fileName, root_asset, render_value, proxy_value)
     look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEnabled)
