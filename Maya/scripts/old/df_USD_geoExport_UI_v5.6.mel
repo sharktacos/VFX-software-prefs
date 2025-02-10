@@ -1,7 +1,7 @@
 //---------------------------------------------------------
 /*
  Export geo to USD with support for:
- - Proxy/render display purpose scope names detected from selected hierarchy.
+ - Proxy/render display purpose scope names detected from selected heirarchy.
  - Reference geometry (.usdc) into payload file (.usda) which is payloaded into Asset file
  - Custom metadata with originating Maya file “exported_from”
  - Variant switch to display high res mesh in viewport
@@ -9,7 +9,7 @@
  - Look file with overs for MaterialX references.
  - Relative texture file paths for MaterialX docs
  
- v6 Export payloaded USD asset with MaterialX reference
+ v5 Export payloaded USD asset with MaterialX reference
  (c) Derek Flood, 2025
  
  
@@ -36,21 +36,14 @@
 
 proc setOptionVars()
 {
-    // Get the child group names under selected to populate purpose fields
+    //Get the child group names under selected to populate purpose fields
     $sel = `ls -sl`;
     //$dag_root = `substitute "\|" $sel[0] "x"`;
     $dag_root = substituteAllString($sel[0], "|", "");
     $geoGrpPath = `listRelatives -path $sel`;
     $find_groups = `listRelatives $geoGrpPath`;
-    string $found_render = "UNDEFINED";
-    string $found_proxy = "UNDEFINED";
-
-    if (size($find_groups) > 0) {
-        $found_render = $find_groups[0];
-    }
-    if (size($find_groups) > 1) {
-        $found_proxy = $find_groups[1];
-    }
+    $found_render = $find_groups[0];
+    $found_proxy = $find_groups[1];
 
     if (!`optionVar -exists optVar_root`) {
         optionVar -stringValue optVar_root $dag_root;
@@ -67,10 +60,6 @@ proc setOptionVars()
     if (!`optionVar -exists optVar_relativePaths`) {
         optionVar -intValue optVar_relativePaths 1; // Default to selected
     }
-
-    if (!`optionVar -exists optVar_usePurposes`) {
-        optionVar -intValue optVar_usePurposes 0; // Default to unselected
-    }
 }
 
 // creates the options of the File dialog
@@ -80,52 +69,18 @@ global proc string df_UISetup(string $parent)
     string $layout = `scrollLayout -childResizable true`;
 
     setParent $layout;
-    
-    // Add the checkbox for MaterialX relative texture file paths
-    checkBox -label "Convert MaterialX docs to relative texture file paths" -value 1 materialXRelativePathsChkBox;
-    
-    // Add the checkbox for creating render and proxy purposes from subgroups
-    checkBox -label "Create render and proxy purposes from subgroups" -value 0 -cc "togglePurposeFields()" createPurposesChkBox;
-
-    $title = "USD Asset geometry structure:";
+    $title = "Render and Proxy Purpose Scope Names (Detected from selected hierarchy)";
     $frame = `frameLayout -label $title -collapsable false`;
     text -align left -label "";
     textFieldGrp -ed 0 -bgc 0.15 0.15 0.15 -label "Root Prim:" -ann "Derived from selected node."  root_field;
     text -align left -label "           	geo/";
-    
-    // Render and Proxy fields
-    columnLayout -adjustableColumn true purposeFields;
     textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label "Render Purpose:" -ann "Derived from children of selected root node."  render_field;
     textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label "Proxy Purpose:" -ann "Derived from children of selected root node."  proxy_field;
-    setParent ..;
     
-    // Initially hide render and proxy fields
-    hideUIComponent("purposeFields");
+    // Add the checkbox for MaterialX relative texture file paths
+    checkBox -label "Convert MaterialX docs to relative texture file paths" -value 1 materialXRelativePathsChkBox;
 
     return $layout;
-}
-
-global proc togglePurposeFields() {
-    int $createPurposes = `checkBox -q -value createPurposesChkBox`;
-    if ($createPurposes) {
-        showUIComponent("purposeFields");
-    } else {
-        hideUIComponent("purposeFields");
-    }
-}
-
-global proc showUIComponent(string $component) {
-    string $children[] = `columnLayout -q -childArray $component`;
-    for ($child in $children) {
-        control -e -visible true $child;
-    }
-}
-
-global proc hideUIComponent(string $component) {
-    string $children[] = `columnLayout -q -childArray $component`;
-    for ($child in $children) {
-        control -e -visible false $child;
-    }
 }
 
 // UIInit
@@ -137,29 +92,14 @@ global proc df_UIInit(string $parent, string $filterType)
     string $rpath = `optionVar -q optVar_render`;
     string $ppath = `optionVar -q optVar_proxy`;
     int $relativePathsEnabled = `optionVar -q optVar_relativePaths`;
-    int $usePurposes = `optionVar -q optVar_usePurposes`;
 
     setParent $parent;
     textFieldGrp -e -text $xpath root_field;
     textFieldGrp -e -text $rpath render_field;
     textFieldGrp -e -text $ppath proxy_field;
-    if ($rpath == "UNDEFINED") {
-        textFieldGrp -e -bgc 1 0 0 render_field; // Change the background color to red if "UNDEFINED"
-    }
-    if ($ppath == "UNDEFINED") {
-        textFieldGrp -e -bgc 1 0 0 proxy_field; // Change the background color to red if "UNDEFINED"
-    }
     checkBox -e -value $relativePathsEnabled materialXRelativePathsChkBox;
-    checkBox -e -value $usePurposes createPurposesChkBox;
-
-    if ($usePurposes) {
-        showUIComponent("purposeFields");
-    } else {
-        hideUIComponent("purposeFields");
-    }
 }
 
-// UICommit
 global proc df_UICommit(string $parent)
 {
     setParent $parent;
@@ -169,7 +109,6 @@ global proc df_UICommit(string $parent)
     optionVar -stringValue optVar_render (`textFieldGrp -q -text  render_field`);
     optionVar -stringValue optVar_proxy (`textFieldGrp -q -text  proxy_field`);
     optionVar -intValue optVar_relativePaths (`checkBox -q -value materialXRelativePathsChkBox`);
-    optionVar -intValue optVar_usePurposes (`checkBox -q -value createPurposesChkBox`);
 }
 
 global proc mayaUsd_exportGeo()
@@ -178,7 +117,6 @@ global proc mayaUsd_exportGeo()
     optionVar -remove optVar_render;
     optionVar -remove optVar_proxy;
     optionVar -remove optVar_relativePaths;
-    optionVar -remove optVar_usePurposes;
 
     string $sel[] = `ls -sl`;
     int $isSel = `size($sel)`;
@@ -201,10 +139,13 @@ global proc mayaUsd_exportGeo()
         return;
     }
 
-    int $usePurposes = `optionVar -q optVar_usePurposes`;
-    
     if ($geoGrp[0] != "geo") {
-        confirmDialog -message "Missing \"geo\" group. Structure must be \n\nroot/ (asset name)\n   geo/\n \nNote that \"geo\" must be the exact name for the geometry scope. The root prim is typically given the name of the asset. For example \"fruitBowl\" " -button "Got it";
+        confirmDialog -message "Missing \"geo\" group. Structure must be \n\nroot/ (asset name)\n   geo/\n      render/ \n      proxy/\n\nNote that \"geo\" must be the exact name for the geometry scope. The render and proxy purpose scopes can be named as desired based on your studio naming conventions. The root prim is typically given the name of the asset. For example \"fruitBowl\" " -button "Got it";
+        return;
+    }
+
+    if ($justTwo != 2) {
+        confirmDialog -message "Just two child groups under \"geo\" please. Render and Proxy, in that order" -button "Sorry";
         return;
     }
 
@@ -219,21 +160,13 @@ global proc mayaUsd_exportGeo()
                       -optionsUIInit "df_UIInit" 
                       -optionsUICommit "df_UICommit"`;
 
-    // Get the updated values after user selection
-    $render_value = `optionVar -q optVar_render`; // pass this value to python
-    $proxy_value = `optionVar -q optVar_proxy`; // pass this value to python
-    $relativePathsEnabled = `optionVar -q optVar_relativePaths`; // pass this value to python
-    $usePurposes = `optionVar -q optVar_usePurposes`; // pass this value to python
+    $render_value = `optionVar -q optVar_render`; //pass this value to python
+    $proxy_value = `optionVar -q optVar_proxy`; //pass this value to python
+    $relativePathsEnabled = `optionVar -q optVar_relativePaths`; //pass this value to python
     $fileName = $filepath[0];
-
-    // Perform the check after user selects the options
-    if ($usePurposes && $justTwo != 2) {
-        confirmDialog -message "For the render and proxy purpose option there must be just two child groups under \"geo\" please. Render and Proxy, in that order" -button "Sorry";
-        return;
-    }
-
+        
     if (size($fileName) > 0){
-        python("import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "', '" + $relativePathsEnabled + "', '" + $usePurposes + "')");
+        python("import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "', '" + $relativePathsEnabled + "')");
     }
 }
 

@@ -14,7 +14,7 @@
  - meters to units in metadata (default centimeters)
  - fix mesh name clashes
  
- v6.0 Export payloaded USD asset with MaterialX reference
+ v5.6 Export payloaded USD asset with MaterialX reference
  (c) Derek Flood, 2025
 
  call with: 
@@ -221,7 +221,7 @@ def export_materialX_doc(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled)
         convert_texture_paths_to_relative(mtlx_absolute_path)
 
             
-def get_mesh_and_material_info(fileName, relativePathsEnabled):
+def get_mesh_and_material_info(render_value, fileName, relativePathsEnabled):
     # Get mesh and material information for all meshes under a given transform.
 
     usd_directory = os.path.dirname(os.path.abspath(fileName))
@@ -349,13 +349,15 @@ def get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled
             
     return proxy_info
 
-def geom_stage(fileName, root_asset, render_value, proxy_value, usePurposes):
+def geom_stage(fileName, root_asset, render_value, proxy_value):
 
     stripExtension = os.path.splitext(fileName)[0]
     geom_name = stripExtension + '_geo'
 
     # Export the geo file
+    #mc.file(geom_name, options=";exportDisplayColor=1;exportColorSets=0;mergeTransformAndShape=1;exportComponentTags=0;defaultUSDFormat=usdc;jobContext=[None];materialsScopeName=mtl", typ="USD Export", pr=True, ch=True, chn=True, exportSelected=True, f=True)
     mc.file(geom_name, options=";exportDisplayColor=1;exportColorSets=0;mergeTransformAndShape=1;exportComponentTags=0;defaultUSDFormat=usdc;materialsScopeName=mtl;exportMaterials=0;sar=0", typ="USD Export", pr=True, ch=True, chn=True, exportSelected=True, f=True)
+
 
     # Replace xforms with scopes for purpose groups
     stage = Usd.Stage.Open(geom_name + '.usd')
@@ -368,11 +370,10 @@ def geom_stage(fileName, root_asset, render_value, proxy_value, usePurposes):
     extentsHint = root_geom_model_API.ComputeExtentsHint(bbox_cache)
     root_geom_model_API.SetExtentsHint(extentsHint)
     
-    if usePurposes:
-        prim_render = stage.GetPrimAtPath(root_asset + "/geo/" + render_value)
-        prim_render.SetTypeName("Scope")
-        prim_proxy = stage.GetPrimAtPath(root_asset + "/geo/" + proxy_value)
-        prim_proxy.SetTypeName("Scope")
+    prim_render = stage.GetPrimAtPath(root_asset + "/geo/" + render_value)
+    prim_render.SetTypeName("Scope")
+    prim_proxy = stage.GetPrimAtPath(root_asset + "/geo/" + proxy_value)
+    prim_proxy.SetTypeName("Scope")
 
     stage.Save()
 
@@ -412,7 +413,7 @@ def payload_stage(fileName, root_asset):
 
 
 
-def asset_stage(fileName, render_value, proxy_value, root_asset, usePurposes):
+def asset_stage(fileName, render_value, proxy_value, root_asset):
 
     maya_scene = mc.file (q=True, sn=True, shn=True)
     stripExtension = os.path.splitext(fileName)[0]
@@ -466,43 +467,41 @@ def asset_stage(fileName, render_value, proxy_value, root_asset, usePurposes):
     extentsHint = root_geom_model_API.ComputeExtentsHint(bbox_cache)
     root_geom_model_API.SetExtentsHint(extentsHint)
     
-    
-    if usePurposes:
-        
-        # Create display variants
-        variant_sets = payload_prim.GetVariantSets().AddVariantSet('geo_vis')
+    # Create display variants
+    variant_sets = payload_prim.GetVariantSets().AddVariantSet('geo_vis')
 
-        variant_sets.AddVariant("high_res")
-        variant_sets.SetVariantSelection("high_res")
-        with variant_sets.GetVariantEditContext():
-            # Overs with default and guide purposes (for display of high res mesh)
-            render_path = Sdf.Path(root_asset + "/geo/" + render_value)
-            render_prim = stage.DefinePrim(render_path)
-            render_prim.SetSpecifier(Sdf.SpecifierOver)
-            render_purpose = UsdGeom.Imageable(render_prim).CreatePurposeAttr()
-            render_purpose.Set(UsdGeom.Tokens.default_)
+    variant_sets.AddVariant("high_res")
+    variant_sets.SetVariantSelection("high_res")
+    with variant_sets.GetVariantEditContext():
+        # Overs with default and guide purposes (for display of high res mesh)
+        render_path = Sdf.Path(root_asset + "/geo/" + render_value)
+        render_prim = stage.DefinePrim(render_path)
+        render_prim.SetSpecifier(Sdf.SpecifierOver)
+        render_purpose = UsdGeom.Imageable(render_prim).CreatePurposeAttr()
+        render_purpose.Set(UsdGeom.Tokens.default_)
+    
+        proxy_path = Sdf.Path(root_asset + "/geo/" + proxy_value)
+        proxy_prim = stage.DefinePrim(proxy_path)
+        proxy_prim.SetSpecifier(Sdf.SpecifierOver)
+        proxy_purpose = UsdGeom.Imageable(proxy_prim).CreatePurposeAttr()
+        proxy_purpose.Set(UsdGeom.Tokens.guide)  
         
-            proxy_path = Sdf.Path(root_asset + "/geo/" + proxy_value)
-            proxy_prim = stage.DefinePrim(proxy_path)
-            proxy_prim.SetSpecifier(Sdf.SpecifierOver)
-            proxy_purpose = UsdGeom.Imageable(proxy_prim).CreatePurposeAttr()
-            proxy_purpose.Set(UsdGeom.Tokens.guide)
-        
-        variant_sets.AddVariant("preview")
-        variant_sets.SetVariantSelection("preview")
-        with variant_sets.GetVariantEditContext():
-            # Overs with render and proxy purposes (for viewport preview)
-            render_path = Sdf.Path(root_asset + "/geo/" + render_value)
-            render_prim = stage.DefinePrim(render_path)
-            render_prim.SetSpecifier(Sdf.SpecifierOver)
-            render_purpose = UsdGeom.Imageable(render_prim).CreatePurposeAttr()
-            render_purpose.Set(UsdGeom.Tokens.render)
-        
-            proxy_path = Sdf.Path(root_asset + "/geo/" + proxy_value)
-            proxy_prim = stage.DefinePrim(proxy_path)
-            proxy_prim.SetSpecifier(Sdf.SpecifierOver)
-            proxy_purpose = UsdGeom.Imageable(proxy_prim).CreatePurposeAttr()
-            proxy_purpose.Set(UsdGeom.Tokens.proxy)
+    variant_sets.AddVariant("preview")
+    variant_sets.SetVariantSelection("preview")
+    with variant_sets.GetVariantEditContext():
+        # Overs with render and proxy purposes (for viewport preview)
+        render_path = Sdf.Path(root_asset + "/geo/" + render_value)
+        render_prim = stage.DefinePrim(render_path)
+        render_prim.SetSpecifier(Sdf.SpecifierOver)
+        render_purpose = UsdGeom.Imageable(render_prim).CreatePurposeAttr()
+        render_purpose.Set(UsdGeom.Tokens.render)
+    
+        proxy_path = Sdf.Path(root_asset + "/geo/" + proxy_value)
+        proxy_prim = stage.DefinePrim(proxy_path)
+        proxy_prim.SetSpecifier(Sdf.SpecifierOver)
+        proxy_purpose = UsdGeom.Imageable(proxy_prim).CreatePurposeAttr()
+        proxy_purpose.Set(UsdGeom.Tokens.proxy)  
+
 
     # diagnositic
     print_asset = stage.GetRootLayer().ExportToString()
@@ -512,9 +511,7 @@ def asset_stage(fileName, render_value, proxy_value, root_asset, usePurposes):
     # save to file
     stage.GetRootLayer().Save()
 
-
-def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEnabled, usePurposes):
-
+def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEnabled):
     # Strip the file extension from fileName and create new filename with '_look.usda'
     stripExtension = os.path.splitext(fileName)[0]
     look_file = stripExtension + '_look.usda'
@@ -550,7 +547,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
 
     # -------- Mesh --------------
     # Process all meshes and materials under the given render purpose
-    mesh_material_info = get_mesh_and_material_info(fileName, relativePathsEnabled)
+    mesh_material_info = get_mesh_and_material_info(render_value, fileName, relativePathsEnabled)
     
     for meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path in mesh_material_info:
         
@@ -564,11 +561,8 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
         # Split the full path by '|' and create a list of path parts
         path_parts = full_path.strip('|').split('|')
         
-        # Initialize the current path with the root asset, 'geo', and the render value if usePurposes is True
-        if usePurposes:
-            current_path = f'{root_asset}/geo/{render_value}'
-        else:
-            current_path = f'{root_asset}/geo'
+        # Initialize the current path with the root asset, 'geo', and the render value
+        current_path = f'{root_asset}/geo/{render_value}'
         
         # Iterate through each part in the path parts list to build the hierarchy
         for part in path_parts:
@@ -598,49 +592,45 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
             print(f"Skipping duplicate mesh: {mesh_name_path}")
     
     # ----------- Proxy ----
+    # Process all proxy meshes and materials under the given proxy_value
+    proxy_material_info = get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled)
     
-    if usePurposes:
-    
-        # ----------- Proxy ----
-        # Process all proxy meshes and materials under the given proxy_value
-        proxy_material_info = get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled)
+    for proxyMesh, px_mtlx_file, px_mtlx_name, px_mtlx_absolute_path in proxy_material_info:
+            
+        try:
+            # Get the full path from the dictionary
+            full_path = full_path_dict.get(proxyMesh, proxyMesh)
         
-        for proxyMesh, px_mtlx_file, px_mtlx_name, px_mtlx_absolute_path in proxy_material_info:
-                
-            try:
-                # Get the full path from the dictionary
-                full_path = full_path_dict.get(proxyMesh, proxyMesh)
+            # Add a reference to the MaterialX file in the 'Materials' scope
+            materials_scope.GetReferences().AddReference(f'./{px_mtlx_file}', '/MaterialX/Materials')
+        
+            # Define the 'proxy' over under the root asset
+            proxy_path = f'{root_asset}/geo/{proxy_value}'
+            if proxy_path not in created_paths:
+                proxy_prim = stage.OverridePrim(proxy_path)
+                proxy_prim.SetSpecifier(Sdf.SpecifierOver)
+                created_paths.add(proxy_path)
+        
+            # Define the 'proxyMesh' over under the 'proxy' over
+            mesh_proxy_path = f'{proxy_path}/{proxyMesh}'
             
-                # Add a reference to the MaterialX file in the 'Materials' scope
-                materials_scope.GetReferences().AddReference(f'./{px_mtlx_file}', '/MaterialX/Materials')
-            
-                # Define the 'proxy' over under the root asset
-                proxy_path = f'{root_asset}/geo/{proxy_value}'
-                if proxy_path not in created_paths:
-                    proxy_prim = stage.OverridePrim(proxy_path)
-                    proxy_prim.SetSpecifier(Sdf.SpecifierOver)
-                    created_paths.add(proxy_path)
-            
-                # Define the 'proxyMesh' over under the 'proxy' over
-                mesh_proxy_path = f'{proxy_path}/{proxyMesh}'
-                
-                if mesh_proxy_path not in created_paths:
-                    mesh_proxy_prim = stage.OverridePrim(mesh_proxy_path)
-                    mesh_proxy_prim.SetSpecifier(Sdf.SpecifierOver)
+            if mesh_proxy_path not in created_paths:
+                mesh_proxy_prim = stage.OverridePrim(mesh_proxy_path)
+                mesh_proxy_prim.SetSpecifier(Sdf.SpecifierOver)
 
-                    # Apply the MaterialBindingAPI schema on the 'proxyMesh' prim
-                    UsdShade.MaterialBindingAPI.Apply(mesh_proxy_prim)
-                
-                    # Define the material binding relationship
-                    material_binding_rel = mesh_proxy_prim.CreateRelationship('material:binding', False)
-                    material_binding_rel.SetTargets([f'{root_asset}/mtl/{px_mtlx_name}_SG'])
-                    created_paths.add(mesh_proxy_path)
-                else:
-                    # Diagnostic: Print a message if a duplicate proxy mesh name is found
-                    print(f"Skipping duplicate proxy mesh: {mesh_proxy_path}")
-            except Exception as e:
-                print(f"Warning: Skipping proxy mesh {proxyMesh} due to error: {e}")
-                continue
+                # Apply the MaterialBindingAPI schema on the 'proxyMesh' prim
+                UsdShade.MaterialBindingAPI.Apply(mesh_proxy_prim)
+            
+                # Define the material binding relationship
+                material_binding_rel = mesh_proxy_prim.CreateRelationship('material:binding', False)
+                material_binding_rel.SetTargets([f'{root_asset}/mtl/{px_mtlx_name}_SG'])
+                created_paths.add(mesh_proxy_path)
+            else:
+                # Diagnostic: Print a message if a duplicate proxy mesh name is found
+                print(f"Skipping duplicate proxy mesh: {mesh_proxy_path}")
+        except Exception as e:
+            print(f"Warning: Skipping proxy mesh {proxyMesh} due to error: {e}")
+            continue
             
     # Save the stage
     stage.GetRootLayer().Save()
@@ -668,7 +658,7 @@ def arnold_subdiv():
 
 
 
-def main(fileName, render_value, proxy_value, relativePathsEnabled, usePurposes):
+def main(fileName, render_value, proxy_value, relativePathsEnabled):
     sel=mc.ls(sl=True)
     dag_root = sel[0].replace("|", "")
     root_asset = "/" + dag_root
@@ -676,10 +666,10 @@ def main(fileName, render_value, proxy_value, relativePathsEnabled, usePurposes)
     # Run the function to ensure unique names
     ensure_unique_mesh_names()
     arnold_subdiv()
-    geom_stage(fileName, root_asset, render_value, proxy_value, usePurposes)
-    look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEnabled, usePurposes)
+    geom_stage(fileName, root_asset, render_value, proxy_value)
+    look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEnabled)
     payload_stage(fileName, root_asset)
-    asset_stage(fileName, render_value, proxy_value, root_asset, usePurposes)
+    asset_stage(fileName, render_value, proxy_value, root_asset)
 
 
 if __name__ == "__main__":
