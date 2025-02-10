@@ -1,18 +1,18 @@
 #---------------------------------------------------------
 '''
  Export geo to USD with support for:
- - Proxy/render display purposes,
+ - Option for Proxy/render display purposes,
  - Reference geometry (.usdc) into payload file (.usda) which is payloaded into Asset file
  - Custom metadata with originating Maya file “exported_from”
- - variant switch to display high res mesh in viewport
+ - variant switch to display high res mesh in viewport (with purposes option)
  - switch to "_geo" naming convention for mesh file in crate binary.
  - look file with overs for MaterialX references
- - Support for complex hierarchy under render purpose
+ - Support for complex hierarchy under under geo scope (or under render purpose if option selected) 
  - Relative texture file paths for MaterialX docs
- - Export bound MaterialX documents to file.
+ - Export bound MaterialX documents to file (creates in "mat" directory inside save folder)
  - Inherit from class primitive
  - meters to units in metadata (default centimeters)
- - fix mesh name clashes
+ - fix mesh name clashes by renaming with unique names.
  
  v6.0 Export payloaded USD asset with MaterialX reference
  (c) Derek Flood, 2025
@@ -221,7 +221,7 @@ def export_materialX_doc(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled)
         convert_texture_paths_to_relative(mtlx_absolute_path)
 
             
-def get_mesh_and_material_info(fileName, relativePathsEnabled):
+def get_mesh_and_material_info(fileName, relativePathsEnabled, usePurposes):
     # Get mesh and material information for all meshes under a given transform.
 
     usd_directory = os.path.dirname(os.path.abspath(fileName))
@@ -230,8 +230,12 @@ def get_mesh_and_material_info(fileName, relativePathsEnabled):
 
     long_sel = mc.ls(sl=True, long=True)
     geoGrpPath = mc.listRelatives(long_sel, path=True, fullPath=True)
-    find_groups = mc.listRelatives(geoGrpPath, path=True, fullPath=True)
-    found_render = find_groups[0]
+    
+    if usePurposes:
+        find_groups = mc.listRelatives(geoGrpPath, path=True, fullPath=True)
+        found_render = find_groups[0]
+    else:
+        found_render = geoGrpPath[0]
     
     mesh_info = []
     error_messages = []
@@ -248,35 +252,36 @@ def get_mesh_and_material_info(fileName, relativePathsEnabled):
             
             # Get the relative path of the shape
             relative_path = get_relative_path(meshName, found_render)
-            
+
             # Get the material shading group connected to the shape
             Maya_SG = mc.listConnections(shape + '.instObjGroups', d=True, s=False)[0]
-            
+
             # Get the material connected to the shading group
             mtlX_SG = mc.listConnections(Maya_SG + '.surfaceShader', d=False, s=True)[0]
-            
+
             # Extract the ufePath attribute
             SG_ufePath = mc.getAttr(mtlX_SG + '.ufePath')
-            
+
             # Extract the material name from the ufePath
             mtlx_docPath = re.sub(r"%[^%]*$", "", SG_ufePath)
             mtlx_name_match = re.search(r"%([^%]*)$", mtlx_docPath)
             if not mtlx_name_match:
                 continue
+            
             mtlx_name = mtlx_name_match.group(1)
-
+            
             # Construct the absolute path for the MaterialX file
             mtlx_file = os.path.join("mat", f"{mtlx_name}.mtlx")
             mtlx_absolute_path = os.path.join(usd_directory, mtlx_file)
-
+            
             # Check if the MaterialX file exists on disk
             if not os.path.exists(mtlx_absolute_path):
                 # Export MaterialX Document if it doesn't exist
                 export_materialX_doc(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled)
-            
+                
             # Append the meshName, relative path, full path of the MaterialX file, and material name to the list
             mesh_info.append((meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path))
-            
+
         except Exception as e:
             print(f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file. ")
             continue
@@ -550,7 +555,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
 
     # -------- Mesh --------------
     # Process all meshes and materials under the given render purpose
-    mesh_material_info = get_mesh_and_material_info(fileName, relativePathsEnabled)
+    mesh_material_info = get_mesh_and_material_info(fileName, relativePathsEnabled, usePurposes)
     
     for meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path in mesh_material_info:
         
@@ -672,6 +677,8 @@ def main(fileName, render_value, proxy_value, relativePathsEnabled, usePurposes)
     sel=mc.ls(sl=True)
     dag_root = sel[0].replace("|", "")
     root_asset = "/" + dag_root
+    relativePathsEnabled = int(relativePathsEnabled)
+    usePurposes = int(usePurposes)
     
     # Run the function to ensure unique names
     ensure_unique_mesh_names()

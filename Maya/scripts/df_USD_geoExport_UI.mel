@@ -1,15 +1,20 @@
 //---------------------------------------------------------
 /*
  Export geo to USD with support for:
- - Proxy/render display purpose scope names detected from selected hierarchy.
+  - Option for Proxy/render display purposes,
  - Reference geometry (.usdc) into payload file (.usda) which is payloaded into Asset file
  - Custom metadata with originating Maya file “exported_from”
- - Variant switch to display high res mesh in viewport
- - Switch to "_geo" naming convention for mesh file in crate binary.
- - Look file with overs for MaterialX references.
+ - variant switch to display high res mesh in viewport (with purposes option)
+ - switch to "_geo" naming convention for mesh file in crate binary.
+ - look file with overs for MaterialX references
+ - Support for complex hierarchy under under geo scope (or under render purpose if option selected) 
  - Relative texture file paths for MaterialX docs
+ - Export bound MaterialX documents to file (creates in "mat" directory inside save folder)
+ - Inherit from class primitive
+ - meters to units in metadata (default centimeters)
+ - fix mesh name clashes by renaming with unique names.
  
- v6 Export payloaded USD asset with MaterialX reference
+ v6.0 Export payloaded USD asset with MaterialX reference
  (c) Derek Flood, 2025
  
  
