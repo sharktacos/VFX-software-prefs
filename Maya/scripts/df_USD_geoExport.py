@@ -431,11 +431,9 @@ def asset_stage(fileName, render_value, proxy_value, root_asset, usePurposes):
     # Create USD "asset" stage, 
     asset_layer = Sdf.Layer.CreateNew(asset_file, args = {'format':'usda'})
     stage: Usd.Stage = Usd.Stage.Open(asset_layer)
-
-
     
     # Add class primitive using CreateClassPrim
-    class_prim_path = Sdf.Path("/__class__" + root_asset)
+    class_prim_path = Sdf.Path("/__class__")
     class_prim = stage.CreateClassPrim(class_prim_path)
     
     # Add the default prim to the class
@@ -463,14 +461,6 @@ def asset_stage(fileName, render_value, proxy_value, root_asset, usePurposes):
     payload_prim.SetMetadata("customData", {"Exported_from": maya_scene})
 
     # Add inherits
-    #instance_prims = prototype.GetInstances()
-    #for instance_prim in instance_prims:
-    #    inherits_api = instance_prim.GetInherits()
-    #    inherits_api.AddInherit(class_prim.GetPath(), position=Usd.ListPositionFrontOfAppendList)  
-    # Inspect prototype and collect what to override
-    #prototype = default_prim.GetPrototype()    
-    # Prepend inherits statement
-    #instance_prims = prototype.GetInstances()
     inherit_prim = default_prim.GetPrim()
     inherits_api = inherit_prim.GetInherits()
     inherits_api.AddInherit(class_prim_path, position=Usd.ListPositionFrontOfPrependList)
