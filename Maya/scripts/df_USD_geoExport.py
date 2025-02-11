@@ -417,7 +417,7 @@ def payload_stage(fileName, root_asset):
 
 
 
-def asset_stage(fileName, render_value, proxy_value, root_asset, usePurposes):
+def asset_stage(fileName, render_value, proxy_value, root_asset, dag_root, usePurposes):
 
     maya_scene = mc.file (q=True, sn=True, shn=True)
     stripExtension = os.path.splitext(fileName)[0]
@@ -428,9 +428,10 @@ def asset_stage(fileName, render_value, proxy_value, root_asset, usePurposes):
     payName = stripExtension + '_payload.usda'
     payfile_root = "./" + os.path.basename(payName)
 
-    # Create USD "asset" stage, 
+    # Create USD "asset" stage
     asset_layer = Sdf.Layer.CreateNew(asset_file, args = {'format':'usda'})
     stage: Usd.Stage = Usd.Stage.Open(asset_layer)
+    
     
     # Add class primitive using CreateClassPrim
     class_prim_path = Sdf.Path("/__class__")
@@ -440,6 +441,9 @@ def asset_stage(fileName, render_value, proxy_value, root_asset, usePurposes):
     default_class_prim_path = Sdf.Path("/__class__" + root_asset)
     stage.CreateClassPrim(default_class_prim_path)
     
+    # Create class prim for asset
+    asset_class_prim_path = class_prim_path.AppendChild(dag_root)
+    asset_class_prim = stage.CreateClassPrim(asset_class_prim_path)
     
     # Create and define default prim
     default_prim = UsdGeom.Xform.Define(stage, Sdf.Path(root_asset))
@@ -463,7 +467,7 @@ def asset_stage(fileName, render_value, proxy_value, root_asset, usePurposes):
     # Add inherits
     inherit_prim = default_prim.GetPrim()
     inherits_api = inherit_prim.GetInherits()
-    inherits_api.AddInherit(class_prim_path, position=Usd.ListPositionFrontOfPrependList)
+    inherits_api.AddInherit(asset_class_prim_path, position=Usd.ListPositionFrontOfPrependList)
 
     # Set kind to component 
     model_API = Usd.ModelAPI(payload_prim)
@@ -690,7 +694,7 @@ def main(fileName, render_value, proxy_value, relativePathsEnabled, usePurposes)
     geom_stage(fileName, root_asset, render_value, proxy_value, usePurposes)
     look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEnabled, usePurposes)
     payload_stage(fileName, root_asset)
-    asset_stage(fileName, render_value, proxy_value, root_asset, usePurposes)
+    asset_stage(fileName, render_value, proxy_value, root_asset, dag_root, usePurposes)
 
 
 if __name__ == "__main__":
