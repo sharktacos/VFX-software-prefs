@@ -145,8 +145,12 @@ def convert_texture_paths_to_relative(mtlx_file_path):
         # Function to convert absolute paths to relative paths
         def make_relative_path(path):
             if os.path.isabs(path):
-                return os.path.relpath(path, mtlx_directory)
-            return path
+            #    return os.path.relpath(path, mtlx_directory)
+            #return path
+                relative_path = os.path.relpath(path, mtlx_directory)
+                return relative_path.replace('\\', '/')  # Ensure forward slashes
+            return path.replace('\\', '/')  # Ensure forward slashes even for relative paths
+
         
         # Traverse the XML tree to find all texture file paths
         for elem in root.iter():
@@ -432,7 +436,6 @@ def asset_stage(fileName, render_value, proxy_value, root_asset, dag_root, usePu
     asset_layer = Sdf.Layer.CreateNew(asset_file, args = {'format':'usda'})
     stage: Usd.Stage = Usd.Stage.Open(asset_layer)
     
-    
     # Add class primitive using CreateClassPrim
     class_prim_path = Sdf.Path("/__class__")
     class_prim = stage.CreateClassPrim(class_prim_path)
@@ -587,6 +590,9 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
         for part in path_parts:
             # Update the current path by appending the current part
             current_path = f'{current_path}/{part}'
+            # Ensure current_path does not end with a slash
+            if current_path.endswith('/'):
+                current_path = current_path.rstrip('/')
             # Create the current path in the USD stage if it hasn't been created yet
             if current_path not in created_paths:
                 stage.OverridePrim(current_path)
