@@ -62,8 +62,8 @@ global proc shelf_DF_docs () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "C:/Program Files/Autodesk/Arnold/maya2022/icons/AreaLightShelf.png" 
-        -image1 "C:/Program Files/Autodesk/Arnold/maya2022/icons/AreaLightShelf.png" 
+        -image "icons/AreaLightShelf_150.png" 
+        -image1 "icons/AreaLightShelf_150.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
@@ -130,8 +130,8 @@ global proc shelf_DF_docs () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "C:/Program Files/Autodesk/Arnold/maya2022/icons/SkydomeLightShelf.png" 
-        -image1 "C:/Program Files/Autodesk/Arnold/maya2022/icons/SkydomeLightShelf.png" 
+        -image "icons/SkydomeLightShelf_150.png" 
+        -image1 "icons/SkydomeLightShelf_150.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
@@ -177,8 +177,8 @@ global proc shelf_DF_docs () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "%USERPROFILE%/Documents/maya/2022/prefs/icons/ShaderToABC_200.png" 
-        -image1 "%USERPROFILE%/Documents/maya/2022/prefs/icons/ShaderToABC_200.png" 
+        -image "icons/ShaderToABC_200.png" 
+        -image1 "icons/ShaderToABC_200.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
@@ -211,8 +211,8 @@ global proc shelf_DF_docs () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "%USERPROFILE%/Documents/maya/2022/prefs/icons/UVTransfer.png" 
-        -image1 "%USERPROFILE%/Documents/maya/2022/prefs/icons/UVTransfer.png" 
+        -image "icons/UVTransfer.png" 
+        -image1 "icons/UVTransfer.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
@@ -245,8 +245,8 @@ global proc shelf_DF_docs () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "%USERPROFILE%/Documents/maya/2022/prefs/icons/aovGrp.png" 
-        -image1 "%USERPROFILE%/Documents/maya/2022/prefs/icons/aovGrp.png" 
+        -image "icons/aovGrp.png" 
+        -image1 "icons/aovGrp.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
@@ -279,8 +279,8 @@ global proc shelf_DF_docs () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "%USERPROFILE%/Documents/maya/2022/prefs/icons/aovGrpOff.png" 
-        -image1 "%USERPROFILE%/Documents/maya/2022/prefs/icons/aovGrpOff.png" 
+        -image "icons/aovGrpOff.png" 
+        -image1 "icons/aovGrpOff.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
@@ -429,8 +429,8 @@ global proc shelf_DF_docs () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "C:/Program Files/Autodesk/Arnold/maya2022/icons/RenderViewShelf_150.png" 
-        -image1 "C:/Program Files/Autodesk/Arnold/maya2022/icons/RenderViewShelf_150.png" 
+        -image "icons/RenderViewShelf_150.png" 
+        -image1 "icons/RenderViewShelf_150.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
@@ -498,8 +498,8 @@ global proc shelf_DF_docs () {
         -imageOverlayLabel "Arn" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "%USERPROFILE%/Documents/maya/2022/prefs/icons/render_aiImage.png" 
-        -image1 "%USERPROFILE%/Documents/maya/2022/prefs/icons/render_aiImage.png" 
+        -image "icons/render_aiImage.png" 
+        -image1 "icons/render_aiImage.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
@@ -602,8 +602,8 @@ global proc shelf_DF_docs () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "%USERPROFILE%/Documents/maya/2022/prefs/icons/out_aiStandardSurface_150.png" 
-        -image1 "%USERPROFILE%/Documents/maya/2022/prefs/icons/out_aiStandardSurface_150.png" 
+        -image "icons/out_aiStandardSurface_150.png" 
+        -image1 "icons/out_aiStandardSurface_150.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
@@ -650,8 +650,8 @@ global proc shelf_DF_docs () {
         -imageOverlayLabel "Arn" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "%USERPROFILE%/Maya/prefs/icons/BlendRuf.png" 
-        -image1 "%USERPROFILE%/Maya/prefs/icons/BlendRuf.png" 
+        -image "icons/BlendRuf.png" 
+        -image1 "icons/BlendRuf.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
@@ -719,8 +719,8 @@ global proc shelf_DF_docs () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "%USERPROFILE%/maya/prefs/icons/sp2.png" 
-        -image1 "%USERPROFILE%/maya/prefs/icons/sp2.png" 
+        -image "icons/sp2.png" 
+        -image1 "icons/sp2.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
@@ -766,47 +766,13 @@ global proc shelf_DF_docs () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "%USERPROFILE%/Maya/prefs/icons/USD_geo.png" 
-        -image1 "%USERPROFILE%/Maya/prefs/icons/USD_geo.png" 
+        -image "icons/USD_geo.png" 
+        -image1 "icons/USD_geo.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
         -command "source df_USD_geoExport_UI;\nmayaUsd_exportGeo();" 
         -sourceType "mel" 
-        -commandRepeatable 1
-        -flat 1
-    ;
-    shelfButton
-        -enableCommandRepeat 1
-        -flexibleWidthType 3
-        -flexibleWidthValue 64
-        -enable 1
-        -width 35
-        -height 34
-        -manage 1
-        -visible 1
-        -preventOverride 0
-        -annotation "Export Selected to USD with materials and bindings" 
-        -enableBackground 0
-        -backgroundColor 0 0 0 
-        -highlightColor 0.321569 0.521569 0.65098 
-        -align "center" 
-        -label "USD Look Export Selected" 
-        -labelOffset 0
-        -rotation 0
-        -flipX 0
-        -flipY 0
-        -useAlpha 1
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.5 
-        -image "%USERPROFILE%/Maya/prefs/icons/USD_mtl3.png" 
-        -image1 "%USERPROFILE%/Maya/prefs/icons/USD_mtl3.png" 
-        -style "iconOnly" 
-        -marginWidth 0
-        -marginHeight 1
-        -command "import df_USD_mtlExport\ndf_USD_mtlExport.main()" 
-        -sourceType "python" 
         -commandRepeatable 1
         -flat 1
     ;
@@ -834,46 +800,12 @@ global proc shelf_DF_docs () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "%USERPROFILE%/Maya/prefs/icons/USD_view.png" 
-        -image1 "%USERPROFILE%/Maya/prefs/icons/USD_view.png" 
+        -image "icons/USD_view.png" 
+        -image1 "icons/USD_view.png" 
         -style "iconOnly" 
         -marginWidth 0
         -marginHeight 1
         -command "#############################################\n'''\nOpen USDview for selected assets\n'''\n#############################################\n\nimport maya.cmds as cmds\nimport ufe\nfrom pxr import Usd\nimport mayaUsd as uLib\nimport os\nimport sys\nimport subprocess\nif ufe.GlobalSelection.get().empty():\n\tcmds.error('Select any ufe item under (and including) gateway node')\nufeItem = ufe.GlobalSelection.get().back()\nufePathGateway = ufe.Path(ufeItem.path().segments[0])\nstage = uLib.ufe.getStage(str(ufePathGateway))\nsdfLayer = stage.GetRootLayer()\nif not sdfLayer.realPath:\n\tcmds.error('Selected ufe item does not have a concrte layer path - is it an anonymous layer?')\nmayaVer = int(cmds.about(q=True, majorVersion=True))\nmayapyBinPath = os.path.join(os.environ['MAYA_LOCATION'], 'bin')\nif mayaVer == 2022:\n\tmayapyPath = os.path.join(mayapyBinPath, 'mayapy{ver}'.format(ver='' if sys.version_info.major == 3 else '2'))\nelse:\n\tmayapyPath = os.path.join(mayapyBinPath, 'mayapy')  \nusdRootPath = os.environ['USD_LOCATION']\n\n# sanitise the path separators - slightly inefficient\nmayapyPath = mayapyPath.replace('\\\\', os.path.sep).replace('/', os.path.sep)\nusdRootPath = usdRootPath.replace('\\\\', os.path.sep).replace('/', os.path.sep)\nsdfLayerPath = sdfLayer.realPath.replace('\\\\', os.path.sep).replace('/', os.path.sep)\n\n# finally build out the nice pathing\nusdToolsPath = os.path.join(usdRootPath, \"bin\")\nusdLibPath = os.path.join(usdRootPath, \"lib\")\nusdViewPath = os.path.join(usdToolsPath, 'usdview')\n\n# Install OpenGL module, if needed\ntry:\n\timport OpenGL\nexcept:\n\tsubprocess.check_call([mayapyPath, '-m', 'pip', 'install', 'PyOpenGL==3.1.0'])\nif sys.platform in ('win32'):\n\tcreationflags = 0x08000000 # CREATE_NO_WINDOW only for win32, not MacOS or Linux\nelse:\n\tcreationflags = 0\nprint(\"Executing command\\n\t{}\".format(\" \".join([mayapyPath, usdViewPath, sdfLayerPath])))\nsubprocess.Popen([mayapyPath, usdViewPath, sdfLayerPath], creationflags=creationflags)\n" 
-        -sourceType "python" 
-        -commandRepeatable 1
-        -flat 1
-    ;
-    shelfButton
-        -enableCommandRepeat 1
-        -flexibleWidthType 3
-        -flexibleWidthValue 64
-        -enable 1
-        -width 35
-        -height 34
-        -manage 1
-        -visible 1
-        -preventOverride 0
-        -annotation "Pick USD material from mesh" 
-        -enableBackground 0
-        -backgroundColor 0 0 0 
-        -highlightColor 0.321569 0.521569 0.65098 
-        -align "center" 
-        -label "USD Get material from Mesh" 
-        -labelOffset 0
-        -rotation 0
-        -flipX 0
-        -flipY 0
-        -useAlpha 1
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.5 
-        -image "/Users/Derek/Library/Preferences/Autodesk/maya/2024/prefs/icons/USD_pick.png" 
-        -image1 "/Users/Derek/Library/Preferences/Autodesk/maya/2024/prefs/icons/USD_pick.png" 
-        -style "iconOnly" 
-        -marginWidth 0
-        -marginHeight 1
-        -command "\"\"\"\nUSD Get material from Mesh\nRoy Nieterau \nhttps://gist.github.com/BigRoy/758279a185e4b57b266b2dddca1918de\n\n call with:\nimport USD_getMaterialFromMesh\n\"\"\"\n\nfrom maya import cmds\nimport mayaUsd.ufe\nfrom pxr import Usd, UsdShade\n\ndef pairwise(iterable):\n    it = iter(iterable)\n    return zip(it, it)\n\n\ndef iter_ufe_usd_selection():\n    for path in cmds.ls(selection=True, \n                        ufeObjects=True, \n                        long=True,\n                        absoluteName=True):\n        if \",\" not in path:\n            continue\n\n        node, ufe_path = path.split(\",\", 1)\n        if cmds.nodeType(node) != \"mayaUsdProxyShape\":\n            continue\n\n        yield path\n        \n\ndef get_ufe_path(proxy, prim):\n    prim_path = str(prim.GetPath())\n    return \"{},{}\".format(proxy, prim_path)\n    \n        \ndef convert_ufe_paths_to_bound_materials(\n    ufe_paths=None,\n    material_purpose=UsdShade.Tokens.allPurpose,\n    include_subsets=False\n):\n    \"\"\"Convert selection or ufe node paths to bound materials\n    \n    Arguments:\n        ufe_paths (Optional[list]): UFE paths to operate on.\n            If not provided current selection will be used.\n        material_purpose (UsdShade.Token): Material purpose \n            to return bounds for. Defaults to all purposes.\n        include_subsets (bool): Whether to include bound\n            materials from material bind subsets.\n    \n    Returns:\n        list: UsdShadeMaterial UFE paths.\n            \n    \"\"\"\n    \n    if ufe_paths is None:\n        ufe_paths = list(iter_ufe_usd_selection())\n\n    targets = []\n    for path in ufe_paths:\n        proxy, prim_path = path.split(\",\", 1)\n        prim = mayaUsd.ufe.ufePathToPrim(path)\n        if not prim:\n            continue\n        \n        search_from = [prim]\n        if include_subsets:\n            subsets = UsdShade.MaterialBindingAPI(prim).GetMaterialBindSubsets()\n            for subset in subsets:\n                search_from.append(subset.GetPrim())\n            \n        bounds = UsdShade.MaterialBindingAPI.ComputeBoundMaterials(search_from, material_purpose)\n        for (material, relationship) in zip(*bounds):\n            material_prim = material.GetPrim()\n            if material_prim.IsValid():\n                material_prim_ufe_path = get_ufe_path(proxy, material_prim)\n                targets.append(material_prim_ufe_path)\n        \n    return targets\n        \n\ntargets = convert_ufe_paths_to_bound_materials(include_subsets=True)\nif targets:\n    cmds.select(targets, replace=True, noExpand=True)" 
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1
