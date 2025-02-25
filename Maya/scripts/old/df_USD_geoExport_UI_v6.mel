@@ -1,44 +1,43 @@
+//---------------------------------------------------------
 /*
  Export geo to USD with support for:
   - Option for Proxy/render display purposes,
-  - Reference geometry (.usdc) into payload file (.usda) which is payloaded into Asset file
-  - Custom metadata with originating Maya file “exported_from”
-  - variant switch to display high res mesh in viewport (with purposes option)
-  - switch to "_geo" naming convention for mesh file in crate binary.
-  - look file with overs for MaterialX references
-  - Support for complex hierarchy under under geo scope (or under render purpose if option selected) 
-  - Relative texture file paths for MaterialX docs
-  - Export bound MaterialX documents to file (creates in "mat" directory inside save folder)
-  - Inherit from class primitive
-  - meters to units in metadata (default centimeters)
-  - fix mesh name clashes by renaming with unique names.
-  - option to export MaterialX as native USD.
-
- v6.1 Export payloaded USD asset with MaterialX reference as native USD
+ - Reference geometry (.usdc) into payload file (.usda) which is payloaded into Asset file
+ - Custom metadata with originating Maya file “exported_from”
+ - variant switch to display high res mesh in viewport (with purposes option)
+ - switch to "_geo" naming convention for mesh file in crate binary.
+ - look file with overs for MaterialX references
+ - Support for complex hierarchy under under geo scope (or under render purpose if option selected) 
+ - Relative texture file paths for MaterialX docs
+ - Export bound MaterialX documents to file (creates in "mat" directory inside save folder)
+ - Inherit from class primitive
+ - meters to units in metadata (default centimeters)
+ - fix mesh name clashes by renaming with unique names.
+ 
+ v6.0 Export payloaded USD asset with MaterialX reference
  (c) Derek Flood, 2025
-
-
+ 
+ 
  Usage: Select the root prim to export. Confirm proxy and render groups in file dialog. Enter path and filename for root asset. Export.
  Will create a root asset file and corresponding geom and payload files.
-
+ 
  call with:
  source df_USD_geoExport_UI;
  mayaUsd_exportGeo();
-
-
-
- # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- # DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- # FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- # DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-// ---------------------------------------------------------
+//---------------------------------------------------------
 
 proc setOptionVars()
 {
@@ -73,10 +72,6 @@ proc setOptionVars()
     if (!`optionVar -exists optVar_relativePaths`) {
         optionVar -intValue optVar_relativePaths 1; // Default to selected
     }
-    
-    if (!`optionVar -exists optVar_nativeUSD`) {
-        optionVar -intValue optVar_nativeUSD 1; // Default to selected
-    }
 
     if (!`optionVar -exists optVar_usePurposes`) {
         optionVar -intValue optVar_usePurposes 0; // Default to unselected
@@ -91,12 +86,8 @@ global proc string df_UISetup(string $parent)
 
     setParent $layout;
     
-    // Add the checkbox for MaterialX as native USD
-    checkBox -label "Convert MaterialX to native USD (.mtlx to .usda)" -value 1 materialXNativeUSDChkBox;
-    
     // Add the checkbox for MaterialX relative texture file paths
-    checkBox -label "Use relative texture file paths" -value 1 materialXRelativePathsChkBox;
-
+    checkBox -label "Convert MaterialX docs to relative texture file paths" -value 1 materialXRelativePathsChkBox;
     
     // Add the checkbox for creating render and proxy purposes from subgroups
     checkBox -label "Create render and proxy purposes from subgroups" -value 0 -cc "togglePurposeFields()" createPurposesChkBox;
@@ -151,7 +142,6 @@ global proc df_UIInit(string $parent, string $filterType)
     string $rpath = `optionVar -q optVar_render`;
     string $ppath = `optionVar -q optVar_proxy`;
     int $relativePathsEnabled = `optionVar -q optVar_relativePaths`;
-    int $nativeUSDEnabled = `optionVar -q optVar_nativeUSD`;
     int $usePurposes = `optionVar -q optVar_usePurposes`;
 
     setParent $parent;
@@ -165,7 +155,6 @@ global proc df_UIInit(string $parent, string $filterType)
         textFieldGrp -e -bgc 1 0 0 proxy_field; // Change the background color to red if "UNDEFINED"
     }
     checkBox -e -value $relativePathsEnabled materialXRelativePathsChkBox;
-    checkBox -e -value $nativeUSDEnabled materialXNativeUSDChkBox;
     checkBox -e -value $usePurposes createPurposesChkBox;
 
     if ($usePurposes) {
@@ -185,7 +174,6 @@ global proc df_UICommit(string $parent)
     optionVar -stringValue optVar_render (`textFieldGrp -q -text  render_field`);
     optionVar -stringValue optVar_proxy (`textFieldGrp -q -text  proxy_field`);
     optionVar -intValue optVar_relativePaths (`checkBox -q -value materialXRelativePathsChkBox`);
-    optionVar -intValue optVar_nativeUSD (`checkBox -q -value materialXNativeUSDChkBox`);
     optionVar -intValue optVar_usePurposes (`checkBox -q -value createPurposesChkBox`);
 }
 
@@ -195,7 +183,6 @@ global proc mayaUsd_exportGeo()
     optionVar -remove optVar_render;
     optionVar -remove optVar_proxy;
     optionVar -remove optVar_relativePaths;
-    optionVar -remove optVar_nativeUSD;
     optionVar -remove optVar_usePurposes;
 
     string $sel[] = `ls -sl`;
@@ -241,7 +228,6 @@ global proc mayaUsd_exportGeo()
     $render_value = `optionVar -q optVar_render`; // pass this value to python
     $proxy_value = `optionVar -q optVar_proxy`; // pass this value to python
     $relativePathsEnabled = `optionVar -q optVar_relativePaths`; // pass this value to python
-    $nativeUSDEnabled = `optionVar -q optVar_nativeUSD`; // pass this value to python
     $usePurposes = `optionVar -q optVar_usePurposes`; // pass this value to python
     $fileName = $filepath[0];
 
@@ -252,7 +238,7 @@ global proc mayaUsd_exportGeo()
     }
 
     if (size($fileName) > 0){
-        python("from MayaToUsdMtlX import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "', '" + $relativePathsEnabled + "', '" + $nativeUSDEnabled + "', '" + $usePurposes + "')");
+        python("import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "', '" + $relativePathsEnabled + "', '" + $usePurposes + "')");
     }
 }
 
