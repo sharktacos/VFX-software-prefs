@@ -233,7 +233,7 @@ def export_materialX_usd(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled,
         try:
             
             # Export materialX doc
-            export_materialX_doc(mtlx_absolute_path_MX, mtlx_docPath, relativePathsEnabled)
+            export_materialX_doc(mtlx_absolute_path_MX, mtlx_docPath)
             
             # convert texture paths to relative in mtlx docs.
             relativePathsEnabled = int(relativePathsEnabled)
@@ -253,7 +253,7 @@ def export_materialX_usd(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled,
             print(f"An error occurred creating the native USD MaterialX for {mtlx_name}: {e}")
         
     else:
-        export_materialX_doc(mtlx_absolute_path_MX, mtlx_docPath, relativePathsEnabled)
+        export_materialX_doc(mtlx_absolute_path_MX, mtlx_docPath)
         
         # convert texture paths to relative in mtlx docs.
         relativePathsEnabled = int(relativePathsEnabled)
@@ -261,8 +261,8 @@ def export_materialX_usd(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled,
             convert_texture_paths_to_relative(mtlx_absolute_path_MX)
 
 
-'''
-def export_materialX_doc(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled):
+
+def export_materialX_doc(mtlx_absolute_path, mtlx_docPath):
 
     # Normalize the mtlx_absolute_path to ensure compatibility across different operating systems
     #mtlx_absolute_path = os.path.normpath(mtlx_absolute_path)
@@ -273,7 +273,7 @@ def export_materialX_doc(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled)
 
     # Perform the Export Operation
     operation_result = contextOps.doOp(['MxExportDocument', mtlx_absolute_path])
-'''
+
     
 
 
