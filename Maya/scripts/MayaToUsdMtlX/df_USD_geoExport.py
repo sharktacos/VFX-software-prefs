@@ -233,8 +233,11 @@ def export_materialX_usd(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled,
 
         try:
             
-            # Export materialX doc
+
+            # Export materialX doc (silently)
+            #mc.scriptEditorInfo(suppressWarnings=False, suppressInfo=True)
             export_materialX_doc(mtlx_absolute_path_MX, mtlx_docPath)
+            
             
             # convert texture paths to relative in mtlx docs.
             relativePathsEnabled = int(relativePathsEnabled)
@@ -248,6 +251,7 @@ def export_materialX_usd(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled,
             # delete the .mtlx file
             os.unlink(mtlx_absolute_path_MX)
             
+            
         except FileNotFoundError:
             print(f"Error: MaterialX file not found: {mtlx_absolute_path}")
         except Exception as e:
@@ -260,6 +264,8 @@ def export_materialX_usd(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled,
         relativePathsEnabled = int(relativePathsEnabled)
         if relativePathsEnabled:
             convert_texture_paths_to_relative(mtlx_absolute_path_MX)
+            
+    #mc.scriptEditorInfo(suppressWarnings=False, suppressInfo=False)
 
 
 
@@ -297,6 +303,8 @@ def get_mesh_and_material_info(fileName, relativePathsEnabled, usePurposes, nati
     
     mesh_info = []
     error_messages = []
+    
+    mc.scriptEditorInfo(suppressWarnings=False, suppressInfo=True)
 
     # Get all mesh shapes under the transform recursively
     shapes = get_all_mesh_shapes(found_render)
@@ -344,6 +352,8 @@ def get_mesh_and_material_info(fileName, relativePathsEnabled, usePurposes, nati
         except Exception as e:
             print(f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file. ")
             continue
+            
+    mc.scriptEditorInfo(suppressWarnings=False, suppressInfo=True)
             
 
     return mesh_info
