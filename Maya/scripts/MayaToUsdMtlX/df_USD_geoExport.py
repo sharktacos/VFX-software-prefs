@@ -152,11 +152,21 @@ def convert_texture_paths_to_relative(mtlx_file_path):
         mtlx_directory = os.path.dirname(mtlx_file_path)
         mtlx_filename = os.path.basename(mtlx_file_path)
         
+        '''
         # Function to convert absolute paths to relative paths
         def make_relative_path(path):
             if os.path.isabs(path):
                 return os.path.relpath(path, mtlx_directory)
             return path
+        '''   
+        # Function to convert absolute paths to relative paths
+        def make_relative_path(path):
+            if os.path.isabs(path):
+                # Ensure forward slashes in the file path
+                path = path.replace('\\', '/')
+                return os.path.relpath(path, mtlx_directory).replace('\\', '/')
+            return path.replace('\\', '/')
+        
         
         # Traverse the XML tree to find all texture file paths
         for elem in root.iter():
@@ -234,8 +244,7 @@ def export_materialX_usd(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled,
         try:
             
 
-            # Export materialX doc (silently)
-            #mc.scriptEditorInfo(suppressWarnings=False, suppressInfo=True)
+            # Export materialX doc 
             export_materialX_doc(mtlx_absolute_path_MX, mtlx_docPath)
             
             
@@ -265,7 +274,6 @@ def export_materialX_usd(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled,
         if relativePathsEnabled:
             convert_texture_paths_to_relative(mtlx_absolute_path_MX)
             
-    #mc.scriptEditorInfo(suppressWarnings=False, suppressInfo=False)
 
 
 
