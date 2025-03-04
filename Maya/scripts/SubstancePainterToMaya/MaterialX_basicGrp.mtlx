@@ -9,12 +9,12 @@
   <!-- Standard Surface with better defaults -->
   <standard_surface name="MatName_mtl" type="surfaceshader" nodedef="ND_standard_surface_surfaceshader">
     <input name="base_color" type="color3" output="outColor" nodegraph="MatName_nodes" />
-    <input name="base" type="float" interfacename="diffuse_weight" value="0.8" />
-    <input name="specular" type="float" interfacename="specular_weight" value="0.5" />
-    <input name="subsurface_radius" type="color3" interfacename="subsurface_radius" value="0.2258, 0.0258, 0.0076" />
+    <input name="base" type="float" value="0.8" />
+    <input name="specular" type="float" value="0.5" />
+    <input name="subsurface_radius" type="color3" value="0.2258, 0.0258, 0.0076" />
     <input name="subsurface_anisotropy" type="float" value="0.8" />
-    <input name="subsurface_scale" type="float" interfacename="subsurface_scale" value="0.1" />
-    <input name="subsurface" type="float" interfacename="Subsurface_weight" value="0" />
+    <input name="subsurface_scale" type="float" value="0.1" />
+    <input name="subsurface" type="float" value="0" />
     <input name="specular_roughness" type="float" output="outRoughness" nodegraph="MatName_nodes" />
     <input name="coat_normal" type="vector3" output="outNormal" nodegraph="MatName_nodes" />
     <input name="normal" type="vector3" output="outNormal" nodegraph="MatName_nodes" />
