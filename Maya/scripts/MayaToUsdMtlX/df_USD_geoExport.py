@@ -472,9 +472,9 @@ def payload_stage(fileName, root_asset):
     stage: Usd.Stage = Usd.Stage.Open(pay_layer)
     
     # Set the stage metadata
-    stage.SetMetadata('metersPerUnit', 0.01)
-    stage.SetMetadata('upAxis', 'Y')
-    
+    UsdGeom.SetStageMetersPerUnit(stage, UsdGeom.LinearUnits.centimeters)
+    UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
+
     # Set the subLayers with relative paths
     relative_look_file = f"./{os.path.basename(look_file)}"
     relative_geom_file = f"./{os.path.basename(geom_file)}"
