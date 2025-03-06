@@ -1,3 +1,7 @@
+'''
+v02 fix flats
+'''
+
 import os
 import re
 from pathlib import Path
@@ -97,9 +101,9 @@ def mtlxConnect (texture, clean, stackShapePath):
             nor_input = ufe.AttributeInfo(mtl_item.path(), 'inputs:normal')
 
             # Disconnect the image to shader.
-            #connectionHandler_nor = ufe.RunTimeMgr.instance().connectionHandler(mxRuntimeId)
-            connectionHandler.disconnect(nor_output, coatNor_input)
-            connectionHandler.disconnect(nor_output, nor_input)
+            connectionHandler_nor = ufe.RunTimeMgr.instance().connectionHandler(mxRuntimeId)
+            connectionHandler_nor.disconnect(nor_output, coatNor_input)
+            connectionHandler_nor.disconnect(nor_output, nor_input)
             
             #delete map nodes
             normalmap = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%" + materialName + "_nor"
@@ -135,8 +139,8 @@ def mtlxConnect (texture, clean, stackShapePath):
             ruf_input = ufe.AttributeInfo(mtl_item.path(), 'inputs:specular_roughness')
 
             # Disconnect the image to shader.
-            #connectionHandler_ruf = ufe.RunTimeMgr.instance().connectionHandler(mxRuntimeId)
-            connectionHandler.disconnect(ruf_output, ruf_input)
+            connectionHandler_ruf = ufe.RunTimeMgr.instance().connectionHandler(mxRuntimeId)
+            connectionHandler_ruf.disconnect(ruf_output, ruf_input)
             
             # delete the map nodes
             map_ruf = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%" + materialName + "_spc"
