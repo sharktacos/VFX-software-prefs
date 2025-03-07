@@ -1,0 +1,262 @@
+/*
+ Export geo to USD with support for:
+  - Option for Proxy/render display purposes,
+  - Reference geometry (.usdc) into payload file (.usda) which is payloaded into Asset file
+  - Custom metadata with originating Maya file “exported_from”
+  - variant switch to display high res mesh in viewport (with purposes option)
+  - switch to "_geo" naming convention for mesh file in crate binary.
+  - look file with overs for MaterialX references
+  - Support for complex hierarchy under under geo scope (or under render purpose if option selected) 
+  - Relative texture file paths for MaterialX docs
+  - Export bound MaterialX documents to file (creates in "mat" directory inside save folder)
+  - Inherit from class primitive
+  - meters to units in metadata (default centimeters)
+  - fix mesh name clashes by renaming with unique names.
+  - option to export MaterialX as native USD.
+
+ v6.1 Export payloaded USD asset with MaterialX reference as native USD
+ (c) Derek Flood, 2025
+
+
+ Usage: Select the root prim to export. Confirm proxy and render groups in file dialog. Enter path and filename for root asset. Export.
+ Will create a root asset file and corresponding geom and payload files.
+
+ call with:
+ source df_USD_geoExport_UI;
+ mayaUsd_exportGeo();
+
+
+
+ # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ # DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ # FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ # DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+// ---------------------------------------------------------
+
+proc setOptionVars()
+{
+    // Get the child group names under selected to populate purpose fields
+    $sel = `ls -sl`;
+    //$dag_root = `substitute "\|" $sel[0] "x"`;
+    $dag_root = substituteAllString($sel[0], "|", "");
+    $geoGrpPath = `listRelatives -path $sel`;
+    $find_groups = `listRelatives $geoGrpPath`;
+    string $found_render = "UNDEFINED";
+    string $found_proxy = "UNDEFINED";
+
+    if (size($find_groups) > 0) {
+        $found_render = $find_groups[0];
+    }
+    if (size($find_groups) > 1) {
+        $found_proxy = $find_groups[1];
+    }
+
+    if (!`optionVar -exists optVar_root`) {
+        optionVar -stringValue optVar_root $dag_root;
+    }
+    
+    if (!`optionVar -exists optVar_render`) {
+        optionVar -stringValue optVar_render $found_render;
+    }
+
+    if (!`optionVar -exists optVar_proxy`) {
+        optionVar -stringValue optVar_proxy $found_proxy;
+    }
+
+    if (!`optionVar -exists optVar_relativePaths`) {
+        optionVar -intValue optVar_relativePaths 1; // Default to selected
+    }
+    
+    if (!`optionVar -exists optVar_nativeUSD`) {
+        optionVar -intValue optVar_nativeUSD 1; // Default to selected
+    }
+
+    if (!`optionVar -exists optVar_usePurposes`) {
+        optionVar -intValue optVar_usePurposes 0; // Default to unselected
+    }
+}
+
+// creates the options of the File dialog
+global proc string df_UISetup(string $parent)
+{
+    setParent $parent;
+    string $layout = `scrollLayout -childResizable true`;
+
+    setParent $layout;
+    
+    // Add the checkbox for MaterialX as native USD
+    checkBox -label "Convert MaterialX to native USD (.mtlx to .usda)" -value 1 materialXNativeUSDChkBox;
+    
+    // Add the checkbox for MaterialX relative texture file paths
+    checkBox -label "Use relative texture file paths" -value 1 materialXRelativePathsChkBox;
+    // Add the checkbox for creating render and proxy purposes from subgroups
+    checkBox -label "Localize texture files" -value 0 LocalizeTexChkBox;
+    // Add the checkbox for creating render and proxy purposes from subgroups
+    checkBox -label "Create render and proxy purposes from subgroups" -value 0 -cc "togglePurposeFields()" createPurposesChkBox;
+
+    $title = "USD Asset geometry structure:";
+    $frame = `frameLayout -label $title -collapsable false`;
+    text -align left -label "";
+    textFieldGrp -ed 0 -bgc 0.15 0.15 0.15 -label "Root Prim:" -ann "Derived from selected node."  root_field;
+    text -align left -label "           	geo/";
+    
+    // Render and Proxy fields
+    columnLayout -adjustableColumn true purposeFields;
+    textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label "Render Purpose:" -ann "Derived from children of selected root node."  render_field;
+    textFieldGrp -ed 0 -bgc 0.6 0.6 0.6 -label "Proxy Purpose:" -ann "Derived from children of selected root node."  proxy_field;
+    setParent ..;
+    
+    // Initially hide render and proxy fields
+    hideUIComponent("purposeFields");
+
+    return $layout;
+}
+
+global proc togglePurposeFields() {
+    int $createPurposes = `checkBox -q -value createPurposesChkBox`;
+    if ($createPurposes) {
+        showUIComponent("purposeFields");
+    } else {
+        hideUIComponent("purposeFields");
+    }
+}
+
+global proc showUIComponent(string $component) {
+    string $children[] = `columnLayout -q -childArray $component`;
+    for ($child in $children) {
+        control -e -visible true $child;
+    }
+}
+
+global proc hideUIComponent(string $component) {
+    string $children[] = `columnLayout -q -childArray $component`;
+    for ($child in $children) {
+        control -e -visible false $child;
+    }
+}
+
+// UIInit
+global proc df_UIInit(string $parent, string $filterType)
+{
+    setOptionVars();
+
+    string $xpath = `optionVar -q optVar_root`;
+    string $rpath = `optionVar -q optVar_render`;
+    string $ppath = `optionVar -q optVar_proxy`;
+    int $relativePathsEnabled = `optionVar -q optVar_relativePaths`;
+    int $localizeTexEnabled = `optionVar -q optVar_LocalizeTex`;
+    int $nativeUSDEnabled = `optionVar -q optVar_nativeUSD`;
+    int $usePurposes = `optionVar -q optVar_usePurposes`;
+
+    setParent $parent;
+    textFieldGrp -e -text $xpath root_field;
+    textFieldGrp -e -text $rpath render_field;
+    textFieldGrp -e -text $ppath proxy_field;
+    if ($rpath == "UNDEFINED") {
+        textFieldGrp -e -bgc 1 0 0 render_field; // Change the background color to red if "UNDEFINED"
+    }
+    if ($ppath == "UNDEFINED") {
+        textFieldGrp -e -bgc 1 0 0 proxy_field; // Change the background color to red if "UNDEFINED"
+    }
+    checkBox -e -value $relativePathsEnabled materialXRelativePathsChkBox;
+    checkBox -e -value $localizeTexEnabled LocalizeTexChkBox;
+    checkBox -e -value $nativeUSDEnabled materialXNativeUSDChkBox;
+    checkBox -e -value $usePurposes createPurposesChkBox;
+
+    if ($usePurposes) {
+        showUIComponent("purposeFields");
+    } else {
+        hideUIComponent("purposeFields");
+    }
+}
+
+// UICommit
+global proc df_UICommit(string $parent)
+{
+    setParent $parent;
+
+    // fetch values
+    optionVar -stringValue optVar_root (`textFieldGrp -q -text  root_field`);
+    optionVar -stringValue optVar_render (`textFieldGrp -q -text  render_field`);
+    optionVar -stringValue optVar_proxy (`textFieldGrp -q -text  proxy_field`);
+    optionVar -intValue optVar_relativePaths (`checkBox -q -value materialXRelativePathsChkBox`);
+    optionVar -intValue optVar_nativeUSD (`checkBox -q -value materialXNativeUSDChkBox`);
+    optionVar -intValue optVar_usePurposes (`checkBox -q -value createPurposesChkBox`);
+}
+
+global proc mayaUsd_exportGeo()
+{
+    optionVar -remove optVar_root;
+    optionVar -remove optVar_render;
+    optionVar -remove optVar_proxy;
+    optionVar -remove optVar_relativePaths;
+    optionVar -remove optVar_nativeUSD;
+    optionVar -remove optVar_usePurposes;
+
+    string $sel[] = `ls -sl`;
+    int $isSel = `size($sel)`;
+    string $workspace = `workspace -rootDirectory -query`;
+    string $geoGrp[] = `listRelatives $sel`;
+    string $geoGrpPath[] = `listRelatives -path $sel`;
+    string $GroupCount[] = `listRelatives -path $geoGrpPath`;
+    int $justTwo = `size $GroupCount`;
+    
+    // Check if nothing is selected
+    if (!$isSel) {
+        confirmDialog -message "Nothing Selected. Select the root node of your asset." -button "Derp";
+        return;
+    }
+
+    // Check if a MaterialX stack shape is selected
+    string $selType = `nodeType $sel[0]`;
+    if ($selType == "materialXStackShape") {
+        confirmDialog -message "A MaterialX stack shape is selected. Please select the root node of your asset." -button "Got it";
+        return;
+    }
+
+    int $usePurposes = `optionVar -q optVar_usePurposes`;
+    
+    if ($geoGrp[0] != "geo") {
+        confirmDialog -message "Missing \"geo\" group. Structure must be \n\nroot/ (asset name)\n   geo/\n \nNote that \"geo\" must be the exact name for the geometry scope. The root prim is typically given the name of the asset. For example \"fruitBowl\" " -button "Got it";
+        return;
+    }
+
+    string $filepath[] = `fileDialog2 
+                      -dialogStyle 2
+                      -fileMode 0
+                      -caption "Export selected to USD lookdev asset with referenced MaterialX docs." 
+                      -fileFilter "USD Export (*.usd *.usdc *.usda)" 
+                      -okCaption "Export" 
+                      -dir $workspace 
+                      -optionsUICreate "df_UISetup" 
+                      -optionsUIInit "df_UIInit" 
+                      -optionsUICommit "df_UICommit"`;
+
+    // Get the updated values after user selection
+    $render_value = `optionVar -q optVar_render`; // pass this value to python
+    $proxy_value = `optionVar -q optVar_proxy`; // pass this value to python
+    $relativePathsEnabled = `optionVar -q optVar_relativePaths`; // pass this value to python
+    $localizeTexEnabled = `optionVar -q optVar_LocalizeTex`; // pass this value to python
+    $nativeUSDEnabled = `optionVar -q optVar_nativeUSD`; // pass this value to python
+    $usePurposes = `optionVar -q optVar_usePurposes`; // pass this value to python
+    $fileName = $filepath[0];
+
+    // Perform the check after user selects the options
+    if ($usePurposes && $justTwo != 2) {
+        confirmDialog -message "For the render and proxy purpose option there must be just two child groups under \"geo\" please. Render and Proxy, in that order" -button "Sorry";
+        return;
+    }
+
+    if (size($fileName) > 0){
+        python("from MayaToUsdMtlX import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "', '" + $relativePathsEnabled + "', '" + $localizeTexEnabled + "', '" + $nativeUSDEnabled + "', '" + $usePurposes + "')");
+    }
+}
+
+//mayaUsd_exportGeo()
