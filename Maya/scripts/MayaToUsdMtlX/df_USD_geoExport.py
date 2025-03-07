@@ -55,6 +55,8 @@ import ufe
 import re
 from pathlib import Path
 import xml.etree.ElementTree as ET
+import shutil
+
 from MayaToUsdMtlX import df_mtlx2usd as MtlxToUsd
 from importlib import reload
 reload(MtlxToUsd)
@@ -191,6 +193,59 @@ def convert_texture_paths_to_relative(mtlx_file_path):
 
 
 
+def localize_texture_paths(mtlx_file_path):
+    """
+    Find absolute texture file paths, copy these files to ../textures/, 
+    and update the paths in the MaterialX document.
+    """
+    try:
+        # Parse the MaterialX document from the file
+        tree = ET.parse(mtlx_file_path)
+        root = tree.getroot()
+        
+        # Get the directory of the .mtlx file
+        mtlx_directory = os.path.dirname(mtlx_file_path)
+        textures_directory = os.path.abspath(os.path.join(mtlx_directory, '..', 'textures'))
+        
+        # Create the textures directory if it does not exist
+        if not os.path.exists(textures_directory):
+            os.makedirs(textures_directory)
+        
+        # Function to convert absolute paths to relative paths
+        def make_relative_path(path):
+            if os.path.isabs(path):
+                # Ensure forward slashes in the file path
+                path = path.replace('\\', '/')
+                return os.path.relpath(path, mtlx_directory).replace('\\', '/')
+            return path.replace('\\', '/')
+        
+        # Traverse the XML tree to find all texture file paths
+        for elem in root.iter():
+            if elem.tag == 'input' and elem.get('type') == 'filename':
+                original_path = elem.get('value')
+                
+                # Check if the path is already relative
+                if not os.path.isabs(original_path):
+                    continue
+                
+                # Copy the texture file to the textures directory
+                texture_filename = os.path.basename(original_path)
+                new_texture_path = os.path.join(textures_directory, texture_filename)
+                shutil.copy2(original_path, new_texture_path)
+                
+                # Convert to relative path
+                relative_path = make_relative_path(new_texture_path)
+                
+                elem.set('value', relative_path)
+        
+        # Write the updated MaterialX document back to the file
+        tree.write(mtlx_file_path, xml_declaration=True, encoding='utf-8')
+        #print(f" # Updated MaterialX document with new texture paths for: {mtlx_file_path}")
+    
+    except Exception as e:
+        print(f"An error occurred while updating texture paths for {mtlx_file_path}: {e}")
+        
+        
 
 
 def get_all_mesh_shapes(render_purp):
@@ -227,7 +282,7 @@ def get_relative_path(meshName, render_purp):
 
 
 
-def export_materialX_usd(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled, nativeUSDEnabled, mtlx_name):
+def export_materialX_usd(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled, localizeTexEnabled, nativeUSDEnabled, mtlx_name):
 
     # Normalize the mtlx_absolute_path to ensure compatibility across different operating systems
     mtlx_absolute_path = os.path.normpath(mtlx_absolute_path)
@@ -249,8 +304,11 @@ def export_materialX_usd(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled,
             
             
             # convert texture paths to relative in mtlx docs.
-            relativePathsEnabled = int(relativePathsEnabled)
-            if relativePathsEnabled:
+            #relativePathsEnabled = int(relativePathsEnabled)
+            
+            if localizeTexEnabled:
+                localize_texture_paths(mtlx_absolute_path_MX)
+            elif relativePathsEnabled:
                 convert_texture_paths_to_relative(mtlx_absolute_path_MX)
 
             # Convert MaterialX doc to native USD
@@ -270,8 +328,10 @@ def export_materialX_usd(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled,
         export_materialX_doc(mtlx_absolute_path_MX, mtlx_docPath)
         
         # convert texture paths to relative in mtlx docs.
-        relativePathsEnabled = int(relativePathsEnabled)
-        if relativePathsEnabled:
+        #relativePathsEnabled = int(relativePathsEnabled)
+        if localizeTexEnabled:
+            localize_texture_paths(mtlx_absolute_path_MX)
+        elif relativePathsEnabled:
             convert_texture_paths_to_relative(mtlx_absolute_path_MX)
             
 
@@ -604,12 +664,8 @@ def asset_stage(fileName, render_value, proxy_value, root_asset, dag_root, usePu
     stage.GetRootLayer().Save()
 
 
-def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEnabled, usePurposes, nativeUSDEnabled):
+def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEnabled, localizeTexEnabled, usePurposes, nativeUSDEnabled):
 
-    '''
-    Add functionality for proxy
-    test .mtlx if native disabled
-    '''
     nativeUSDEnabled = int(nativeUSDEnabled)
     
     # Strip the file extension from fileName and create new filename with '_look.usda'
@@ -620,16 +676,15 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
     look_layer = Sdf.Layer.CreateNew(look_file, args={'format': 'usda'})
     stage = Usd.Stage.Open(look_layer)
     
-    # Set stage metadata
+    # default prim is over, not xform 
+    default_prim = stage.OverridePrim(Sdf.Path(root_asset))
+    stage.SetDefaultPrim(default_prim.GetPrim())
+    #default_prim = UsdGeom.Xform.Define(stage, Sdf.Path(root_asset))
+    #stage.SetDefaultPrim(default_prim.GetPrim())
+    
+    # Set stage metadata   
     UsdGeom.SetStageMetersPerUnit(stage, UsdGeom.LinearUnits.centimeters)
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
-    
-    # Check if root_asset is valid
-    if not root_asset or not root_asset.startswith('/'):
-        raise ValueError("The root_asset path must be a non-empty absolute path starting with '/'.")
-    
-    # Define root prim as Xform
-    root_xform = UsdGeom.Xform.Define(stage, root_asset)
     
     # Make 'Materials' scope defined as a def and scope under the 'over' root asset
     materials_scope_path = f'{root_asset}/mtl'
@@ -655,7 +710,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
         # Check if native USD option is enabled for MaterialX
         if nativeUSDEnabled:
             # reference MaterialX as native USD .usda file
-            root_xform.GetPrim().GetReferences().AddReference(f'./mat/{mtlx_name}.usda', '/ASSET_MaterialX')
+            default_prim.GetPrim().GetReferences().AddReference(f'./mat/{mtlx_name}.usda', '/ASSET_MaterialX')
     
         else:
             # reference MaterialX document as .mtlx file
@@ -778,11 +833,12 @@ def arnold_subdiv():
 
 
 
-def main(fileName, render_value, proxy_value, relativePathsEnabled, nativeUSDEnabled, usePurposes):
+def main(fileName, render_value, proxy_value, relativePathsEnabled, localizeTexEnabled, nativeUSDEnabled, usePurposes):
     sel=mc.ls(sl=True)
     dag_root = sel[0].replace("|", "")
     root_asset = "/" + dag_root
     relativePathsEnabled = int(relativePathsEnabled)
+    localizeTexEnabled = int(localizeTexEnabled)
     nativeUSDEnabled = int(nativeUSDEnabled)
     usePurposes = int(usePurposes)
     
@@ -790,7 +846,7 @@ def main(fileName, render_value, proxy_value, relativePathsEnabled, nativeUSDEna
     ensure_unique_mesh_names()
     arnold_subdiv()
     geom_stage(fileName, root_asset, render_value, proxy_value, usePurposes)
-    look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEnabled, usePurposes, nativeUSDEnabled)
+    look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEnabled, localizeTexEnabled, usePurposes, nativeUSDEnabled)
 
     payload_stage(fileName, root_asset)
     asset_stage(fileName, render_value, proxy_value, root_asset, dag_root, usePurposes)

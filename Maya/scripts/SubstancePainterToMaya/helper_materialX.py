@@ -148,7 +148,13 @@ def mtlxConnect (texture, clean, stackShapePath):
 
             mc.delete(map_ruf)
             mc.delete(map_lerp)
-
+            
+            # set spec value
+            '''
+            shaderAttributes = ufe.Attributes.attributes(mtl_item)
+            roughnessAttribute = shaderAttributes.attribute('inputs:specular_roughness')
+            roughnessAttribute.set(0.3)
+            '''
         
 
             # if delete option is set, delete flat texture files.
