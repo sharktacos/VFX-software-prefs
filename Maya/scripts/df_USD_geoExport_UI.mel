@@ -74,6 +74,10 @@ proc setOptionVars()
         optionVar -intValue optVar_relativePaths 1; // Default to selected
     }
     
+    if (!`optionVar -exists optVar_LocalizeTex`) {
+        optionVar -intValue optVar_LocalizeTex 0; // Default to unselected
+    }
+
     if (!`optionVar -exists optVar_nativeUSD`) {
         optionVar -intValue optVar_nativeUSD 1; // Default to selected
     }
@@ -96,8 +100,8 @@ global proc string df_UISetup(string $parent)
     
     // Add the checkbox for MaterialX relative texture file paths
     checkBox -label "Use relative texture file paths" -value 1 materialXRelativePathsChkBox;
-
-    
+    // Add the checkbox for creating render and proxy purposes from subgroups
+    checkBox -label "Localize texture files" -value 0 LocalizeTexChkBox;
     // Add the checkbox for creating render and proxy purposes from subgroups
     checkBox -label "Create render and proxy purposes from subgroups" -value 0 -cc "togglePurposeFields()" createPurposesChkBox;
 
@@ -151,6 +155,7 @@ global proc df_UIInit(string $parent, string $filterType)
     string $rpath = `optionVar -q optVar_render`;
     string $ppath = `optionVar -q optVar_proxy`;
     int $relativePathsEnabled = `optionVar -q optVar_relativePaths`;
+    int $localizeTexEnabled = `optionVar -q optVar_LocalizeTex`;
     int $nativeUSDEnabled = `optionVar -q optVar_nativeUSD`;
     int $usePurposes = `optionVar -q optVar_usePurposes`;
 
@@ -165,6 +170,7 @@ global proc df_UIInit(string $parent, string $filterType)
         textFieldGrp -e -bgc 1 0 0 proxy_field; // Change the background color to red if "UNDEFINED"
     }
     checkBox -e -value $relativePathsEnabled materialXRelativePathsChkBox;
+    checkBox -e -value $localizeTexEnabled LocalizeTexChkBox;
     checkBox -e -value $nativeUSDEnabled materialXNativeUSDChkBox;
     checkBox -e -value $usePurposes createPurposesChkBox;
 
@@ -185,6 +191,7 @@ global proc df_UICommit(string $parent)
     optionVar -stringValue optVar_render (`textFieldGrp -q -text  render_field`);
     optionVar -stringValue optVar_proxy (`textFieldGrp -q -text  proxy_field`);
     optionVar -intValue optVar_relativePaths (`checkBox -q -value materialXRelativePathsChkBox`);
+    optionVar -intValue optVar_LocalizeTex (`checkBox -q -value LocalizeTexChkBox`);
     optionVar -intValue optVar_nativeUSD (`checkBox -q -value materialXNativeUSDChkBox`);
     optionVar -intValue optVar_usePurposes (`checkBox -q -value createPurposesChkBox`);
 }
@@ -195,6 +202,7 @@ global proc mayaUsd_exportGeo()
     optionVar -remove optVar_render;
     optionVar -remove optVar_proxy;
     optionVar -remove optVar_relativePaths;
+    optionVar -remove optVar_LocalizeTex;
     optionVar -remove optVar_nativeUSD;
     optionVar -remove optVar_usePurposes;
 
@@ -241,6 +249,7 @@ global proc mayaUsd_exportGeo()
     $render_value = `optionVar -q optVar_render`; // pass this value to python
     $proxy_value = `optionVar -q optVar_proxy`; // pass this value to python
     $relativePathsEnabled = `optionVar -q optVar_relativePaths`; // pass this value to python
+    $localizeTexEnabled = `optionVar -q optVar_LocalizeTex`; // pass this value to python
     $nativeUSDEnabled = `optionVar -q optVar_nativeUSD`; // pass this value to python
     $usePurposes = `optionVar -q optVar_usePurposes`; // pass this value to python
     $fileName = $filepath[0];
@@ -252,7 +261,7 @@ global proc mayaUsd_exportGeo()
     }
 
     if (size($fileName) > 0){
-        python("from MayaToUsdMtlX import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "', '" + $relativePathsEnabled + "', '" + $nativeUSDEnabled + "', '" + $usePurposes + "')");
+        python("from MayaToUsdMtlX import df_USD_geoExport; df_USD_geoExport.main('" + $fileName + "', '" + $render_value + "', '" + $proxy_value + "', '" + $relativePathsEnabled + "', '" + $localizeTexEnabled + "', '" + $nativeUSDEnabled + "', '" + $usePurposes + "')");
     }
 }
 

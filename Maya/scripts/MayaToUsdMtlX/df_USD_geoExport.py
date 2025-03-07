@@ -198,6 +198,7 @@ def localize_texture_paths(mtlx_file_path):
     Find absolute texture file paths, copy these files to ../textures/, 
     and update the paths in the MaterialX document.
     """
+
     try:
         # Parse the MaterialX document from the file
         tree = ET.parse(mtlx_file_path)
@@ -353,7 +354,7 @@ def export_materialX_doc(mtlx_absolute_path, mtlx_docPath):
 
 
             
-def get_mesh_and_material_info(fileName, relativePathsEnabled, usePurposes, nativeUSDEnabled):
+def get_mesh_and_material_info(fileName, relativePathsEnabled, localizeTexEnabled, usePurposes, nativeUSDEnabled):
     # Get mesh and material information for all meshes under a given transform.
 
     usd_directory = os.path.dirname(os.path.abspath(fileName))
@@ -411,7 +412,7 @@ def get_mesh_and_material_info(fileName, relativePathsEnabled, usePurposes, nati
             # Check if the MaterialX file exists on disk
             if not os.path.exists(mtlx_absolute_path):
                 # Export MaterialX Document if it doesn't exist
-                export_materialX_usd(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled, nativeUSDEnabled, mtlx_name)
+                export_materialX_usd(mtlx_absolute_path, mtlx_docPath, relativePathsEnabled, localizeTexEnabled, nativeUSDEnabled, mtlx_name)
 
                 
             # Append the meshName, relative path, full path of the MaterialX file, and material name to the list
@@ -700,7 +701,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
 
     # -------- Mesh --------------
     # Process all meshes and materials under the given render purpose
-    mesh_material_info = get_mesh_and_material_info(fileName, relativePathsEnabled, usePurposes, nativeUSDEnabled)
+    mesh_material_info = get_mesh_and_material_info(fileName, relativePathsEnabled, localizeTexEnabled, usePurposes, nativeUSDEnabled)
     
     for meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path in mesh_material_info:
         
@@ -841,6 +842,7 @@ def main(fileName, render_value, proxy_value, relativePathsEnabled, localizeTexE
     localizeTexEnabled = int(localizeTexEnabled)
     nativeUSDEnabled = int(nativeUSDEnabled)
     usePurposes = int(usePurposes)
+    
     
     # Run the function to ensure unique names
     ensure_unique_mesh_names()
