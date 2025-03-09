@@ -8,6 +8,15 @@ try:
 except:
     import PySide6 as PySide
     
+try:
+    import PySide2.QtGui as QtGui
+except ImportError:
+    import PySide6.QtGui as QtGui
+    
+import numpy as np
+
+
+    
 
 
 
@@ -628,7 +637,7 @@ def is_black_EXR(path):
     return black
 
 
-def is_flat_color(path):
+def is_flat_colorOLD(path):
     img = PySide.QtGui.QImage(path)
     
     # Fail-safe for invalid image formats (EXR 16/32b float)
@@ -645,6 +654,26 @@ def is_flat_color(path):
     bits = img.constBits()
     first = bits[0]   
     return all(first == next for next in bits)
+    
+def is_flat_color(path):
+    img = QtGui.QImage(path)
+    
+    # Fail-safe for invalid image formats (EXR 16/32b float)
+    if img.isNull():
+        print('Invalid 16/32b image format. Try OpenEXR instead. Cannot parse: ' + path)
+        return False
+
+    # Convert to grayscale if not already
+    if img.format() != QtGui.QImage.Format_Grayscale8:
+        img = img.convertToFormat(QtGui.QImage.Format_Grayscale8)
+
+    # Efficient pixel comparison using numpy
+    bits = img.bits().tobytes()
+    np_bits = np.frombuffer(bits, dtype=np.uint8)
+    
+    return np.all(np_bits == np_bits[0])
+ 
+
 
 
 def cleanFiles(texture, fileNode):

@@ -50,6 +50,8 @@ def mtlxAddMaps (texture, mapType, stackShapePath):
     """
     
     # replace with UDIM tag as needed
+    #file_path = texture.filePath
+    texture.filePath = texture.filePath.replace('\\', '/')
     filePath = re.sub(r"\d{4}\.", '<UDIM>.', texture.filePath) #not sure if needed for UDIMS
     materialName = texture.textureSet
     mapDagPath = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%" + materialName + mapType

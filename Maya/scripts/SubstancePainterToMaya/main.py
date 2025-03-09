@@ -60,6 +60,10 @@ from importlib import reload
 reload(ui)
 reload(helper)
 
+
+import cProfile
+import pstats
+
 # Variables
 toolUI = ui.PainterToMayaUI()
 toolUI.createUI()
@@ -149,7 +153,20 @@ def launch(ui):
 
     # Add connect to the proceed button
     ui.proceedButton.clicked.connect(lambda: proceed(ui, foundTextures, renderer, uiElements))
+    
+    # Speed tests profiling
+    #ui.proceedButton.clicked.connect(lambda: profile_proceed(ui, foundTextures, renderer, uiElements))
 
+def profile_proceed(ui, foundTextures, renderer, uiElements):
+    profiler = cProfile.Profile()
+    profiler.enable()
+    proceed(ui, foundTextures, renderer, uiElements)
+    profiler.disable()
+    
+    # Print profiling results
+    stats = pstats.Stats(profiler).sort_stats('cumtime')
+    stats.print_stats()
+    
 def proceed(ui, foundTextures, renderer, uiElements):
 
     print('\n PROCEED \n')
