@@ -150,6 +150,9 @@ def launch(ui):
 
     # Display second part of the UI
     ui = helper.displaySecondPartOfUI(ui, renderer)
+    
+    # Ensure uiElements are not garbage collected
+    uiElementsRef = uiElements.copy()  # Line 151
 
     # Add connect to the proceed button
     ui.proceedButton.clicked.connect(lambda: proceed(ui, foundTextures, renderer, uiElements))
@@ -170,6 +173,8 @@ def profile_proceed(ui, foundTextures, renderer, uiElements):
 def proceed(ui, foundTextures, renderer, uiElements):
 
     print('\n PROCEED \n')
+    
+    #print(f"Debug: uiElements before proceeding: {uiElements}")  
 
     # Import render definitions
     if renderer.name == 'Arnold':
@@ -213,26 +218,26 @@ def proceed(ui, foundTextures, renderer, uiElements):
         stackShapeItem = ufe.Hierarchy.createItem(ufe.PathString.path(stackShapePath))
         contextOps = ufe.ContextOps.contextOps(stackShapeItem)
 
-        
+
         # Get list of materials
         materials = list()
     
         for texture in texturesToUse:
-        
-            if texture.textureSet not in materials:
-                materials.append(texture.textureSet)
-                
-        # create materialX docs        
-        for material in materials:        
             
-            render_helper.mtlxImportDoc (material, stackShapePath)
-            
-        # populate texture map filepaths in mtlx docs
-        for texture in texturesToUse:    
-        
+            #print(f'texture.textureSet: {texture.textureSet}')
+            # check that material exists
+            if not mc.objExists(texture.textureSet):
+                print(f'Warning: Material {texture.textureSet} does not exist. Check that the material name corresponds to the texture name.')
+                continue
+            #print('in the loop')
+            # clean files (if option is selected)
             texture.materialAttribute = renderer.renderParameters.MAP_LIST_REAL_ATTRIBUTES[texture.indice]
             clean = ui.checkboxRem.isChecked()
+            
+            # Create doc
+            render_helper.mtlxImportDoc (texture, stackShapePath)
 
+            # Connect MaterialX nodes
             render_helper.mtlxConnect (texture, clean, stackShapePath)
             
             # Assign MaterialX shaders

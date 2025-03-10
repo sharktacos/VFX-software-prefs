@@ -132,15 +132,22 @@ class PainterToMayaUI:
         )
         self.namingConventionLayout.addWidget(self.map)
 
+
+
+        # option "use all" or "use selected" (disabled)
         self.grpRadioTextureSets = PySide.QtWidgets.QButtonGroup()
         self.textureSetRadio1 = PySide.QtWidgets.QRadioButton('Use all found texture sets')
         self.textureSetRadio1.setChecked(True)
+        self.textureSetRadio1.setVisible(False)
+
         self.grpRadioTextureSets.addButton(self.textureSetRadio1)
         self.textureSetRadio2 = PySide.QtWidgets.QRadioButton('Use only specified texture set')
+        self.textureSetRadio2.setVisible(False)
         self.grpRadioTextureSets.addButton(self.textureSetRadio2)
 
         self.namingConventionLayout.addWidget(self.textureSetRadio1)
         self.namingConventionLayout.addWidget(self.textureSetRadio2)
+
 
 
 
@@ -170,8 +177,10 @@ class PainterToMayaUI:
         self.rendererLayout.addWidget(self.rendererRadio2)
         self.rendererLayout.addWidget(self.rendererRadio3)
 
-        # Materials
-        self.grpMaterials = PySide.QtWidgets.QGroupBox('Materials')
+
+        # Materials 
+        #self.grpMaterials = PySide.QtWidgets.QGroupBox('Materials')
+        self.grpMaterials = PySide.QtWidgets.QGroupBox('')
         self.layVMainWindow01.addWidget(self.grpMaterials)
 
         self.materialsLayout = PySide.QtWidgets.QVBoxLayout()
@@ -182,19 +191,28 @@ class PainterToMayaUI:
 
         self.materialsRadio1 = PySide.QtWidgets.QRadioButton(
             'Use existing materials, if they don\'t exist, create new ones (not assigned)')
+        self.materialsRadio1.setVisible(False)
         self.grpRadioMaterials.addButton(self.materialsRadio1)
 
-
         self.materialsRadio2 = PySide.QtWidgets.QRadioButton('Create new materials (not assigned)')
+        self.materialsRadio2.setVisible(False)
         self.grpRadioMaterials.addButton(self.materialsRadio2)
 
         self.materialsRadio3 = PySide.QtWidgets.QRadioButton('Use existing materials. Convert if wrong material type.')
         self.grpRadioMaterials.addButton(self.materialsRadio3)
         self.materialsRadio3.setChecked(True)
+        self.materialsRadio3.setVisible(False)
+        self.materialsLayout.addWidget(self.materialsRadio3)
+        
 
         self.materialsLayout.addWidget(self.materialsRadio1)
         self.materialsLayout.addWidget(self.materialsRadio2)
         self.materialsLayout.addWidget(self.materialsRadio3)
+
+
+
+
+
 
         # Launch button
         self.grpLaunch = PySide.QtWidgets.QGroupBox('Check for textures')
