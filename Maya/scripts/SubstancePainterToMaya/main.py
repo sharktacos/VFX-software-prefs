@@ -229,13 +229,25 @@ def proceed(ui, foundTextures, renderer, uiElements):
             if not mc.objExists(texture.textureSet):
                 print(f'Warning: Material {texture.textureSet} does not exist. Check that the material name corresponds to the texture name.')
                 continue
-            #print('in the loop')
+                
+            if texture.textureSet not in materials:
+                materials.append(texture.textureSet)
+                
+                # create materialX docs        
+        for material in materials:        
+            
+            # Create doc
+            render_helper.mtlxImportDoc (material, stackShapePath)
+            
+        # populate texture map filepaths in mtlx docs
+        for texture in texturesToUse:
+        
+            if not mc.objExists(texture.textureSet):
+                continue
+            
             # clean files (if option is selected)
             texture.materialAttribute = renderer.renderParameters.MAP_LIST_REAL_ATTRIBUTES[texture.indice]
             clean = ui.checkboxRem.isChecked()
-            
-            # Create doc
-            render_helper.mtlxImportDoc (texture, stackShapePath)
 
             # Connect MaterialX nodes
             render_helper.mtlxConnect (texture, clean, stackShapePath)

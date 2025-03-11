@@ -11,9 +11,9 @@ from SubstancePainterToMaya import helper
 from importlib import reload
 reload(helper)
 
-def mtlxImportDoc (texture, stackShapePath):
+def mtlxImportDoc (material, stackShapePath):
 
-    materialName = texture.textureSet 
+    materialName = material 
     script_path: Path = Path(__file__).parent.resolve()
     templateName = "MaterialX_basicGrp"
     templatePath = str(script_path) + "/" + templateName + ".mtlx"
