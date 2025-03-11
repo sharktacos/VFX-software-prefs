@@ -30,7 +30,7 @@
     <output name="outRoughness" type="float" nodename="MatName_roughness_lerp" />
     
     <tiledimage name="MatName_dif" type="color3" nodedef="ND_tiledimage_color3">
-      <input name="file" type="filename" colorspace="sRGB" value="" />
+      <input name="file" type="filename" colorspace="rgb_texture" value="" />
       <input name="default" type="color3" value="0.18, 0.18, 0.18" />
     </tiledimage>
     
