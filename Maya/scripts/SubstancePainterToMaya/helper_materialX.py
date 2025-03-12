@@ -4,7 +4,12 @@ v02 fix flats
 
 import os
 import re
-#import numpy as np
+import numpy as np
+try:
+    import PySide2.QtGui as QtGui
+except ImportError:
+    import PySide6.QtGui as QtGui
+
 from pathlib import Path
 import ufe
 import maya.cmds as mc
@@ -12,6 +17,24 @@ import maya.cmds as mc
 from SubstancePainterToMaya import helper
 from importlib import reload
 reload(helper)
+
+def is_flat_colorMtlx(path):
+    img = QtGui.QImage(path)
+    
+    # Fail-safe for invalid image formats (EXR 16/32b float)
+    if img.isNull():
+        print('Invalid 16/32b image format. Try OpenEXR instead. Cannot parse: ' + path)
+        return False
+
+    # Convert to grayscale if not already
+    if img.format() != QtGui.QImage.Format_Grayscale8:
+        img = img.convertToFormat(QtGui.QImage.Format_Grayscale8)
+
+    # Efficient pixel comparison using numpy
+    bits = img.bits().tobytes()
+    np_bits = np.frombuffer(bits, dtype=np.uint8)
+    
+    return np.all(np_bits == np_bits[0])
 
 def mtlxImportDoc (material, stackShapePath):
 
@@ -71,7 +94,7 @@ def mtlxConnect (texture, clean, stackShapePath):
     :param attributeName: The name of the material attribute to use
     """
     attributeName = texture.materialAttribute 
-    flat = helper.is_flat_colorMtlx(texture.filePath)
+    flat = is_flat_colorMtlx(texture.filePath)
     materialName = texture.textureSet
     
     nodegraph_string = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%"
@@ -133,6 +156,7 @@ def mtlxConnect (texture, clean, stackShapePath):
         spc_Attr = ufe.Attributes.attributes(spc_item)
         spc_file = spc_Attr.attribute('inputs:file')
         spc_fileValue = spc_file.get()
+        mxRuntimeId_ruf = doc_item.runTimeId() 
         
         # if texture is flat (all pixels the same value) skip
         if flat:
@@ -143,7 +167,7 @@ def mtlxConnect (texture, clean, stackShapePath):
             ruf_input = ufe.AttributeInfo(mtl_item.path(), 'inputs:specular_roughness')
 
             # Disconnect the image to shader.
-            connectionHandler_ruf = ufe.RunTimeMgr.instance().connectionHandler(mxRuntimeId)
+            connectionHandler_ruf = ufe.RunTimeMgr.instance().connectionHandler(mxRuntimeId_ruf)
             connectionHandler_ruf.disconnect(ruf_output, ruf_input)
             
             # delete the map nodes
@@ -265,7 +289,7 @@ def mtlxConnectToFile (texture, mtlxPath, clean):
     materialName = texture.textureSet 
     attributeName = texture.materialAttribute 
     mtlxDoc = mtlxPath + "/" + materialName + ".mtlx"
-    flat = helper.is_flat_color(texture.filePath)
+    flat = is_flat_colorMtlx(texture.filePath)
        
     # If normalMap
     if attributeName == 'normalCamera' and texture.output == 'outColor':
