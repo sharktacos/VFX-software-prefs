@@ -4,9 +4,11 @@ v02 fix flats
 
 import os
 import re
+#import numpy as np
 from pathlib import Path
 import ufe
 import maya.cmds as mc
+
 from SubstancePainterToMaya import helper
 from importlib import reload
 reload(helper)
@@ -69,7 +71,7 @@ def mtlxConnect (texture, clean, stackShapePath):
     :param attributeName: The name of the material attribute to use
     """
     attributeName = texture.materialAttribute 
-    flat = helper.is_flat_color(texture.filePath)
+    flat = helper.is_flat_colorMtlx(texture.filePath)
     materialName = texture.textureSet
     
     nodegraph_string = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%"

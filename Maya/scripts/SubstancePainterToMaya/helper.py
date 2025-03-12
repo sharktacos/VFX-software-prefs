@@ -13,10 +13,8 @@ try:
 except ImportError:
     import PySide6.QtGui as QtGui
     
-import numpy as np
-
-
-    
+try:
+    import numpy as np
 
 
 
@@ -637,7 +635,7 @@ def is_black_EXR(path):
     return black
 
 
-def is_flat_colorOLD(path):
+def is_flat_color(path):
     img = PySide.QtGui.QImage(path)
     
     # Fail-safe for invalid image formats (EXR 16/32b float)
@@ -655,7 +653,7 @@ def is_flat_colorOLD(path):
     first = bits[0]   
     return all(first == next for next in bits)
     
-def is_flat_color(path):
+def is_flat_colorMtlx(path):
     img = QtGui.QImage(path)
     
     # Fail-safe for invalid image formats (EXR 16/32b float)
