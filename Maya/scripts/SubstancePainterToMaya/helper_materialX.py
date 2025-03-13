@@ -105,20 +105,13 @@ def mtlxConnect (texture, clean, stackShapePath):
     doc_string = stackShapePath + ",%" + materialName
     doc_item = ufe.Hierarchy.createItem(ufe.PathString.path(doc_string)) # string to item
     mxRuntimeId = doc_item.runTimeId() # UFE runtime ID of the MaterialX runtime.
-    connectionHandler = ufe.RunTimeMgr.instance().connectionHandler(mxRuntimeId)
-    #print(f'processing: {texture.textureName}')
-    
+    #connectionHandler = ufe.RunTimeMgr.instance().connectionHandler(mxRuntimeId)
        
     # If normalMap
     if attributeName == 'normalCamera' and texture.output == 'outColor':
         
-        nor_map = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%" + materialName + "_nor"
-        nor_item = ufe.Hierarchy.createItem(ufe.PathString.path(nor_map))
-        nor_Attr = ufe.Attributes.attributes(nor_item)
-        nor_file = nor_Attr.attribute('inputs:file')
-        nor_fileValue = nor_file.get()
-        
         # if texture is flat (all pixels the same value) skip
+        '''
         if flat:
             print('Normal map: Found flat texture map. Skipping: ' + texture.textureName)
             
@@ -144,20 +137,25 @@ def mtlxConnect (texture, clean, stackShapePath):
                 cleanFilesMtlx(texture)
 
         else:
-            mapType = '_nor'
-            mtlxAddMaps (texture, mapType, stackShapePath)
+        '''
+        mapType = '_nor'
+        mtlxAddMaps (texture, mapType, stackShapePath)
             
         
     # If spec roughness create a mask network
     if attributeName == 'specularRoughness':
 
+        '''
         spc_map = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%" + materialName + "_spc"
         spc_item = ufe.Hierarchy.createItem(ufe.PathString.path(spc_map))
         spc_Attr = ufe.Attributes.attributes(spc_item)
         spc_file = spc_Attr.attribute('inputs:file')
         spc_fileValue = spc_file.get()
-        mxRuntimeId_ruf = doc_item.runTimeId() 
+        '''
         
+        #mxRuntimeId_ruf = doc_item.runTimeId() 
+        
+        '''
         # if texture is flat (all pixels the same value) skip
         if flat:
             print('Spec Roughness: Found flat texture map. Skipping: ' + texture.textureName)
@@ -167,7 +165,7 @@ def mtlxConnect (texture, clean, stackShapePath):
             ruf_input = ufe.AttributeInfo(mtl_item.path(), 'inputs:specular_roughness')
 
             # Disconnect the image to shader.
-            connectionHandler_ruf = ufe.RunTimeMgr.instance().connectionHandler(mxRuntimeId_ruf)
+            connectionHandler_ruf = ufe.RunTimeMgr.instance().connectionHandler(mxRuntimeId)
             connectionHandler_ruf.disconnect(ruf_output, ruf_input)
             
             # delete the map nodes
@@ -178,20 +176,19 @@ def mtlxConnect (texture, clean, stackShapePath):
             mc.delete(map_lerp)
             
             # set spec value
-            '''
-            shaderAttributes = ufe.Attributes.attributes(mtl_item)
-            roughnessAttribute = shaderAttributes.attribute('inputs:specular_roughness')
-            roughnessAttribute.set(0.3)
-            '''
+            #shaderAttributes = ufe.Attributes.attributes(mtl_item)
+            #roughnessAttribute = shaderAttributes.attribute('inputs:specular_roughness')
+            #roughnessAttribute.set(0.3)
         
 
             # if delete option is set, delete flat texture files.
             if clean:
                 cleanFilesMtlx(texture)
-
+        
         else:
-            mapType = '_spc'
-            mtlxAddMaps (texture, mapType, stackShapePath)
+        '''
+        mapType = '_spc'
+        mtlxAddMaps (texture, mapType, stackShapePath)
 
 
 
