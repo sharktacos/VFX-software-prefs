@@ -29,15 +29,15 @@
     <output name="outColor" type="color3" nodename="MatName_dif" />
     <output name="outRoughness" type="float" nodename="MatName_roughness_lerp" />
     
-    <image name="MatName_dif" type="color3" nodedef="ND_image_color3">
+    <tiledimage name="MatName_dif" type="color3" nodedef="ND_tiledimage_color3">
       <input name="file" type="filename" colorspace="srgb_texture" value="" />
       <input name="default" type="color3" value="0.18, 0.18, 0.18" />
-    </image>
+    </tiledimage>
     
-    <image name="MatName_nor" type="vector3" nodedef="ND_image_vector3">
+    <tiledimage name="MatName_nor" type="vector3" nodedef="ND_tiledimage_vector3">
       <input name="file" type="filename" colorspace="Raw" value="" />
       <input name="default" type="vector3" value="0.5, 0.5, 1.0" />
-    </image>
+    </tiledimage>
     
     <!-- Dual roughness sliders modulated by roughness mask -->
     <mix name="MatName_roughness_lerp" type="float" nodedef="ND_mix_float">
@@ -50,15 +50,13 @@
       <input name="in" type="vector3" nodename="MatName_nor" />
     </normalmap>
     
-    <image name="MatName_met" type="float" nodedef="ND_image_float">
+    <tiledimage name="MatName_met" type="float" nodedef="ND_tiledimage_float">
       <input name="file" type="filename" value="" colorspace="Raw" />
-	  <input name="default" type="float" value="0" />
-    </image>
+    </tiledimage>
     
-    <image name="MatName_spc" type="float" nodedef="ND_image_float">
+    <tiledimage name="MatName_spc" type="float" nodedef="ND_tiledimage_float">
       <input name="file" type="filename" value="" colorspace="Raw" />
-	  <input name="default" type="float" value="0.2" />
-    </image>
+    </tiledimage>
     
   </nodegraph>
 </materialx>

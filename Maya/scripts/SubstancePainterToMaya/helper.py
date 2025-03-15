@@ -20,7 +20,7 @@ except ImportError:
     import PySide6.QtWidgets as QtWidgets
     
 
-    
+from PySide6.QtGui import QImage
 
 
 
@@ -580,6 +580,8 @@ def createDisplacementMap(texture, fileNode, colorCorrect=False, forceTexture=Tr
             mc.connectAttr(displaceNode + '.displacement',
                            shadingGroup + '.displacementShader', force=forceTexture)
 
+
+    
 def is_black_constant(path):
     img = PySide.QtGui.QImage(path)
 
@@ -590,6 +592,8 @@ def is_black_constant(path):
         img.convertTo(img.Format.Format_Grayscale8)
 
     return not any(img.constBits())
+
+
 
 """
 def is_flat_colorRGB(path):

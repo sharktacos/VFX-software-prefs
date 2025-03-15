@@ -248,9 +248,10 @@ def proceed(ui, foundTextures, renderer, uiElements):
             # clean files (if option is selected)
             texture.materialAttribute = renderer.renderParameters.MAP_LIST_REAL_ATTRIBUTES[texture.indice]
             clean = ui.checkboxRem.isChecked()
+            flatX = ui.checkboxFlatX.isChecked()
 
             # Connect MaterialX nodes
-            render_helper.mtlxConnect (texture, clean, stackShapePath)
+            render_helper.mtlxConnect (texture, clean, flatX, stackShapePath)
             
             # Assign MaterialX shaders
             render_helper.mtlxAssignMaterial (texture, stackShapePath)

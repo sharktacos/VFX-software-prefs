@@ -6,9 +6,9 @@ import os
 import re
 import numpy as np
 try:
-    import PySide2.QtGui as QtGui
+    from PySide6.QtGui import QImage
 except ImportError:
-    import PySide6.QtGui as QtGui
+    from PySide6.QtGui import QImage
 
 from pathlib import Path
 import ufe
@@ -19,7 +19,7 @@ from importlib import reload
 reload(helper)
 
 def is_flat_colorMtlx(path):
-    img = QtGui.QImage(path)
+    img = QImage(path)
     
     # Fail-safe for invalid image formats (EXR 16/32b float)
     if img.isNull():
@@ -27,14 +27,28 @@ def is_flat_colorMtlx(path):
         return False
 
     # Convert to grayscale if not already
-    if img.format() != QtGui.QImage.Format_Grayscale8:
-        img = img.convertToFormat(QtGui.QImage.Format_Grayscale8)
+    if img.format() != QImage.Format_Grayscale8:
+        img = img.convertToFormat(QImage.Format_Grayscale8)
 
     # Efficient pixel comparison using numpy
     bits = img.bits().tobytes()
     np_bits = np.frombuffer(bits, dtype=np.uint8)
     
     return np.all(np_bits == np_bits[0])
+
+    
+def is_black_constant_Mtlx(path):
+    img = QImage(path)
+
+    if img.isNull():
+        return False 
+
+    if img.format() != QImage.Format_Grayscale8:
+        img = img.convertToFormat(QImage.Format_Grayscale8)
+
+    img_bits = np.frombuffer(img.constBits(), dtype=np.uint8).reshape((img.height(), img.width()))
+    return not np.any(img_bits)
+    
 
 def mtlxImportDoc (material, stackShapePath):
 
@@ -87,14 +101,14 @@ def mtlxAddMaps (texture, mapType, stackShapePath):
 
 
 
-def mtlxConnect (texture, clean, stackShapePath):
+def mtlxConnect (texture, clean, flatX, stackShapePath):
 
     """
     For each map type replace place-holder with the filepath in the MaterialX document
     :param attributeName: The name of the material attribute to use
     """
     attributeName = texture.materialAttribute 
-    flat = is_flat_colorMtlx(texture.filePath)
+    #flat = is_flat_colorMtlx(texture.filePath)
     materialName = texture.textureSet
     
     nodegraph_string = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%"
@@ -104,40 +118,12 @@ def mtlxConnect (texture, clean, stackShapePath):
     
     doc_string = stackShapePath + ",%" + materialName
     doc_item = ufe.Hierarchy.createItem(ufe.PathString.path(doc_string)) # string to item
-    mxRuntimeId = doc_item.runTimeId() # UFE runtime ID of the MaterialX runtime.
+    #mxRuntimeId = doc_item.runTimeId() # UFE runtime ID of the MaterialX runtime.
     #connectionHandler = ufe.RunTimeMgr.instance().connectionHandler(mxRuntimeId)
        
     # If normalMap
     if attributeName == 'normalCamera' and texture.output == 'outColor':
-        
-        # if texture is flat (all pixels the same value) skip
-        '''
-        if flat:
-            print('Normal map: Found flat texture map. Skipping: ' + texture.textureName)
-            
-            # Get the attribute info of the input and output of the shader.
-            nor_output = ufe.AttributeInfo(nodegraph_item.path(), 'outputs:outNormal')
-            coatNor_input = ufe.AttributeInfo(mtl_item.path(), 'inputs:coat_normal')
-            nor_input = ufe.AttributeInfo(mtl_item.path(), 'inputs:normal')
 
-            # Disconnect the image to shader.
-            connectionHandler_nor = ufe.RunTimeMgr.instance().connectionHandler(mxRuntimeId)
-            connectionHandler_nor.disconnect(nor_output, coatNor_input)
-            connectionHandler_nor.disconnect(nor_output, nor_input)
-            
-            #delete map nodes
-            normalmap = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%" + materialName + "_nor"
-            map_nor = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%" + materialName + "_normalmap"
-            mc.delete(map_nor)
-            mc.delete(normalmap)
-            
-
-            # if delete option is set, delete flat texture files.
-            if clean:
-                cleanFilesMtlx(texture)
-
-        else:
-        '''
         mapType = '_nor'
         mtlxAddMaps (texture, mapType, stackShapePath)
             
@@ -145,50 +131,44 @@ def mtlxConnect (texture, clean, stackShapePath):
     # If spec roughness create a mask network
     if attributeName == 'specularRoughness':
 
-        '''
-        spc_map = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%" + materialName + "_spc"
-        spc_item = ufe.Hierarchy.createItem(ufe.PathString.path(spc_map))
-        spc_Attr = ufe.Attributes.attributes(spc_item)
-        spc_file = spc_Attr.attribute('inputs:file')
-        spc_fileValue = spc_file.get()
-        '''
+        if flatX:
         
-        #mxRuntimeId_ruf = doc_item.runTimeId() 
+            flat = is_black_constant_Mtlx(texture.filePath)
+            if not flat:
+                mapType = '_spc'
+                mtlxAddMaps (texture, mapType, stackShapePath)
         
-        '''
-        # if texture is flat (all pixels the same value) skip
-        if flat:
-            print('Spec Roughness: Found flat texture map. Skipping: ' + texture.textureName)
+            else:
+                print('Spec Roughness: Found flat texture map. Skipping: ' + texture.textureName)
             
-            # Get the attribute info of the 'out' output of the shader.
-            ruf_output = ufe.AttributeInfo(nodegraph_item.path(), 'outputs:outRoughness')
-            ruf_input = ufe.AttributeInfo(mtl_item.path(), 'inputs:specular_roughness')
+                # Get the attribute info of the 'out' output of the shader.
+                ruf_output = ufe.AttributeInfo(nodegraph_item.path(), 'outputs:outRoughness')
+                ruf_input = ufe.AttributeInfo(mtl_item.path(), 'inputs:specular_roughness')
 
-            # Disconnect the image to shader.
-            connectionHandler_ruf = ufe.RunTimeMgr.instance().connectionHandler(mxRuntimeId)
-            connectionHandler_ruf.disconnect(ruf_output, ruf_input)
+                # Disconnect the image to shader.
+                mxRuntimeId = doc_item.runTimeId()
+                connectionHandler_ruf = ufe.RunTimeMgr.instance().connectionHandler(mxRuntimeId)
+                connectionHandler_ruf.disconnect(ruf_output, ruf_input)
             
-            # delete the map nodes
-            map_ruf = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%" + materialName + "_spc"
-            map_lerp = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%" + materialName + "_roughness_lerp"
+                # delete the map nodes
+                map_ruf = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%" + materialName + "_spc"
+                map_lerp = stackShapePath + ",%" + materialName + "%" + materialName + "_nodes%" + materialName + "_roughness_lerp"
 
-            mc.delete(map_ruf)
-            mc.delete(map_lerp)
-            
-            # set spec value
-            #shaderAttributes = ufe.Attributes.attributes(mtl_item)
-            #roughnessAttribute = shaderAttributes.attribute('inputs:specular_roughness')
-            #roughnessAttribute.set(0.3)
-        
+                mc.delete(map_ruf)
+                mc.delete(map_lerp)
 
-            # if delete option is set, delete flat texture files.
-            if clean:
-                cleanFilesMtlx(texture)
+                # if delete option is set, delete flat texture files.
+                if clean:
+                    cleanFilesMtlx(texture)
         
         else:
-        '''
-        mapType = '_spc'
-        mtlxAddMaps (texture, mapType, stackShapePath)
+            mapType = '_spc'
+            mtlxAddMaps (texture, mapType, stackShapePath)
+
+
+
+
+
 
 
 

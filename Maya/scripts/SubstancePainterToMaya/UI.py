@@ -83,6 +83,7 @@ class PainterToMayaUI:
         self.grpNamingConvention = PySide.QtWidgets.QGroupBox('Naming Convention')
         self.layVMainWindow01.addWidget(self.grpNamingConvention)
 
+
         self.namingConventionLayout = PySide.QtWidgets.QVBoxLayout()
         self.grpNamingConvention.setLayout(self.namingConventionLayout)
 
@@ -274,6 +275,10 @@ class PainterToMayaUI:
         self.checkbox3.setVisible(False)
         self.optionsLayout.addWidget(self.checkbox3)
 
+        self.checkboxFlatX = PySide.QtWidgets.QCheckBox('Disconnect flat texture maps for MaterialX')
+        self.checkboxFlatX.setChecked(True)
+        self.optionsLayout.addWidget(self.checkboxFlatX)
+        
         self.checkboxRem = PySide.QtWidgets.QCheckBox('Delete flat texture map files (bump, normal, spec, metal)')
         self.checkboxRem.setChecked(False)
         self.optionsLayout.addWidget(self.checkboxRem)
