@@ -416,7 +416,7 @@ def get_mesh_and_material_info(fileName, relativePathsEnabled, localizeTexEnable
 
                 
             # Append the meshName, relative path, full path of the MaterialX file, and material name to the list
-            mesh_info.append((meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path))
+            mesh_info.append((meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path, mtlX_SG))
 
         except Exception as e:
             print(f"Warning: The renderable mesh {meshName} is not assigned to a MaterialX material. Skipping in look file. ")
@@ -485,7 +485,7 @@ def get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled
 
 
             # Append the meshName, relative path, full path of the MaterialX file, and material name to the list
-            proxy_info.append((proxyMesh, px_mtlx_file, px_mtlx_name, px_mtlx_absolute_path))
+            proxy_info.append((proxyMesh, px_mtlx_file, px_mtlx_name, px_mtlx_absolute_path, px_mtlX_SG))
             
         except Exception as e:
             print(f"Warning: The proxy mesh {proxyMesh} is not assigned to a MaterialX material. Skipping in look file.")
@@ -703,7 +703,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
     # Process all meshes and materials under the given render purpose
     mesh_material_info = get_mesh_and_material_info(fileName, relativePathsEnabled, localizeTexEnabled, usePurposes, nativeUSDEnabled)
     
-    for meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path in mesh_material_info:
+    for meshName, relative_path, mtlx_file, mtlx_name, mtlx_absolute_path, mtlX_SG in mesh_material_info:
         
         # Get the full path from the dictionary
         full_path = full_path_dict.get(meshName, relative_path)
@@ -749,7 +749,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
             
             # Define the material binding relationship
             material_binding_rel = mesh_name_prim.CreateRelationship('material:binding', False)
-            material_binding_rel.SetTargets([f'{root_asset}/mtl/{mtlx_name}_SG'])
+            material_binding_rel.SetTargets([f'{root_asset}/mtl/{mtlX_SG}'])
             created_paths.add(mesh_name_path)
         else:
             # Diagnostic: Print a message if a duplicate mesh name is found
@@ -765,7 +765,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
         # Process all proxy meshes and materials under the given proxy_value
         proxy_material_info = get_proxy_mesh_and_material_info(proxy_value, fileName, relativePathsEnabled, nativeUSDEnabled)
         
-        for proxyMesh, px_mtlx_file, px_mtlx_name, px_mtlx_absolute_path in proxy_material_info:
+        for proxyMesh, px_mtlx_file, px_mtlx_name, px_mtlx_absolute_path, px_mtlX_SG in proxy_material_info:
 
             try:
                 # Get the full path from the dictionary
@@ -799,7 +799,7 @@ def look_stage(fileName, root_asset, render_value, proxy_value, relativePathsEna
                 
                     # Define the material binding relationship
                     material_binding_rel = mesh_proxy_prim.CreateRelationship('material:binding', False)
-                    material_binding_rel.SetTargets([f'{root_asset}/mtl/{px_mtlx_name}_SG'])
+                    material_binding_rel.SetTargets([f'{root_asset}/mtl/{px_mtlX_SG}'])
                     created_paths.add(mesh_proxy_path)
                 else:
                     # Diagnostic: Print a message if a duplicate proxy mesh name is found
