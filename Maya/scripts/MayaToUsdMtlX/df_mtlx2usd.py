@@ -51,8 +51,8 @@ def set_usd_input_value(usd_destination, sdf_type, mtlx_value, mtlx_SourceName):
 
     if sdf_type == "color3f":
         vec_type = Gf.Vec3f
-    #elif sdf_type == "vector3f":
-    elif sdf_type == "float3":
+    elif sdf_type == "vector3f":
+    #elif sdf_type == "float3":
         vec_type = Gf.Vec3f
     elif sdf_type == "float2":
         vec_type = Gf.Vec2f
@@ -98,8 +98,8 @@ def map_mtlx_type_to_sdf(mtlx_type):
     elif mtlx_type == "float":
         return Sdf.ValueTypeNames.Float
     elif mtlx_type == "vector3":
-        return Sdf.ValueTypeNames.Float3
-        #return Sdf.ValueTypeNames.Vector3f        
+        #return Sdf.ValueTypeNames.Float3
+        return Sdf.ValueTypeNames.Vector3f
     elif mtlx_type == "vector2":
         return Sdf.ValueTypeNames.Float2 
     elif mtlx_type == "filename":
@@ -171,9 +171,12 @@ def materialx_to_usd(mtlx_filepath, usd_filepath, asset_name):
     surface_material_elem = root.find("./surfacematerial") 
     if surface_material_elem is None:
         raise ValueError("No <surfacematerial> element found at the root level.")
-
+    
     material_name = surface_material_elem.get("name")
     material_def = surface_material_elem.get("nodedef") 
+    if not material_def:
+        material_def = "ND_surfacematerial"
+        print("Warning: No node defintion found in MaterialX file for material. Setting to ND_surfacematerial")
     material_path = f"{materials_scope_path}/{material_name}" 
     usd_material = UsdShade.Material.Define(stage, material_path) 
     
@@ -184,9 +187,17 @@ def materialx_to_usd(mtlx_filepath, usd_filepath, asset_name):
         
         # 2. Get Surface Shaders  
         surface_shaders = root.findall("./*[@type='surfaceshader']")
+
+        
         for surface in surface_shaders:
             surface_name = surface.get("name")
             surface_def = surface.get("nodedef")
+            if not surface_def:
+                #surface_def = "ND_standard_surface_surfaceshader"
+                surface_def = f"ND_{surface.tag}_surfaceshader"
+                print(f"Warning: No node defintion found in MaterialX file for surfaceshader. Setting to ND_{surface.tag}_surfaceshader")
+                # todo: query element name for other surfaceshader types.
+                
             surface_path = f"{material_path}/{surface_name}"  # Prim path *under* the material
             usd_surface = UsdShade.Shader.Define(stage, surface_path)
             usd_surface.SetShaderId(surface_def)
@@ -281,10 +292,17 @@ def materialx_to_usd(mtlx_filepath, usd_filepath, asset_name):
                 
                 usd_nodes = {}
                 for node_elem in nodegraph_elem.findall("./*"): # Iterate through all elements under nodegraph
-                    if "nodedef" in node_elem.attrib: # Check if it has a nodedef attribute (i.e. that it is a node)
+                    
+                    if node_elem.tag not in ["output", "input"]:
+                    #if "nodedef" in node_elem.attrib: # Check if it has a nodedef attribute (i.e. that it is a node)
                         node_name = node_elem.get("name")
                         node_type = node_elem.get("type")
-                        node_def = node_elem.get("nodedef")
+                        #node_def = node_elem.get("nodedef")
+                        if node_elem.tag == "normalmap":
+                            node_def = f"ND_{node_elem.tag}"
+                        else:
+                            node_def = f"ND_{node_elem.tag}_{node_type}" 
+                            
                         node_output = node_elem.get("output")
                     
                         # Create USD node from path
@@ -303,8 +321,9 @@ def materialx_to_usd(mtlx_filepath, usd_filepath, asset_name):
             
                     # 7. Get node inputs...
                     for input_elem in node_elem.findall("./input"):
-                        if "nodedef" not in node_elem.attrib:
-                            continue
+                        #if "nodedef" not in node_elem.attrib:
+                        #if input_elem.tag not in ["output", "input"]:
+                        #    continue
                         input_name = input_elem.get("name")
                         input_type = input_elem.get("type")
                         input_value = input_elem.get("value")
