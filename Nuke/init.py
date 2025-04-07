@@ -5,6 +5,7 @@ nuke.pluginAddPath('./rvnuke')
 
 
 import nuke
+nuke.pluginAddPath('pixelfudger3')
 nuke.knobDefault("Root.colorManagement", "OCIO")
 #nuke.knobDefault("Root.floatLut", "reference")
 
